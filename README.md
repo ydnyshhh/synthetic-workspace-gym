@@ -1,384 +1,214 @@
-# Synthetic Workspace Gym
-
-Synthetic Workspace Gym is a research-oriented framework for generating and evaluating small, executable workspace environments for tool-using agents.
-
-The unit of work is an environment instance, not a prompt. Each instance is treated as a self-contained world with:
-
-- an initial visible workspace
-- hidden evaluator assets outside the writable agent workspace
-- explicit tool permissions
-- a structured manifest
-- trusted success criteria
-- controllable difficulty and latent complexity metadata
-- full episode trajectory logging
-
-This makes the project useful as infrastructure for agent training and evaluation, rather than as a flat prompt dataset or benchmark-only task list.
-
-## Why This Exists
-
-Most agent benchmarks stop at instructions and final answers. Real coding and workspace agents operate in richer environments:
-
-- files exist before the agent starts
-- tools mutate state over time
-- hidden evaluators determine success
-- trajectory quality matters, not just the final answer
-- difficulty comes from workspace structure, coupling, and repair dynamics
-
-Synthetic Workspace Gym focuses on those environment-level concerns directly.
-
-## v1 Scope
-
-The current version implements three environment families:
-
-1. `tabular`
-   Messy CSV/JSON transformation tasks with deterministic hidden reference outputs.
-2. `script_repair`
-   Small Python repair tasks with hidden tests.
-3. `pipeline`
-   Multi-file mini-project completion tasks with broken config/code/output assumptions.
-
-Each generated environment includes:
-
-- `visible/` workspace files for the agent
-- `hidden/` evaluator assets and solution metadata
-- `manifest.json` describing the concrete instance
-
-Each episode run exports:
-
-- manifest copy
-- trajectory JSONL
-- evaluator result JSON
-- summary JSON
-- final workspace snapshot
-- final unified diff
-
-## Project Layout
-
-```text
-src/synthetic_workspace_gym/
-  schemas/        Typed core schemas and event models
-  generators/     Environment-family generators and difficulty logic
-  evaluators/     Trusted hidden evaluators
-  runtime/        Tool execution, environment loading, episode runner
-  agents/         Baseline agents
-  analysis/       Artifact export and diff helpers
-  cli.py          Command-line entrypoint
-tests/            Generator, evaluator, runtime, schema, and e2e tests
-```
-
-## Core Abstractions
-
-### `EnvironmentSpec`
-
-Declarative generation input with:
-
-- `env_family`
-- `difficulty`
-- `seed`
-- `max_steps`
-- `time_limit_seconds`
-- `tool_permissions`
-- `observability`
-- `task_params`
-- `evaluator_params`
-- `generation_params`
-- `complexity_profile`
-
-### `EnvironmentManifest`
-
-Concrete generated-instance manifest with:
-
-- `env_id`
-- `family`
-- `difficulty`
-- `seed`
-- `instruction`
-- `workspace_root`
-- `visible_files`
-- `hidden_root`
-- `hidden_files`
-- `tool_permissions`
-- `max_steps`
-- `time_limit_seconds`
-- `metadata`
-- `evaluator_entrypoint`
-- `reference_solution`
-
-### `EvaluatorResult`
-
-Structured trusted evaluation output with:
-
-- `success`
-- `score`
-- `subscores`
-- `failure_labels`
-- `diagnostics`
-- `runtime_seconds`
-
-### Trajectory Schema
-
-Every tool step records:
-
-- step index
-- timestamp
-- action type
-- action arguments
-- observation summary
-- stdout/stderr
-- exit code
-- files touched
-- workspace digest
-- success flag
-
-### Extension Interfaces
-
-- `BaseGenerator`
-- `BaseEvaluator`
-- `BaseAgent`
-- `EpisodeRunner`
-
-## Install
-
-### Recommended
-
-```bash
-uv sync
-```
-
-If your environment restricts access to the global `uv` cache, use a repo-local cache:
-
-```bash
-uv sync --cache-dir .uv-cache
-```
-
-## Run Tests
-
-```bash
-uv run --no-project --cache-dir .uv-cache --python python python -B -m unittest discover -s tests -v
-```
-
-In a normal unrestricted environment, `uv run python -m unittest discover -s tests -v` is also fine after `uv sync`.
-
-## CLI
-
-The package exposes the `swg` CLI.
-
-### Generate environments
-
-```bash
-uv run swg generate --family tabular --count 5 --difficulty 3 --seed 100 --output-dir generated
-```
-
-### Run one episode
-
-```bash
-uv run swg run --environment generated/tabular-d3-s100-XXXXXXXX --agent react --output-dir episodes
-```
-
-### Evaluate a workspace
-
-```bash
-uv run swg evaluate --environment generated/tabular-d3-s100-XXXXXXXX
-```
-
-You can also evaluate a modified workspace explicitly:
-
-```bash
-uv run swg evaluate --environment generated/tabular-d3-s100-XXXXXXXX --workspace /path/to/workspace
-```
-
-### Benchmark a baseline
-
-```bash
-uv run swg benchmark --environments generated --agent react --output-dir benchmarks
-```
-
-## Runtime and Tool Model
-
-Agents interact through a structured tool API:
-
-- `read_file(path)`
-- `write_file(path, content)`
-- `append_file(path, content)`
-- `list_directory(path)`
-- `run_shell(command)`
-- `run_python(command_or_script)`
-- `submit(path_or_answer)`
-
-The runtime is intentionally local and simple in v1:
-
-- each episode runs in an isolated scratch workspace under the configured output root
-- visible workspace files are copied into that scratch directory
-- hidden evaluator assets stay outside the agent workspace
-- max steps and wall-clock time are enforced
-- every action and observation is logged
-- evaluation happens only at the end of the episode or after `submit`
-
-This is a cooperative research sandbox, not a security-hardened OS isolation layer.
-
-## Environment Families
-
-### 1. Tabular / Data Transformation
-
-Visible workspace contents typically include:
-
-- `README.md`
-- `task.json`
-- `data/orders.csv`
-- optional lookup/adjustment files
-
-Hidden assets include:
-
-- `expected_output.json`
-- `evaluator_config.json`
-- `reference_solution.json`
-
-Difficulty scales with factors such as:
-
-- more rows and input files
-- deduplication requirements
-- joins
-- extra transformation steps
-- distractor files
-- stricter output constraints
-
-### 2. Script / Code Repair
-
-Visible workspace contents typically include:
-
-- `README.md`
-- `task.json`
-- `src/repair_target/*.py`
-- a visible smoke-test entrypoint
-- scenario data files
-
-Hidden assets include:
-
-- a hidden test runner
-- evaluator config
-- solution file metadata
-
-Difficulty scales with factors such as:
-
-- more files
-- more simultaneous bugs
-- subtler bug types
-- misleading visible hints
-- cross-file repair requirements
-
-### 3. Pipeline / Config Completion
-
-Visible workspace contents typically include:
-
-- `README.md`
-- `task.json`
-- `config/*.json`
-- `src/pipeline_app/*.py`
-- executable `run_pipeline.py`
-- input data files
-
-Hidden assets include:
-
-- `expected_output.json`
-- `evaluator_config.json`
-- solution file metadata
-
-Difficulty scales with factors such as:
-
-- config/code coupling
-- missing transformation steps
-- broken output assumptions
-- distractor notes/configs
-- stricter output contracts
+﻿# Synthetic Workspace Gym
+
+Synthetic Workspace Gym is a framework for generating and evaluating small, executable workspace environments for tool-using agents.
+
+I think one of the bottlenecks in agent research is that environments are still too often handcrafted. Building each one manually is tedious, hard to scale, and makes it difficult to study agent behavior systematically across controlled variations in difficulty, structure, and tooling. Prompts alone are not enough; what matters is the executable world around them. Synthetic Workspace Gym is my attempt to address that by treating environments as generated objects rather than fixed artifacts. Instead of writing each workspace by hand, the framework compiles synthetic workspace-style environments with hidden evaluators, structured metadata, and reproducible complexity, giving agents a more scalable substrate for training and evaluation.
+
+## Overview
+
+| Item | Description |
+| --- | --- |
+| Primary unit | Environment instance, not prompt |
+| Focus | Synthetic workspace generation, execution, logging, and trusted evaluation |
+| v1 families | `tabular`, `script_repair`, `pipeline` |
+| Runtime model | Local scratch workspace + hidden evaluator outside writable scope |
+| Packaging | Python package with `uv` workflow and `swg` CLI |
+| Status | v1 research infrastructure |
+
+## What This Is
+
+| This project is | This project is not |
+| --- | --- |
+| An environment-centric agent research framework | Just a prompt dataset |
+| A generator of executable workspaces | Only a static benchmark |
+| A place to study trajectories, tool use, and repair behavior | A visible self-evaluation setup |
+| A typed substrate for future environment families | A security sandbox product |
+
+## Quick Start
+
+| Task | Command |
+| --- | --- |
+| Install | `uv sync` |
+| Install with local cache | `uv sync --cache-dir .uv-cache` |
+| Run tests | `uv run --no-project --cache-dir .uv-cache --python python python -B -m unittest discover -s tests -v` |
+| Generate one env | `uv run swg generate --family tabular --count 1 --difficulty 3 --seed 42 --output-dir generated` |
+| Run one episode | `uv run swg run --environment generated/<env_id> --agent react --output-dir episodes` |
+| Evaluate workspace | `uv run swg evaluate --environment generated/<env_id>` |
+| Benchmark baseline | `uv run swg benchmark --environments generated --agent react --output-dir benchmarks` |
+
+## Core Design
+
+### Environment model
+
+Every generated instance is treated as a world with:
+
+| Property | Meaning |
+| --- | --- |
+| Initial state | Visible files and project state before the agent starts |
+| Visible artifacts | Files the agent can inspect and modify |
+| Hidden assets | Trusted evaluator code, expected outputs, reference metadata |
+| Tool permissions | Allowed tool surface for the episode runtime |
+| Success criteria | Evaluator-defined completion logic |
+| Complexity metadata | Difficulty plus latent structural factors |
+
+### Core abstractions
+
+| Abstraction | Purpose | Key fields / methods |
+| --- | --- | --- |
+| `EnvironmentSpec` | Declarative generation request | `env_family`, `difficulty`, `seed`, `max_steps`, `tool_permissions`, `task_params`, `generation_params`, `complexity_profile` |
+| `EnvironmentManifest` | Concrete generated instance description | `env_id`, `instruction`, `visible_files`, `hidden_files`, `evaluator_entrypoint`, `metadata`, `reference_solution` |
+| `EvaluatorResult` | Structured trusted evaluation result | `success`, `score`, `subscores`, `failure_labels`, `diagnostics`, `runtime_seconds` |
+| `TrajectoryEvent` | Step-level execution log | action, args, observation summary, stdout/stderr, exit code, files touched, workspace digest |
+| `BaseGenerator` | Generator interface | `sample_spec()`, `generate_instance()`, `validate_instance()` |
+| `BaseEvaluator` | Evaluator interface | `evaluate(workspace_path, manifest, hidden_root)` |
+| `BaseAgent` | Tool-using agent interface | `reset()`, `act()` |
+| `EpisodeRunner` | Runtime orchestrator | environment reset, action loop, logging, final evaluation, artifact export |
+
+### Difficulty model
+
+External difficulty is exposed as `1..5` or `easy/medium/hard`. Internally, generators use richer latent factors:
+
+| Factor | Meaning |
+| --- | --- |
+| `file_count` | Workspace size |
+| `distractor_count` | Irrelevant or misleading visible artifacts |
+| `dependency_depth` | Cross-file coupling depth |
+| `reasoning_hops` | Number of conceptual steps needed |
+| `transformation_count` | Required transformation operations |
+| `bug_subtlety` | Repair subtlety or misleadingness |
+| `execution_required` | Whether running code/shell is necessary |
+| `output_constraint_strength` | Strictness of final artifact contract |
+
+## Implemented Environment Families
+
+| Family | Visible workspace shape | Hidden evaluation | Typical failure modes | Difficulty scaling |
+| --- | --- | --- | --- | --- |
+| `tabular` | CSV/JSON inputs, task file, README, expected output path | Hidden exact-output comparison | Wrong parsing, dedup, joins, aggregations, sorting | more rows/files, schema mismatch, joins, distractors, stricter output |
+| `script_repair` | Small Python project with bugs, smoke-test entrypoint | Hidden unit tests | syntax, off-by-one, condition bugs, path issues, imports, wrong return values | more files, more bugs, cross-file coupling, subtler faults |
+| `pipeline` | Multi-file mini-project with config + code + artifacts | Hidden execution + artifact validation | wrong config path, broken pipeline step, output format mismatch, aggregation error | more config coupling, broken assumptions, missing steps, stricter artifact requirements |
+
+## Runtime Model
+
+### Tool API
+
+| Tool | Purpose |
+| --- | --- |
+| `read_file(path)` | Read visible workspace file content |
+| `write_file(path, content)` | Replace file content |
+| `append_file(path, content)` | Append to file |
+| `list_directory(path)` | Inspect workspace tree |
+| `run_shell(command)` | Run shell command in workspace |
+| `run_python(command_or_script)` | Run Python code or script in workspace |
+| `submit(path_or_answer)` | Signal completion |
+
+### Runtime guarantees
+
+| Guarantee | v1 behavior |
+| --- | --- |
+| Isolation | Each episode runs in a fresh scratch copy of `visible/` |
+| Hidden evaluator boundary | Hidden assets stay outside the agent writable workspace |
+| Logging | Every tool step is recorded as a structured trajectory event |
+| Limits | `max_steps` and wall-clock `time_limit_seconds` enforced |
+| Evaluation trigger | Runs after episode termination or `submit` |
+| Artifacts | Manifest copy, trajectory, evaluator result, summary, final diff, final workspace |
+
+v1 is intentionally local and subprocess-based. It is a research runtime, not a hardened security sandbox.
+
+## Trusted Evaluation
+
+| Family | Evaluator strategy |
+| --- | --- |
+| `tabular` | Compare generated output to hidden expected JSON |
+| `script_repair` | Execute hidden tests against the repaired workspace |
+| `pipeline` | Execute repaired project and compare final artifact to hidden expected output |
+
+Generation-time validation is built in: every environment is checked by applying the stored reference solution to a scratch copy of the workspace and verifying that the hidden evaluator returns success.
 
 ## Artifact Layout
 
 ### Generated environment
 
-```text
-generated/<env_id>/
-  manifest.json
-  visible/
-    ...
-  hidden/
-    ...
-```
+| Path | Purpose |
+| --- | --- |
+| `generated/<env_id>/manifest.json` | Concrete environment manifest |
+| `generated/<env_id>/visible/` | Agent-visible workspace |
+| `generated/<env_id>/hidden/` | Hidden evaluator assets and solution metadata |
 
 ### Episode rollout
 
-```text
-episodes/<episode_id>/
-  manifest.json
-  trajectory.jsonl
-  evaluator_result.json
-  summary.json
-  final_diff.txt
-  final_workspace/
-    ...
+| Path | Purpose |
+| --- | --- |
+| `episodes/<episode_id>/manifest.json` | Manifest snapshot used for the run |
+| `episodes/<episode_id>/trajectory.jsonl` | Step-by-step action/observation log |
+| `episodes/<episode_id>/evaluator_result.json` | Trusted final evaluation |
+| `episodes/<episode_id>/summary.json` | Rollout summary metrics |
+| `episodes/<episode_id>/final_diff.txt` | Unified diff from initial to final workspace |
+| `episodes/<episode_id>/final_workspace/` | Final workspace snapshot |
+
+## Repository Layout
+
+| Path | Responsibility |
+| --- | --- |
+| `src/synthetic_workspace_gym/schemas/` | Typed schemas and serialization helpers |
+| `src/synthetic_workspace_gym/generators/` | Family generators, difficulty mapping, registry |
+| `src/synthetic_workspace_gym/evaluators/` | Trusted evaluators and registry |
+| `src/synthetic_workspace_gym/runtime/` | Environment loader, tool executor, episode runner |
+| `src/synthetic_workspace_gym/agents/` | Baseline agents |
+| `src/synthetic_workspace_gym/analysis/` | Artifact export, snapshotting, diff utilities |
+| `src/synthetic_workspace_gym/cli.py` | CLI entrypoint |
+| `tests/` | Schema, generator, evaluator, runtime, and end-to-end tests |
+
+## CLI
+
+| Command | Description |
+| --- | --- |
+| `swg generate` | Generate one or more environments from a family and difficulty |
+| `swg run` | Run a baseline agent on one environment |
+| `swg evaluate` | Evaluate a workspace against the hidden evaluator |
+| `swg benchmark` | Run a baseline across a directory of generated environments |
+
+### Examples
+
+```bash
+uv run swg generate --family script_repair --count 10 --difficulty 4 --seed 100 --output-dir generated
+uv run swg run --environment generated/script_repair-d4-s100-XXXXXXXX --agent react --output-dir episodes
+uv run swg evaluate --environment generated/script_repair-d4-s100-XXXXXXXX
+uv run swg benchmark --environments generated --agent react --output-dir benchmarks
 ```
 
 ## Baseline Agents
 
-Two baseline agents are included:
+| Agent | Role |
+| --- | --- |
+| `scripted` | Minimal heuristic smoke-test baseline; intentionally weak |
+| `react` | Simple iterative tool-using baseline that reads instructions, inspects files, runs commands, edits, retries, and submits |
 
-1. `scripted`
-   A minimal heuristic smoke-test agent. It solves the tabular family and performs lightweight visible checks for the repair-style families.
-2. `react`
-   A simple iterative tool-using baseline that reads instructions, inspects task files, runs smoke tests, applies family-specific repairs, and submits.
+The baseline layer is intentionally modular so stronger model-backed agents can plug into the same runtime without changing the environment format.
 
-These are deliberately modular placeholders so stronger model-backed agents can be dropped in later behind the same interfaces.
+## Development Notes
 
-## How Evaluation Works
-
-Evaluation is trusted and hidden from the agent workspace.
-
-- Tabular tasks compare the final produced artifact against a hidden expected output.
-- Script-repair tasks execute hidden tests outside the agent’s writable scope.
-- Pipeline tasks execute the repaired project and compare the resulting artifact to a hidden expected output.
-
-During generation, every environment is validated by applying the reference solution metadata to a scratch copy of the workspace and ensuring the evaluator returns success.
-
-## Difficulty and Complexity
-
-External difficulty is exposed as `1..5` or `easy/medium/hard`, while internal complexity is represented with richer latent factors:
-
-- `file_count`
-- `distractor_count`
-- `dependency_depth`
-- `reasoning_hops`
-- `transformation_count`
-- `bug_subtlety`
-- `execution_required`
-- `output_constraint_strength`
-
-These factors are stored in environment metadata so downstream research can analyze success and failure modes beyond a single flat difficulty number.
+| Topic | Details |
+| --- | --- |
+| Python | `>=3.11` |
+| Package entrypoint | `swg = synthetic_workspace_gym.cli:main` |
+| Build backend | `hatchling` |
+| Test framework | `unittest` |
+| Serialization style | dataclass-based typed schemas with explicit `to_dict()` / `from_dict()` |
+| Dependency policy | minimal v1 surface; standard library first |
 
 ## Adding a New Environment Family
 
-1. Add a new `EnvironmentFamily` enum entry.
-2. Implement a new generator in `src/synthetic_workspace_gym/generators/`.
-3. Implement a new evaluator in `src/synthetic_workspace_gym/evaluators/`.
-4. Register both in the generator/evaluator registries.
-5. Emit:
-   - visible workspace files
-   - hidden evaluator assets
-   - manifest metadata
-   - reference solution metadata
-6. Add family-specific tests covering:
-   - generation validity
-   - unsolved workspace failure
-   - reference solution success
-   - episode execution if applicable
+| Step | What to implement |
+| --- | --- |
+| 1 | Add a new `EnvironmentFamily` entry |
+| 2 | Implement a generator in `src/synthetic_workspace_gym/generators/` |
+| 3 | Implement a trusted evaluator in `src/synthetic_workspace_gym/evaluators/` |
+| 4 | Register both in the generator/evaluator registries |
+| 5 | Emit visible files, hidden assets, manifest metadata, and reference solution metadata |
+| 6 | Add tests for structural validity, unsolved failure, reference solution success, and episode execution |
 
-## Notes for Future Versions
+## Current v1 Boundaries
 
-The current abstractions are intended to extend toward:
-
-- integrity-aware compilation
-- reward-hacking variants
-- decoy leakage files
-- editable vs sealed evaluators
-- provenance monitoring
-- multi-stage / lifelong environments
-
-v1 keeps the implementation local, typed, modular, and research-friendly without overbuilding distributed infrastructure.
+| Included | Deferred |
+| --- | --- |
+| local runtime, hidden evaluators, trajectory logging, typed manifests, three families, baseline agents, CLI, tests | integrity-aware compilation, reward-hacking variants, decoy leakage files, editable evaluators, provenance monitoring, multi-stage / lifelong environments |
