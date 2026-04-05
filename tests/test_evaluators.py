@@ -132,21 +132,12 @@ class EvaluatorCorrectnessTests(unittest.TestCase):
             partial_workspace = root / "partial"
             shutil.copytree(bundle.visible_root, partial_workspace)
             output_path = partial_workspace / "config" / "service_config.json"
+            expected = json.loads((bundle.hidden_root / "expected_output.json").read_text(encoding="utf-8"))
+            partial_payload = dict(expected)
+            partial_payload["retry_attempts"] = int(partial_payload["retry_attempts"]) + 1
+            partial_payload["region"] = "invalid-region"
             output_path.write_text(
-                json.dumps(
-                    {
-                        "base_url": "https://svc.internal/v2",
-                        "cohort_limit": 250,
-                        "enable_shadow_mode": True,
-                        "region": "us-east-1",
-                        "retry_attempts": 1,
-                        "service_name": "ledger-sync",
-                        "timeout_seconds": 45,
-                    },
-                    indent=2,
-                    sort_keys=True,
-                )
-                + "\n",
+                json.dumps(partial_payload, indent=2, sort_keys=True) + "\n",
                 encoding="utf-8",
             )
             result = evaluator.evaluate(partial_workspace, bundle.manifest, bundle.hidden_root)

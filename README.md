@@ -98,6 +98,7 @@ External difficulty is exposed as `1..5` or `easy/medium/hard`. Internally, gene
 | `retrieval_workspace` | `service_config_reconciliation`, `migration_plan_bundle`, `incident_report_bundle`, `client_adapter_sync` | local evidence-grounded config repair, migration-plan synthesis, incident report generation, and doc-assisted code alignment |
 
 `retrieval_workspace` is intentionally local-document retrieval, not browser/web retrieval. The agent must inspect files already present in the workspace and use that evidence to update or create a concrete artifact.
+For the retrieval family, seeds now vary both distractor layout and the underlying content fixture for the grounded task, so `--scenario <id> --seed <seed>` produces materially different local evidence bundles instead of only shuffled distractors.
 
 ## Runtime Model
 
@@ -176,7 +177,7 @@ Generation-time validation is built in: every environment is checked by applying
 | `by_scenario_id` | Aggregate by concrete scenario id |
 | `by_family_and_difficulty` | Aggregate by combined family/difficulty buckets |
 | `by_bug_scope`, `by_failure_mode`, `by_repair_surface`, `by_smoke_test_quality` | Structure-aware slices for scenario analysis when metadata is available |
-| `by_document_count`, `by_retrieval_hops`, `by_evidence_distribution`, `by_staleness_pattern`, `by_distractor_count` | Retrieval-aware slices for local evidence complexity |
+| `by_content_variant_id`, `by_document_count`, `by_retrieval_hops`, `by_evidence_distribution`, `by_staleness_pattern`, `by_distractor_count` | Retrieval-aware slices for content and local evidence complexity |
 
 Each bucket reports `count`, `success_rate`, `mean_score`, `median_score`, `perfect_rate`, `mean_step_count`, `mean_duration_seconds`, `failure_label_counts`, and `mean_subscores`.
 

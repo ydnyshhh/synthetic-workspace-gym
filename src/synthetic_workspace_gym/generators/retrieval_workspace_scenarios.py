@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import random
+from copy import deepcopy
 from textwrap import dedent
 
 from synthetic_workspace_gym.schemas import EnvironmentSpec
@@ -37,6 +38,21 @@ def document_roots(files: dict[str, str]) -> list[str]:
     return sorted(roots)
 
 
+def unique_strings(values: list[str]) -> list[str]:
+    seen: set[str] = set()
+    output: list[str] = []
+    for value in values:
+        if value in seen:
+            continue
+        seen.add(value)
+        output.append(value)
+    return output
+
+
+def select_fixture_variant(seed: int, variants: list[dict[str, object]]) -> dict[str, object]:
+    return deepcopy(variants[(seed - 1) % len(variants)])
+
+
 def base_profile(
     *,
     files: dict[str, str],
@@ -46,9 +62,10 @@ def base_profile(
     repair_surface: str,
     failure_mode: str,
     smoke_test_quality: str,
+    content_variant_id: str | None = None,
 ) -> dict[str, object]:
     settings = difficulty_settings(difficulty)
-    return {
+    profile = {
         "task_type": task_type,
         "document_count": count_documents(files),
         "retrieval_hops": settings["retrieval_hops"],
@@ -61,6 +78,9 @@ def base_profile(
         "failure_mode": failure_mode,
         "smoke_test_quality": smoke_test_quality,
     }
+    if content_variant_id is not None:
+        profile["content_variant_id"] = content_variant_id
+    return profile
 
 
 def add_distractor_documents(files: dict[str, str], rng: random.Random, count: int) -> None:
@@ -101,101 +121,481 @@ def add_distractor_documents(files: dict[str, str], rng: random.Random, count: i
             return
 
 
+def service_config_variants() -> list[dict[str, object]]:
+    return [
+        {
+            "variant_id": "ledger_sync_runtime_v2",
+            "service_name": "ledger-sync",
+            "base_url": "https://svc.internal/v2",
+            "timeout_seconds": 45,
+            "retry_attempts": 3,
+            "region": "ap-south-1",
+            "enable_shadow_mode": True,
+            "cohort_limit": 250,
+            "legacy": {
+                "base_url": "https://svc.internal/v1",
+                "timeout_seconds": 30,
+                "retry_attempts": 1,
+                "region": "us-east-1",
+                "enable_shadow_mode": False,
+                "cohort_limit": 50,
+            },
+        },
+        {
+            "variant_id": "quota_router_runtime_v3",
+            "service_name": "quota-router",
+            "base_url": "https://quota.internal/v3",
+            "timeout_seconds": 60,
+            "retry_attempts": 4,
+            "region": "eu-west-1",
+            "enable_shadow_mode": False,
+            "cohort_limit": 120,
+            "legacy": {
+                "base_url": "https://quota.internal/v2",
+                "timeout_seconds": 35,
+                "retry_attempts": 2,
+                "region": "us-east-2",
+                "enable_shadow_mode": True,
+                "cohort_limit": 40,
+            },
+        },
+        {
+            "variant_id": "report_cache_runtime_v4",
+            "service_name": "report-cache",
+            "base_url": "https://reports.internal/v4",
+            "timeout_seconds": 50,
+            "retry_attempts": 2,
+            "region": "us-west-2",
+            "enable_shadow_mode": True,
+            "cohort_limit": 500,
+            "legacy": {
+                "base_url": "https://reports.internal/v3",
+                "timeout_seconds": 40,
+                "retry_attempts": 1,
+                "region": "us-central-1",
+                "enable_shadow_mode": False,
+                "cohort_limit": 150,
+            },
+        },
+    ]
+
+
+def migration_plan_variants() -> list[dict[str, object]]:
+    return [
+        {
+            "variant_id": "customer_subscription_v3",
+            "schema_version": "v3",
+            "rename_fields": [
+                {"from": "customer_id", "to": "account_id"},
+                {"from": "plan_code", "to": "subscription_tier"},
+            ],
+            "drop_fields": ["legacy_score"],
+            "backfill_rules": [
+                {"source": "profiles.country_code", "target": "country"},
+                {"source": "events.last_active_at", "target": "activity.last_seen_at"},
+            ],
+            "validation_checks": [
+                "Row counts remain unchanged after migration.",
+                "No null account_id values remain after cutover.",
+                "Country values match profiles.country_code for migrated rows.",
+            ],
+            "legacy_rename_fields": [
+                {"from": "customer_id", "to": "member_id"},
+                {"from": "plan_code", "to": "plan_code"},
+            ],
+        },
+        {
+            "variant_id": "workspace_license_v4",
+            "schema_version": "v4",
+            "rename_fields": [
+                {"from": "org_id", "to": "workspace_id"},
+                {"from": "seat_plan", "to": "license_tier"},
+            ],
+            "drop_fields": ["beta_flag"],
+            "backfill_rules": [
+                {"source": "accounts.region_code", "target": "region"},
+                {"source": "events.last_seen_at", "target": "activity.last_seen_at"},
+            ],
+            "validation_checks": [
+                "Row counts remain unchanged after migration.",
+                "No null workspace_id values remain after cutover.",
+                "Region values match accounts.region_code for migrated rows.",
+            ],
+            "legacy_rename_fields": [
+                {"from": "org_id", "to": "team_id"},
+                {"from": "seat_plan", "to": "seat_plan"},
+            ],
+        },
+        {
+            "variant_id": "contract_billing_v5",
+            "schema_version": "v5",
+            "rename_fields": [
+                {"from": "subscription_id", "to": "contract_id"},
+                {"from": "plan_name", "to": "plan_slug"},
+            ],
+            "drop_fields": ["legacy_status"],
+            "backfill_rules": [
+                {"source": "profiles.locale", "target": "locale"},
+                {"source": "invoices.last_paid_at", "target": "billing.last_paid_at"},
+            ],
+            "validation_checks": [
+                "Row counts remain unchanged after migration.",
+                "No null contract_id values remain after cutover.",
+                "Locale values match profiles.locale for migrated rows.",
+            ],
+            "legacy_rename_fields": [
+                {"from": "subscription_id", "to": "agreement_id"},
+                {"from": "plan_name", "to": "plan_name"},
+            ],
+        },
+    ]
+
+
+def incident_variants() -> list[dict[str, object]]:
+    return [
+        {
+            "variant_id": "incident_workspace_sync_quota_guard",
+            "incident_id": "INC-204",
+            "service": "workspace-sync",
+            "impact": "delayed_exports",
+            "priority": "P2",
+            "severity": "sev2",
+            "cause": "quota_guard_trip",
+            "owner": "ops-reliability",
+            "legacy_owner": "platform",
+            "start_utc": "2026-03-21T07:10:00Z",
+            "resolution_utc": "2026-03-21T08:05:00Z",
+            "actions": ["increase export worker quota", "replay delayed jobs"],
+        },
+        {
+            "variant_id": "incident_billing_sync_replica_lag",
+            "incident_id": "INC-318",
+            "service": "billing-sync",
+            "impact": "delayed_invoices",
+            "priority": "P1",
+            "severity": "sev1",
+            "cause": "db_replica_lag",
+            "owner": "db-operations",
+            "legacy_owner": "billing-platform",
+            "start_utc": "2026-04-02T11:20:00Z",
+            "resolution_utc": "2026-04-02T12:04:00Z",
+            "actions": ["fail over read replica", "replay invoice sync"],
+        },
+        {
+            "variant_id": "incident_workspace_ingest_rate_limit",
+            "incident_id": "INC-512",
+            "service": "workspace-ingest",
+            "impact": "slowed_imports",
+            "priority": "P3",
+            "severity": "sev3",
+            "cause": "rate_limit_regression",
+            "owner": "pipeline-ops",
+            "legacy_owner": "platform",
+            "start_utc": "2026-04-11T05:05:00Z",
+            "resolution_utc": "2026-04-11T05:49:00Z",
+            "actions": ["raise ingest rate limit", "replay delayed imports"],
+        },
+    ]
+
+
+def legacy_severity_for(current: str) -> str:
+    mapping = {"sev1": "sev2", "sev2": "sev3", "sev3": "sev2"}
+    return mapping[current]
+
+
+def client_adapter_variants() -> list[dict[str, object]]:
+    return [
+        {
+            "variant_id": "adapter_sample_req_204",
+            "sample_response": {
+                "next_cursor": "cursor-2",
+                "records": [
+                    {"quantity": 4, "sku": "A-1", "warehouse": "east"},
+                    {"quantity": 2, "sku": "B-3"},
+                    {"quantity": 5, "sku": "C-7", "warehouse": "west"},
+                ],
+                "request_id": "req-204",
+            },
+            "sample_expected": {
+                "next_cursor": "cursor-2",
+                "record_count": 3,
+                "request_id": "req-204",
+                "total_quantity": 11,
+                "warehouses": ["east", "unknown", "west"],
+            },
+            "alternate_payload": {
+                "request_id": "req-9",
+                "next_cursor": None,
+                "records": [{"sku": "X", "quantity": 1}],
+            },
+            "alternate_expected": {
+                "next_cursor": None,
+                "record_count": 1,
+                "request_id": "req-9",
+                "total_quantity": 1,
+                "warehouses": ["unknown"],
+            },
+        },
+        {
+            "variant_id": "adapter_sample_req_318",
+            "sample_response": {
+                "next_cursor": "cursor-9",
+                "records": [
+                    {"quantity": 3, "sku": "R-2", "warehouse": "north"},
+                    {"quantity": 6, "sku": "S-8", "warehouse": "north"},
+                    {"quantity": 1, "sku": "T-4"},
+                ],
+                "request_id": "req-318",
+            },
+            "sample_expected": {
+                "next_cursor": "cursor-9",
+                "record_count": 3,
+                "request_id": "req-318",
+                "total_quantity": 10,
+                "warehouses": ["north", "unknown"],
+            },
+            "alternate_payload": {
+                "request_id": "req-22",
+                "next_cursor": "cursor-10",
+                "records": [{"sku": "Y", "quantity": 2, "warehouse": "south"}],
+            },
+            "alternate_expected": {
+                "next_cursor": "cursor-10",
+                "record_count": 1,
+                "request_id": "req-22",
+                "total_quantity": 2,
+                "warehouses": ["south"],
+            },
+        },
+        {
+            "variant_id": "adapter_sample_req_511",
+            "sample_response": {
+                "next_cursor": None,
+                "records": [
+                    {"quantity": 7, "sku": "L-1", "warehouse": "central"},
+                    {"quantity": 2, "sku": "L-9", "warehouse": "east"},
+                ],
+                "request_id": "req-511",
+            },
+            "sample_expected": {
+                "next_cursor": None,
+                "record_count": 2,
+                "request_id": "req-511",
+                "total_quantity": 9,
+                "warehouses": ["central", "east"],
+            },
+            "alternate_payload": {
+                "request_id": "req-44",
+                "next_cursor": None,
+                "records": [{"sku": "Z", "quantity": 4}],
+            },
+            "alternate_expected": {
+                "next_cursor": None,
+                "record_count": 1,
+                "request_id": "req-44",
+                "total_quantity": 4,
+                "warehouses": ["unknown"],
+            },
+        },
+    ]
+
+
+def build_migration_expected_output(variant: dict[str, object]) -> dict[str, object]:
+    rename_fields = list(variant["rename_fields"])
+    backfill_rules = list(variant["backfill_rules"])
+    created_fields = unique_strings(
+        [str(item["to"]) for item in rename_fields] + [str(item["target"]) for item in backfill_rules]
+    )
+    rename_targets = ", ".join(str(item["to"]) for item in rename_fields)
+    drop_fields = ", ".join(str(item) for item in variant["drop_fields"])
+    if len(backfill_rules) == 1:
+        backfill_sentence = f"Backfill {backfill_rules[0]['target']} from {backfill_rules[0]['source']}."
+    else:
+        final_rule = backfill_rules[-1]
+        leading_rules = ", ".join(
+            f"{item['target']} from {item['source']}"
+            for item in backfill_rules[:-1]
+        )
+        backfill_sentence = (
+            f"Backfill {leading_rules}, and {final_rule['target']} from {final_rule['source']}."
+        )
+    ordered_steps = [
+        f"Create {variant['schema_version']} columns {', '.join(created_fields)}.",
+        backfill_sentence,
+        f"Update downstream readers to consume {rename_targets} before cutover.",
+        f"Drop {drop_fields} after backfill validation passes.",
+    ]
+    return {
+        "backfill_rules": backfill_rules,
+        "drop_fields": list(variant["drop_fields"]),
+        "ordered_steps": ordered_steps,
+        "rename_fields": rename_fields,
+        "schema_version": str(variant["schema_version"]),
+        "validation_checks": list(variant["validation_checks"]),
+    }
+
+
+def build_client_adapter_hidden_runner(variant: dict[str, object]) -> str:
+    lines = [
+        "from __future__ import annotations",
+        "",
+        "import json",
+        "import sys",
+        "import unittest",
+        "from pathlib import Path",
+        "",
+        "",
+        "def build_suite(workspace: Path) -> unittest.TestSuite:",
+        '    sys.path.insert(0, str(workspace / "src"))',
+        "    from client_adapter import build_summary",
+        "",
+        '    sample = json.loads((workspace / "samples" / "response.json").read_text(encoding="utf-8"))',
+        f"    expected_sample = {variant['sample_expected']!r}",
+        f"    alternate_payload = {variant['alternate_payload']!r}",
+        f"    alternate_expected = {variant['alternate_expected']!r}",
+        "",
+        "    class HiddenTests(unittest.TestCase):",
+        "        def test_sample_payload(self) -> None:",
+        "            self.assertEqual(build_summary(sample), expected_sample)",
+        "",
+        "        def test_missing_warehouse_defaults_to_unknown(self) -> None:",
+        "            self.assertEqual(build_summary(alternate_payload), alternate_expected)",
+        "",
+        "    return unittest.defaultTestLoader.loadTestsFromTestCase(HiddenTests)",
+        "",
+        "",
+        "def main() -> None:",
+        "    workspace = Path(sys.argv[1]).resolve()",
+        "    suite = build_suite(workspace)",
+        "    result = unittest.TextTestRunner(verbosity=2).run(suite)",
+        "    payload = {",
+        '        "success": result.wasSuccessful(),',
+        '        "score": 1.0 if result.wasSuccessful() else 0.0,',
+        '        "subscores": {',
+        '            "tests_passed": result.testsRun - len(result.failures) - len(result.errors),',
+        '            "tests_total": result.testsRun,',
+        "        },",
+        '        "failure_labels": ["hidden_tests_failed"] if not result.wasSuccessful() else [],',
+        '        "diagnostics": {',
+        '            "tests_run": result.testsRun,',
+        '            "failures": [case[0].id() for case in result.failures],',
+        '            "errors": [case[0].id() for case in result.errors],',
+        "        },",
+        "    }",
+        "    print(json.dumps(payload, sort_keys=True))",
+        "    sys.exit(0 if result.wasSuccessful() else 1)",
+        "",
+        "",
+        'if __name__ == "__main__":',
+        "    main()",
+    ]
+    return "\n".join(lines) + "\n"
+
+
 def build_service_config_reconciliation_scenario(rng: random.Random, spec: EnvironmentSpec) -> dict[str, object]:
     difficulty = spec.difficulty
+    variant = select_fixture_variant(spec.seed, service_config_variants())
     expected_config = {
-        "base_url": "https://svc.internal/v2",
-        "cohort_limit": 250,
-        "enable_shadow_mode": True,
-        "region": "ap-south-1",
-        "retry_attempts": 3,
-        "service_name": "ledger-sync",
-        "timeout_seconds": 45,
+        "base_url": str(variant["base_url"]),
+        "cohort_limit": int(variant["cohort_limit"]),
+        "enable_shadow_mode": bool(variant["enable_shadow_mode"]),
+        "region": str(variant["region"]),
+        "retry_attempts": int(variant["retry_attempts"]),
+        "service_name": str(variant["service_name"]),
+        "timeout_seconds": int(variant["timeout_seconds"]),
     }
+    legacy = dict(variant["legacy"])
     visible_files: dict[str, str] = {
         "config/service_config.json": render_json(
             {
-                "base_url": "https://svc.internal/v1",
-                "cohort_limit": 50,
-                "enable_shadow_mode": False,
-                "region": "us-east-1",
-                "retry_attempts": 1,
-                "service_name": "ledger-sync",
-                "timeout_seconds": 30,
+                "base_url": legacy["base_url"],
+                "cohort_limit": legacy["cohort_limit"],
+                "enable_shadow_mode": legacy["enable_shadow_mode"],
+                "region": legacy["region"],
+                "retry_attempts": legacy["retry_attempts"],
+                "service_name": expected_config["service_name"],
+                "timeout_seconds": legacy["timeout_seconds"],
             }
         )
     }
+    shadow_flag = json.dumps(expected_config["enable_shadow_mode"])
+    legacy_shadow_flag = json.dumps(legacy["enable_shadow_mode"])
+    rollout_sentence = (
+        "Shadow mode is enabled for the beta cohort."
+        if expected_config["enable_shadow_mode"]
+        else "Shadow mode remains disabled for the current cohort."
+    )
     if difficulty == 1:
         visible_files["specs/runtime_contract.md"] = dedent(
-            """
+            f"""
             # Runtime Contract
 
             The `config/service_config.json` file must contain:
 
-            - `service_name`: `ledger-sync`
-            - `base_url`: `https://svc.internal/v2`
-            - `timeout_seconds`: `45`
-            - `retry_attempts`: `3`
-            - `region`: `ap-south-1`
-            - `enable_shadow_mode`: `true`
-            - `cohort_limit`: `250`
+            - `service_name`: `{expected_config["service_name"]}`
+            - `base_url`: `{expected_config["base_url"]}`
+            - `timeout_seconds`: `{expected_config["timeout_seconds"]}`
+            - `retry_attempts`: `{expected_config["retry_attempts"]}`
+            - `region`: `{expected_config["region"]}`
+            - `enable_shadow_mode`: `{shadow_flag}`
+            - `cohort_limit`: `{expected_config["cohort_limit"]}`
             """
         ).strip() + "\n"
     else:
         visible_files["specs/runtime_contract.md"] = dedent(
-            """
+            f"""
             # Runtime Contract
 
             The service contract now uses:
 
-            - `service_name`: `ledger-sync`
-            - `base_url`: `https://svc.internal/v2`
-            - `timeout_seconds`: `45`
-            - `retry_attempts`: `3`
+            - `service_name`: `{expected_config["service_name"]}`
+            - `base_url`: `{expected_config["base_url"]}`
+            - `timeout_seconds`: `{expected_config["timeout_seconds"]}`
+            - `retry_attempts`: `{expected_config["retry_attempts"]}`
             """
         ).strip() + "\n"
         visible_files["notes/rollout_plan.md"] = dedent(
-            """
+            f"""
             # Rollout Plan
 
-            Shadow mode is enabled for the beta cohort.
+            {rollout_sentence}
 
-            - `enable_shadow_mode`: `true`
-            - `cohort_limit`: `250`
+            - `enable_shadow_mode`: `{shadow_flag}`
+            - `cohort_limit`: `{expected_config["cohort_limit"]}`
             """
         ).strip() + "\n"
         if difficulty >= 3:
             visible_files["notes/region_override.md"] = dedent(
-                """
+                f"""
                 # Region Override
 
-                The current deployment stays pinned to `ap-south-1` until the next failover rehearsal.
+                The current deployment stays pinned to `{expected_config["region"]}` until the next failover rehearsal.
                 """
             ).strip() + "\n"
     if difficulty == 4:
         visible_files["notes/legacy_service_config.md"] = dedent(
-            """
+            f"""
             # Legacy Service Config
 
             Old rollout draft:
 
-            - `base_url`: `https://svc.internal/v1`
-            - `timeout_seconds`: `30`
-            - `region`: `us-east-1`
+            - `base_url`: `{legacy["base_url"]}`
+            - `timeout_seconds`: `{legacy["timeout_seconds"]}`
+            - `region`: `{legacy["region"]}`
             """
         ).strip() + "\n"
     if difficulty == 5:
         visible_files["changelog/2026-01-runtime-rollout.md"] = dedent(
-            """
+            f"""
             # 2026-01 Runtime Rollout
 
             Superseded by the current runtime contract and rollout plan.
 
             Historical values:
 
-            - `base_url`: `https://svc.internal/v1`
-            - `enable_shadow_mode`: `false`
-            - `cohort_limit`: `50`
+            - `base_url`: `{legacy["base_url"]}`
+            - `enable_shadow_mode`: `{legacy_shadow_flag}`
+            - `cohort_limit`: `{legacy["cohort_limit"]}`
             """
         ).strip() + "\n"
     add_distractor_documents(visible_files, rng, int(difficulty_settings(difficulty)["distractor_count"]))
@@ -236,6 +636,7 @@ def build_service_config_reconciliation_scenario(rng: random.Random, spec: Envir
             repair_surface="config_alignment",
             failure_mode="grounding_and_semantic",
             smoke_test_quality="none",
+            content_variant_id=str(variant["variant_id"]),
         ),
         "document_roots": document_roots(visible_files),
     }
@@ -243,121 +644,126 @@ def build_service_config_reconciliation_scenario(rng: random.Random, spec: Envir
 
 def build_migration_plan_bundle_scenario(rng: random.Random, spec: EnvironmentSpec) -> dict[str, object]:
     difficulty = spec.difficulty
-    expected_output = {
-        "backfill_rules": [
-            {"source": "profiles.country_code", "target": "country"},
-            {"source": "events.last_active_at", "target": "activity.last_seen_at"},
-        ],
-        "drop_fields": ["legacy_score"],
-        "ordered_steps": [
-            "Create v3 columns account_id, subscription_tier, country, and activity.last_seen_at.",
-            "Backfill country from profiles.country_code and activity.last_seen_at from events.last_active_at.",
-            "Update downstream readers to consume account_id and subscription_tier before cutover.",
-            "Drop legacy_score after backfill validation passes.",
-        ],
-        "rename_fields": [
-            {"from": "customer_id", "to": "account_id"},
-            {"from": "plan_code", "to": "subscription_tier"},
-        ],
-        "schema_version": "v3",
-        "validation_checks": [
-            "Row counts remain unchanged after migration.",
-            "No null account_id values remain after cutover.",
-            "Country values match profiles.country_code for migrated rows.",
-        ],
-    }
+    variant = select_fixture_variant(spec.seed, migration_plan_variants())
+    expected_output = build_migration_expected_output(variant)
+    rename_fields = list(variant["rename_fields"])
+    backfill_rules = list(variant["backfill_rules"])
     visible_files: dict[str, str] = {
         "artifacts/migration_plan.json": render_json(
             {
                 "backfill_rules": [],
-                "drop_fields": ["legacy_score"],
+                "drop_fields": list(variant["drop_fields"]),
                 "ordered_steps": ["Create new columns."],
-                "rename_fields": [{"from": "customer_id", "to": "customer_id"}],
-                "schema_version": "v2",
+                "rename_fields": [{"from": str(rename_fields[0]["from"]), "to": str(rename_fields[0]["from"])}],
+                "schema_version": f"{variant['schema_version']}-draft",
                 "validation_checks": [],
             }
         )
     }
     if difficulty == 1:
+        rename_lines = "\n".join(
+            f"- rename `{item['from']} -> {item['to']}`"
+            for item in rename_fields
+        )
+        drop_lines = "\n".join(f"- drop `{item}`" for item in variant["drop_fields"])
+        backfill_lines = "\n".join(
+            f"- backfill `{item['target']}` from `{item['source']}`"
+            for item in backfill_rules
+        )
+        validation_lines = "\n".join(f"- {item}" for item in variant["validation_checks"])
         visible_files["specs/schema_v3.md"] = dedent(
-            """
-            # Schema v3
+            f"""
+            # Schema {variant["schema_version"]}
 
             Produce a migration plan with:
 
-            - schema version `v3`
-            - rename `customer_id -> account_id`
-            - rename `plan_code -> subscription_tier`
-            - drop `legacy_score`
-            - backfill `country` from `profiles.country_code`
-            - backfill `activity.last_seen_at` from `events.last_active_at`
-            - validation checks: row counts unchanged, no null account_id values, country values preserved
+            - schema version `{variant["schema_version"]}`
+            {rename_lines}
+            {drop_lines}
+            {backfill_lines}
+            {validation_lines}
             """
         ).strip() + "\n"
     else:
+        rename_lines = "\n".join(
+            f"- rename `{item['from']} -> {item['to']}`"
+            for item in rename_fields
+        )
+        drop_lines = "\n".join(f"- drop `{item}`" for item in variant["drop_fields"])
         visible_files["specs/schema_v3.md"] = dedent(
-            """
-            # Schema v3
+            f"""
+            # Schema {variant["schema_version"]}
 
             Required schema changes:
 
-            - rename `customer_id -> account_id`
-            - rename `plan_code -> subscription_tier`
-            - drop `legacy_score`
-            - schema version `v3`
+            {rename_lines}
+            {drop_lines}
+            - schema version `{variant["schema_version"]}`
             """
         ).strip() + "\n"
         visible_files["notes/backfill_rules.md"] = dedent(
-            """
-            # Backfill Rules
-
-            - `profiles.country_code -> country`
-            - `events.last_active_at -> activity.last_seen_at`
-            """
+            "\n".join(
+                [
+                    "# Backfill Rules",
+                    "",
+                    *[
+                        f"- `{item['source']} -> {item['target']}`"
+                        for item in backfill_rules
+                    ],
+                ]
+            )
         ).strip() + "\n"
         if difficulty >= 3:
+            cutover_lines = "\n".join(
+                f"{index}. {step}"
+                for index, step in enumerate(expected_output["ordered_steps"], start=1)
+            )
+            validation_lines = "\n".join(f"- {item}" for item in variant["validation_checks"])
             visible_files["docs/client_cutover.md"] = dedent(
-                """
+                f"""
                 # Client Cutover
 
                 Recommended cutover sequence:
 
-                1. Create v3 columns account_id, subscription_tier, country, and activity.last_seen_at.
-                2. Backfill country and activity.last_seen_at.
-                3. Update downstream readers before final cutover.
-                4. Drop legacy_score after validation passes.
+                {cutover_lines}
 
                 Validation checks:
 
-                - row counts remain unchanged
-                - no null account_id values remain
-                - country values match profiles.country_code
+                {validation_lines}
                 """
             ).strip() + "\n"
     if difficulty == 4:
         visible_files["notes/v2_cutover.md"] = dedent(
-            """
-            # v2 Cutover Draft
-
-            Old plan draft:
-
-            - keep `customer_id`
-            - keep `plan_code`
-            - ignore `country`
-            """
+            "\n".join(
+                [
+                    "# v2 Cutover Draft",
+                    "",
+                    "Old plan draft:",
+                    "",
+                    *[
+                        f"- rename `{item['from']} -> {item['to']}`"
+                        for item in variant["legacy_rename_fields"]
+                    ],
+                    f"- keep `{backfill_rules[0]['target']}` empty",
+                ]
+            )
         ).strip() + "\n"
     if difficulty == 5:
         visible_files["changelog/2026-02-migration.md"] = dedent(
-            """
-            # 2026-02 Migration
-
-            Superseded by the schema v3 documents.
-
-            Historical draft:
-
-            - rename `customer_id -> member_id`
-            - keep `plan_code`
-            """
+            "\n".join(
+                [
+                    f"# 2026-02 Migration for {variant['schema_version']}",
+                    "",
+                    f"Superseded by the schema {variant['schema_version']} documents.",
+                    "",
+                    "Historical draft:",
+                    "",
+                    *[
+                        f"- rename `{item['from']} -> {item['to']}`"
+                        for item in variant["legacy_rename_fields"]
+                    ],
+                ]
+            )
         ).strip() + "\n"
     add_distractor_documents(visible_files, rng, int(difficulty_settings(difficulty)["distractor_count"]))
     return {
@@ -396,6 +802,7 @@ def build_migration_plan_bundle_scenario(rng: random.Random, spec: EnvironmentSp
             repair_surface="migration_spec_synthesis",
             failure_mode="grounding_and_semantic",
             smoke_test_quality="none",
+            content_variant_id=str(variant["variant_id"]),
         ),
         "document_roots": document_roots(visible_files),
     }
@@ -403,40 +810,47 @@ def build_migration_plan_bundle_scenario(rng: random.Random, spec: EnvironmentSp
 
 def build_incident_report_bundle_scenario(rng: random.Random, spec: EnvironmentSpec) -> dict[str, object]:
     difficulty = spec.difficulty
+    variant = select_fixture_variant(spec.seed, incident_variants())
     expected_output = {
-        "actions": ["increase export worker quota", "replay delayed jobs"],
-        "customer_impact": "delayed_exports",
-        "incident_id": "INC-204",
-        "owner": "ops-reliability",
-        "primary_cause": "quota_guard_trip",
-        "resolution_utc": "2026-03-21T08:05:00Z",
-        "service": "workspace-sync",
-        "severity": "sev2",
-        "start_utc": "2026-03-21T07:10:00Z",
+        "actions": list(variant["actions"]),
+        "customer_impact": str(variant["impact"]),
+        "incident_id": str(variant["incident_id"]),
+        "owner": str(variant["owner"]),
+        "primary_cause": str(variant["cause"]),
+        "resolution_utc": str(variant["resolution_utc"]),
+        "service": str(variant["service"]),
+        "severity": str(variant["severity"]),
+        "start_utc": str(variant["start_utc"]),
     }
+    log_lines = [
+        f"{variant['start_utc']} incident={variant['incident_id']} service={variant['service']} event=start impact={variant['impact']} priority={variant['priority']}",
+        f"{variant['start_utc']} incident={variant['incident_id']} event=diagnosis marker={variant['cause']}",
+    ]
+    for offset, action in enumerate(variant["actions"], start=1):
+        minute = 12 + (offset * 14)
+        timestamp_prefix = str(variant["start_utc"])[:14]
+        action_timestamp = f"{timestamp_prefix}{minute:02d}:00Z"
+        log_lines.append(
+            f"{action_timestamp} incident={variant['incident_id']} event=action detail={action}"
+        )
+    log_lines.append(
+        f"{variant['resolution_utc']} incident={variant['incident_id']} event=resolved owner_alias={variant['owner']}"
+    )
     visible_files: dict[str, str] = {
         "artifacts/oncall_report.json": render_json(
             {
                 "actions": [],
                 "customer_impact": "unknown",
-                "incident_id": "INC-204",
-                "owner": "platform",
+                "incident_id": variant["incident_id"],
+                "owner": variant["legacy_owner"],
                 "primary_cause": "unknown",
                 "resolution_utc": "",
-                "service": "workspace-sync",
-                "severity": "sev3",
+                "service": variant["service"],
+                "severity": legacy_severity_for(str(variant["severity"])),
                 "start_utc": "",
             }
         ),
-        "logs/incident_204.log": dedent(
-            """
-            2026-03-21T07:10:00Z incident=INC-204 service=workspace-sync event=start impact=delayed_exports priority=P2
-            2026-03-21T07:16:00Z incident=INC-204 event=diagnosis marker=quota_guard_trip
-            2026-03-21T07:52:00Z incident=INC-204 event=action detail=increase export worker quota
-            2026-03-21T08:01:00Z incident=INC-204 event=action detail=replay delayed jobs
-            2026-03-21T08:05:00Z incident=INC-204 event=resolved owner_alias=ops-reliability
-            """
-        ).strip() + "\n",
+        f"logs/{str(variant['incident_id']).lower()}.log": "\n".join(log_lines) + "\n",
         "specs/report_contract.md": dedent(
             """
             # Report Contract
@@ -476,23 +890,23 @@ def build_incident_report_bundle_scenario(rng: random.Random, spec: EnvironmentS
         ).strip() + "\n"
     if difficulty == 4:
         visible_files["notes/postmortem_draft.md"] = dedent(
-            """
+            f"""
             # Postmortem Draft
 
             Draft notes from another incident:
 
-            - severity: sev3
-            - owner: platform
+            - severity: {legacy_severity_for(str(variant["severity"]))}
+            - owner: {variant["legacy_owner"]}
             """
         ).strip() + "\n"
     if difficulty == 5:
         visible_files["changelog/2026-02-reporting.md"] = dedent(
-            """
+            f"""
             # 2026-02 Reporting
 
             Superseded severity mapping:
 
-            - `P2 -> sev3`
+            - `{variant["priority"]} -> {legacy_severity_for(str(variant["severity"]))}`
             """
         ).strip() + "\n"
     add_distractor_documents(visible_files, rng, int(difficulty_settings(difficulty)["distractor_count"]))
@@ -504,6 +918,7 @@ def build_incident_report_bundle_scenario(rng: random.Random, spec: EnvironmentS
         repair_surface="incident_report_grounding",
         failure_mode="grounding_and_semantic",
         smoke_test_quality="none",
+        content_variant_id=str(variant["variant_id"]),
     )
     if difficulty == 1:
         structure["evidence_distribution"] = "primary_plus_supporting"
@@ -543,15 +958,7 @@ def build_incident_report_bundle_scenario(rng: random.Random, spec: EnvironmentS
 
 def build_client_adapter_sync_scenario(rng: random.Random, spec: EnvironmentSpec) -> dict[str, object]:
     difficulty = spec.difficulty
-    sample_response = {
-        "next_cursor": "cursor-2",
-        "records": [
-            {"quantity": 4, "sku": "A-1", "warehouse": "east"},
-            {"quantity": 2, "sku": "B-3"},
-            {"quantity": 5, "sku": "C-7", "warehouse": "west"},
-        ],
-        "request_id": "req-204",
-    }
+    variant = select_fixture_variant(spec.seed, client_adapter_variants())
     correct_adapter = dedent(
         """
         from __future__ import annotations
@@ -596,7 +1003,7 @@ def build_client_adapter_sync_scenario(rng: random.Random, spec: EnvironmentSpec
     ).strip() + "\n"
     visible_files: dict[str, str] = {
         "src/client_adapter.py": buggy_adapter,
-        "samples/response.json": render_json(sample_response),
+        "samples/response.json": render_json(variant["sample_response"]),
         "run_example.py": dedent(
             """
             from __future__ import annotations
@@ -685,81 +1092,7 @@ def build_client_adapter_sync_scenario(rng: random.Random, spec: EnvironmentSpec
             """
         ).strip() + "\n"
     add_distractor_documents(visible_files, rng, int(difficulty_settings(difficulty)["distractor_count"]))
-    hidden_runner = dedent(
-        """
-        from __future__ import annotations
-
-        import json
-        import sys
-        import unittest
-        from pathlib import Path
-
-
-        def build_suite(workspace: Path) -> unittest.TestSuite:
-            sys.path.insert(0, str(workspace / "src"))
-            from client_adapter import build_summary
-
-            sample = json.loads((workspace / "samples" / "response.json").read_text(encoding="utf-8"))
-
-            class HiddenTests(unittest.TestCase):
-                def test_sample_payload(self) -> None:
-                    self.assertEqual(
-                        build_summary(sample),
-                        {
-                            "next_cursor": "cursor-2",
-                            "record_count": 3,
-                            "request_id": "req-204",
-                            "total_quantity": 11,
-                            "warehouses": ["east", "unknown", "west"],
-                        },
-                    )
-
-                def test_missing_warehouse_defaults_to_unknown(self) -> None:
-                    payload = {
-                        "request_id": "req-9",
-                        "next_cursor": None,
-                        "records": [{"sku": "X", "quantity": 1}],
-                    }
-                    self.assertEqual(
-                        build_summary(payload),
-                        {
-                            "next_cursor": None,
-                            "record_count": 1,
-                            "request_id": "req-9",
-                            "total_quantity": 1,
-                            "warehouses": ["unknown"],
-                        },
-                    )
-
-            return unittest.defaultTestLoader.loadTestsFromTestCase(HiddenTests)
-
-
-        def main() -> None:
-            workspace = Path(sys.argv[1]).resolve()
-            suite = build_suite(workspace)
-            result = unittest.TextTestRunner(verbosity=2).run(suite)
-            payload = {
-                "success": result.wasSuccessful(),
-                "score": 1.0 if result.wasSuccessful() else 0.0,
-                "subscores": {
-                    "tests_passed": result.testsRun - len(result.failures) - len(result.errors),
-                    "tests_total": result.testsRun,
-                },
-                "failure_labels": ["hidden_tests_failed"] if not result.wasSuccessful() else [],
-                "diagnostics": {
-                    "tests_run": result.testsRun,
-                    "failures": [case[0].id() for case in result.failures],
-                    "errors": [case[0].id() for case in result.errors],
-                },
-            }
-            print(json.dumps(payload, sort_keys=True))
-            sys.exit(0 if result.wasSuccessful() else 1)
-
-
-        if __name__ == "__main__":
-            main()
-        """
-    ).strip() + "\n"
+    hidden_runner = build_client_adapter_hidden_runner(variant)
     return {
         "scenario_id": "client_adapter_sync",
         "title": "Client Adapter Sync",
@@ -798,6 +1131,7 @@ def build_client_adapter_sync_scenario(rng: random.Random, spec: EnvironmentSpec
             repair_surface="doc_assisted_code_repair",
             failure_mode="interface_and_semantic",
             smoke_test_quality="informative",
+            content_variant_id=str(variant["variant_id"]),
         ),
         "document_roots": document_roots(visible_files),
     }

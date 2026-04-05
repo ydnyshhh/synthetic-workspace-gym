@@ -41,11 +41,13 @@ class BenchmarkAnalysisTests(unittest.TestCase):
         self.assertIn("by_difficulty", report)
         self.assertIn("by_scenario_id", report)
         self.assertIn("by_family_and_difficulty", report)
+        self.assertIn("by_content_variant_id", report)
         self.assertIn("by_document_count", report)
         self.assertIn("by_retrieval_hops", report)
         self.assertIn("by_evidence_distribution", report)
         self.assertIn("by_staleness_pattern", report)
         self.assertTrue(report["by_document_count"])
+        self.assertTrue(report["by_content_variant_id"])
         self.assertIn("4", report["by_retrieval_hops"])
         self.assertIn("stale_note", report["by_staleness_pattern"])
 

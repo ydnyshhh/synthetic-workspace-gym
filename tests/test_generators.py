@@ -92,6 +92,7 @@ class GeneratorValidityTests(unittest.TestCase):
             profile = dict(bundle.manifest.metadata["scenario_profile"])
             for key in (
                 "task_type",
+                "content_variant_id",
                 "document_count",
                 "retrieval_hops",
                 "evidence_distribution",
@@ -135,6 +136,33 @@ class GeneratorValidityTests(unittest.TestCase):
             self.assertLess(int(low_profile["distractor_count"]), int(high_profile["distractor_count"]))
             self.assertEqual(low_profile["staleness_pattern"], "none")
             self.assertEqual(high_profile["staleness_pattern"], "superseded_changelog")
+
+    def test_retrieval_workspace_seed_changes_core_fixture_outputs(self) -> None:
+        scenarios = (
+            "service_config_reconciliation",
+            "migration_plan_bundle",
+            "incident_report_bundle",
+        )
+        with workspace_tempdir() as tmp_dir:
+            root = Path(tmp_dir)
+            generator = get_generator("retrieval_workspace")
+            for scenario_id in scenarios:
+                with self.subTest(scenario_id=scenario_id):
+                    first = generator.generate_instance(
+                        generator.sample_spec(difficulty=3, seed=1, scenario_id=scenario_id),
+                        root / f"{scenario_id}-seed-1",
+                    )
+                    second = generator.generate_instance(
+                        generator.sample_spec(difficulty=3, seed=2, scenario_id=scenario_id),
+                        root / f"{scenario_id}-seed-2",
+                    )
+                    first_profile = dict(first.manifest.metadata["scenario_profile"])
+                    second_profile = dict(second.manifest.metadata["scenario_profile"])
+                    self.assertNotEqual(first_profile["content_variant_id"], second_profile["content_variant_id"])
+                    self.assertNotEqual(
+                        first.manifest.reference_solution["files"],
+                        second.manifest.reference_solution["files"],
+                    )
 
 
 if __name__ == "__main__":
