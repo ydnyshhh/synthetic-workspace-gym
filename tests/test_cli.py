@@ -22,9 +22,21 @@ class CliTests(unittest.TestCase):
                 command_generate(
                     argparse.Namespace(
                         family="tabular",
-                        count=2,
+                        count=1,
                         difficulty="2",
                         seed=70,
+                        scenario="monthly_segment_report",
+                        output_dir=generated_root,
+                        skip_validate=False,
+                    )
+                )
+                command_generate(
+                    argparse.Namespace(
+                        family="tabular",
+                        count=1,
+                        difficulty="4",
+                        seed=71,
+                        scenario="weekly_refund_rollup",
                         output_dir=generated_root,
                         skip_validate=False,
                     )
@@ -42,6 +54,11 @@ class CliTests(unittest.TestCase):
             payload = json.loads(result_files[0].read_text(encoding="utf-8"))
             self.assertEqual(payload["agent"], "heuristic")
             self.assertEqual(payload["environment_count"], 2)
+            self.assertIn("overall", payload)
+            self.assertIn("by_family", payload)
+            self.assertIn("by_difficulty", payload)
+            self.assertIn("by_scenario_id", payload)
+            self.assertEqual(len(payload["rows"]), 2)
 
 
 if __name__ == "__main__":

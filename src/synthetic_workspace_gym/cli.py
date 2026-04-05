@@ -6,6 +6,7 @@ import time
 from pathlib import Path
 
 from synthetic_workspace_gym.agents import HeuristicBaselineAgent, ScriptedBaselineAgent
+from synthetic_workspace_gym.analysis.benchmarking import build_benchmark_report, episode_to_row
 from synthetic_workspace_gym.evaluators.registry import get_evaluator
 from synthetic_workspace_gym.generators.common import normalize_difficulty
 from synthetic_workspace_gym.generators.registry import get_generator
@@ -105,23 +106,14 @@ def command_benchmark(args: argparse.Namespace) -> int:
     if not env_roots:
         raise SystemExit(f"No environments found under {args.environments}")
     runner = EpisodeRunner(output_root=args.output_dir / "episodes")
-    agent_name = get_agent(args.agent).name
-    summaries = []
+    rows = []
     for env_root in env_roots:
         environment = load_environment(env_root)
         summary = runner.run_episode(environment, get_agent(args.agent))
-        summaries.append(summary)
-    success_rate = sum(1 for summary in summaries if summary.evaluation.success) / len(summaries)
-    mean_score = sum(summary.evaluation.score for summary in summaries) / len(summaries)
-    aggregate = {
-        "agent": agent_name,
-        "environment_count": len(summaries),
-        "success_rate": round(success_rate, 4),
-        "mean_score": round(mean_score, 4),
-        "episodes": [summary.to_dict() for summary in summaries],
-    }
+        rows.append(episode_to_row(summary, environment.manifest))
+    aggregate = build_benchmark_report(rows)
     args.output_dir.mkdir(parents=True, exist_ok=True)
-    write_json(args.output_dir / f"benchmark-{agent_name}-{int(time.time())}.json", aggregate)
+    write_json(args.output_dir / f"benchmark-{aggregate['agent']}-{int(time.time())}.json", aggregate)
     print(json.dumps(aggregate, indent=2, sort_keys=True))
     return 0
 

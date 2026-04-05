@@ -157,6 +157,22 @@ Generation-time validation is built in: every environment is checked by applying
 | `episodes/<episode_id>/final_diff.txt` | Unified diff from initial to final workspace |
 | `episodes/<episode_id>/final_workspace/` | Final workspace snapshot |
 
+### Benchmark report
+
+`swg benchmark` now builds a normalized analysis row per episode and then emits grouped summaries instead of only a flat global mean.
+
+| Section | Purpose |
+| --- | --- |
+| `rows` | Per-episode normalized analysis rows merging runtime outcome and manifest metadata |
+| `overall` | Global aggregate metrics across the run set |
+| `by_family` | Aggregate by `tabular`, `script_repair`, `pipeline` |
+| `by_difficulty` | Aggregate by difficulty level |
+| `by_scenario_id` | Aggregate by concrete scenario id |
+| `by_family_and_difficulty` | Aggregate by combined family/difficulty buckets |
+| `by_bug_scope`, `by_failure_mode`, `by_repair_surface`, `by_smoke_test_quality` | Structure-aware slices for scenario analysis when metadata is available |
+
+Each bucket reports `count`, `success_rate`, `mean_score`, `median_score`, `perfect_rate`, `mean_step_count`, `mean_duration_seconds`, `failure_label_counts`, and `mean_subscores`.
+
 ## Repository Layout
 
 | Path | Responsibility |
@@ -166,7 +182,7 @@ Generation-time validation is built in: every environment is checked by applying
 | `src/synthetic_workspace_gym/evaluators/` | Trusted evaluators and registry |
 | `src/synthetic_workspace_gym/runtime/` | Environment loader, tool executor, episode runner |
 | `src/synthetic_workspace_gym/agents/` | Baseline agents |
-| `src/synthetic_workspace_gym/analysis/` | Artifact export, snapshotting, diff utilities |
+| `src/synthetic_workspace_gym/analysis/` | Artifact export, snapshotting, diff utilities, benchmark analysis |
 | `src/synthetic_workspace_gym/cli.py` | CLI entrypoint |
 | `tests/` | Schema, generator, evaluator, runtime, and end-to-end tests |
 
