@@ -42,6 +42,33 @@ class GeneratorValidityTests(unittest.TestCase):
                 ) -> GeneratedPayload:
                     raise NotImplementedError
 
+    def test_script_and_pipeline_generators_cover_expected_base_scenarios(self) -> None:
+        expected = {
+            "script_repair": {
+                "inventory_report",
+                "path_batch",
+                "csv_schema_drift",
+                "timestamp_normalization",
+                "team_roster_export",
+            },
+            "pipeline": {
+                "team_hours_pipeline",
+                "sales_csv_pipeline",
+                "artifact_stitch_pipeline",
+                "quality_gate_pipeline",
+            },
+        }
+        with workspace_tempdir() as tmp_dir:
+            root = Path(tmp_dir)
+            for family, scenario_ids in expected.items():
+                generator = get_generator(family)
+                seen: set[str] = set()
+                for seed in range(1, len(scenario_ids) + 1):
+                    spec = generator.sample_spec(difficulty=3, seed=seed)
+                    bundle = generator.generate_instance(spec, root / family)
+                    seen.add(str(bundle.manifest.metadata["scenario_id"]))
+                self.assertEqual(seen, scenario_ids)
+
 
 if __name__ == "__main__":
     unittest.main()

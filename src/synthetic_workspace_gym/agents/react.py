@@ -147,41 +147,147 @@ class HeuristicBaselineAgent(BaseAgent):
                 edits.append(("src/repair_target/io_helpers.py", fixed_io))
             if fixed_batch != batch:
                 edits.append(("src/repair_target/batch.py", fixed_batch))
+        elif scenario_id == "csv_schema_drift":
+            parser = self.file_cache.get("src/repair_target/parser.py", "")
+            report = self.file_cache.get("src/repair_target/report.py", "")
+            fixed_parser = parser.replace('row["customer_id"]', 'row["account_id"]')
+            fixed_parser = fixed_parser.replace('row.get("customer_id")', 'row.get("account_id")')
+            fixed_report = report.replace(
+                'return sorted(summary.values(), key=lambda item: str(item["row_count"]))',
+                'return sorted(summary.values(), key=lambda item: str(item["region"]))',
+            )
+            if fixed_parser != parser:
+                edits.append(("src/repair_target/parser.py", fixed_parser))
+            if fixed_report != report:
+                edits.append(("src/repair_target/report.py", fixed_report))
+        elif scenario_id == "timestamp_normalization":
+            time_utils = self.file_cache.get("src/repair_target/time_utils.py", "")
+            report = self.file_cache.get("src/repair_target/report.py", "")
+            fixed_utils = time_utils.replace('"%Y-%d-%m %H:%M"', '"%Y/%m/%d %H:%M"')
+            fixed_utils = fixed_utils.replace(
+                'return sorted(rows, key=lambda row: str(row["timestamp"]))',
+                'return sorted(rows, key=lambda row: parse_timestamp(str(row["timestamp"])))',
+            )
+            fixed_report = report.replace('stamp.strftime("%m/%d/%Y")', 'stamp.strftime("%Y-%m-%d")')
+            if fixed_utils != time_utils:
+                edits.append(("src/repair_target/time_utils.py", fixed_utils))
+            if fixed_report != report:
+                edits.append(("src/repair_target/report.py", fixed_report))
+        elif scenario_id == "team_roster_export":
+            contracts = self.file_cache.get("src/repair_target/contracts.py", "")
+            writer = self.file_cache.get("src/repair_target/writer.py", "")
+            fixed_contracts = contracts.replace('{"team_name": team, "member_count": 0, "total_score": 0}', '{"team": team, "member_count": 0, "total_score": 0}')
+            fixed_contracts = fixed_contracts.replace(
+                'return sorted(summary.values(), key=lambda item: int(item["member_count"]))',
+                'return sorted(summary.values(), key=lambda item: str(item["team"]))',
+            )
+            fixed_writer = self._restore_json_writer(writer)
+            if fixed_contracts != contracts:
+                edits.append(("src/repair_target/contracts.py", fixed_contracts))
+            if fixed_writer != writer:
+                edits.append(("src/repair_target/writer.py", fixed_writer))
         return edits
 
     def _pipeline_edits(self) -> list[tuple[str, str]]:
         assert self.task is not None
         edits: list[tuple[str, str]] = []
+        scenario_id = self.task["scenario_id"]
         config_text = self.file_cache.get("config/pipeline_config.json", "")
-        if config_text:
-            config = json.loads(config_text)
-            config["input_path"] = "data/jobs.json"
-            config["output_path"] = self.task["required_output_path"]
-            normalized = json.dumps(config, indent=2, sort_keys=True) + "\n"
-            if normalized != config_text:
-                edits.append(("config/pipeline_config.json", normalized))
-
         runner = self.file_cache.get("run_pipeline.py", "")
-        fixed_runner = runner.replace("normalized = rows", "normalized = normalize_rows(rows)")
-        if fixed_runner != runner:
-            edits.append(("run_pipeline.py", fixed_runner))
-
-        steps = self.file_cache.get("src/pipeline_app/steps.py", "")
-        fixed_steps = steps.replace(
-            'summary[team]["total_hours"] = round(float(summary[team]["total_hours"]) + 1, 1)',
-            'summary[team]["total_hours"] = round(float(summary[team]["total_hours"]) + float(row["hours"]), 1)',
-        )
-        if fixed_steps != steps:
-            edits.append(("src/pipeline_app/steps.py", fixed_steps))
-
         io_utils = self.file_cache.get("src/pipeline_app/io_utils.py", "")
-        fixed_io = io_utils.replace(
+
+        if scenario_id == "team_hours_pipeline":
+            if config_text:
+                config = json.loads(config_text)
+                config["input_path"] = "data/jobs.json"
+                config["output_path"] = self.task["required_output_path"]
+                normalized = json.dumps(config, indent=2, sort_keys=True) + "\n"
+                if normalized != config_text:
+                    edits.append(("config/pipeline_config.json", normalized))
+            fixed_runner = runner.replace("normalized = rows", "normalized = normalize_rows(rows)")
+            steps = self.file_cache.get("src/pipeline_app/steps.py", "")
+            fixed_steps = steps.replace(
+                'summary[team]["total_hours"] = round(float(summary[team]["total_hours"]) + 1, 1)',
+                'summary[team]["total_hours"] = round(float(summary[team]["total_hours"]) + float(row["hours"]), 1)',
+            )
+            if fixed_runner != runner:
+                edits.append(("run_pipeline.py", fixed_runner))
+            if fixed_steps != steps:
+                edits.append(("src/pipeline_app/steps.py", fixed_steps))
+            fixed_io = self._restore_json_writer(io_utils)
+            if fixed_io != io_utils:
+                edits.append(("src/pipeline_app/io_utils.py", fixed_io))
+        elif scenario_id == "sales_csv_pipeline":
+            if config_text:
+                config = json.loads(config_text)
+                config["input_path"] = "data/sales.csv"
+                config["output_path"] = self.task["required_output_path"]
+                normalized = json.dumps(config, indent=2, sort_keys=True) + "\n"
+                if normalized != config_text:
+                    edits.append(("config/pipeline_config.json", normalized))
+            fixed_runner = runner.replace("normalized = rows", "normalized = normalize_rows(rows)")
+            steps = self.file_cache.get("src/pipeline_app/steps.py", "")
+            fixed_steps = steps.replace(
+                'if not include_inactive and row["active"]:',
+                'if not include_inactive and not row["active"]:',
+            )
+            if fixed_runner != runner:
+                edits.append(("run_pipeline.py", fixed_runner))
+            if fixed_steps != steps:
+                edits.append(("src/pipeline_app/steps.py", fixed_steps))
+            fixed_io = self._restore_json_writer(io_utils)
+            if fixed_io != io_utils:
+                edits.append(("src/pipeline_app/io_utils.py", fixed_io))
+        elif scenario_id == "artifact_stitch_pipeline":
+            if config_text:
+                config = json.loads(config_text)
+                config["fragment_dir"] = "data/fragments"
+                config["output_path"] = self.task["required_output_path"]
+                normalized = json.dumps(config, indent=2, sort_keys=True) + "\n"
+                if normalized != config_text:
+                    edits.append(("config/pipeline_config.json", normalized))
+            fixed_runner = runner.replace("stitched = rows", "stitched = stitch_fragments(rows)")
+            merge = self.file_cache.get("src/pipeline_app/merge.py", "")
+            fixed_merge = merge.replace(
+                'summary[report]["count"] = int(summary[report]["count"]) + 1',
+                'summary[report]["count"] = int(summary[report]["count"]) + int(row["count"])',
+            )
+            if fixed_runner != runner:
+                edits.append(("run_pipeline.py", fixed_runner))
+            if fixed_merge != merge:
+                edits.append(("src/pipeline_app/merge.py", fixed_merge))
+        elif scenario_id == "quality_gate_pipeline":
+            if config_text:
+                config = json.loads(config_text)
+                config["input_path"] = "data/events.json"
+                config["output_path"] = self.task["required_output_path"]
+                normalized = json.dumps(config, indent=2, sort_keys=True) + "\n"
+                if normalized != config_text:
+                    edits.append(("config/pipeline_config.json", normalized))
+            fixed_runner = runner.replace("normalized = rows", "normalized = normalize_rows(rows)")
+            quality = self.file_cache.get("src/pipeline_app/quality.py", "")
+            fixed_quality = quality.replace(
+                'if row["quality"] == minimum_quality:',
+                'if row["quality"] != minimum_quality:',
+            )
+            fixed_quality = fixed_quality.replace(
+                'float(summary[team]["total_hours"]) + 1',
+                'float(summary[team]["total_hours"]) + float(row["hours"])',
+            )
+            if fixed_runner != runner:
+                edits.append(("run_pipeline.py", fixed_runner))
+            if fixed_quality != quality:
+                edits.append(("src/pipeline_app/quality.py", fixed_quality))
+        fixed_io = self._restore_json_writer(io_utils)
+        if fixed_io != io_utils and not any(path == "src/pipeline_app/io_utils.py" for path, _ in edits):
+            edits.append(("src/pipeline_app/io_utils.py", fixed_io))
+        return edits
+
+    def _restore_json_writer(self, content: str) -> str:
+        return content.replace(
             'Path(path).write_text(str(payload), encoding="utf-8")',
             'Path(path).write_text(json.dumps(payload, indent=2, sort_keys=True) + "\\n", encoding="utf-8")',
         )
-        if fixed_io != io_utils:
-            edits.append(("src/pipeline_app/io_utils.py", fixed_io))
-        return edits
 
 
 ReActBaselineAgent = HeuristicBaselineAgent

@@ -3,8 +3,14 @@ from __future__ import annotations
 import json
 import random
 from pathlib import Path
+from textwrap import dedent
 
 from synthetic_workspace_gym.generators.base import BaseGenerator, GeneratedPayload
+from synthetic_workspace_gym.generators.script_repair_scenarios import (
+    build_csv_schema_drift_scenario,
+    build_team_roster_export_scenario,
+    build_timestamp_normalization_scenario,
+)
 from synthetic_workspace_gym.schemas import EnvironmentFamily, EnvironmentSpec
 from synthetic_workspace_gym.utils.io import write_json, write_text
 
@@ -25,8 +31,9 @@ class ScriptRepairGenerator(BaseGenerator):
 
     def _build_environment(self, spec: EnvironmentSpec, *, root: Path, visible_root: Path, hidden_root: Path) -> GeneratedPayload:
         rng = random.Random(spec.seed)
-        scenario = rng.choice([self._inventory_report_scenario(), self._path_batch_scenario()])
-        bug_budget = {1: 1, 2: 1, 3: 2, 4: 3, 5: 3}[spec.difficulty]
+        scenarios = self._scenario_pool()
+        scenario = scenarios[(spec.seed - 1) % len(scenarios)]
+        bug_budget = min(len(scenario["bugs"]), {1: 1, 2: 1, 3: 2, 4: 3, 5: 4}[spec.difficulty])
         candidates = list(scenario["bugs"])
         if spec.difficulty < 5:
             candidates = [bug for bug in candidates if bug["label"] != "syntax_error"]
@@ -48,22 +55,21 @@ class ScriptRepairGenerator(BaseGenerator):
             write_text(visible_root / relative_path, content)
 
         if spec.difficulty >= 4:
-            write_text(
-                visible_root / "notes" / "incident_log.md",
-                "Recent debugging note: the visible smoke test and the hidden evaluator may exercise different code paths.\n",
-            )
+            write_text(visible_root / "notes" / "incident_log.md", str(scenario["debug_note"]))
 
         task_descriptor = {
             "family": "script_repair",
             "scenario_id": scenario["scenario_id"],
             "entrypoint": "python run_example.py",
             "target_files": sorted(touched_files),
-            "hints": scenario["hints"],
+            "hints": self._visible_hints(list(scenario["hints"]), spec.difficulty),
         }
         write_text(visible_root / "README.md", self._build_readme(scenario, task_descriptor))
         write_json(visible_root / "task.json", task_descriptor)
 
-        hidden_runner = scenario["test_runner"](task_descriptor)
+        hidden_runner = scenario["test_runner"]
+        if callable(hidden_runner):
+            hidden_runner = hidden_runner(task_descriptor)
         write_text(hidden_root / "run_hidden_tests.py", hidden_runner)
         for relative_path, payload in scenario.get("hidden_json_assets", {}).items():
             write_json(hidden_root / relative_path, payload)
@@ -86,6 +92,7 @@ class ScriptRepairGenerator(BaseGenerator):
             "complexity_profile": spec.complexity_profile.to_dict() if spec.complexity_profile else {},
             "bug_labels": applied_bug_labels,
             "scenario_id": scenario["scenario_id"],
+            "scenario_profile": scenario["structure"],
         }
         return GeneratedPayload(
             instruction="Repair the provided Python workspace so that the hidden tests pass.",
@@ -93,6 +100,13 @@ class ScriptRepairGenerator(BaseGenerator):
             reference_solution=reference_solution,
             evaluator_entrypoint="synthetic_workspace_gym.evaluators.script_repair:ScriptRepairEvaluator",
         )
+
+    def _visible_hints(self, hints: list[str], difficulty: int) -> list[str]:
+        if difficulty <= 2:
+            return hints
+        if difficulty == 3:
+            return hints[: max(2, min(len(hints), 2))]
+        return hints[:1]
 
     def _build_readme(self, scenario: dict[str, object], task_descriptor: dict[str, object]) -> str:
         hints = "\n".join(f"- {hint}" for hint in task_descriptor["hints"])
@@ -111,6 +125,99 @@ class ScriptRepairGenerator(BaseGenerator):
             "## Hints\n"
             f"{hints}\n"
         )
+
+    def _json_runner(self, *, import_block: str, expression: str) -> str:
+        lines = [
+            "from __future__ import annotations",
+            "",
+            "import json",
+            "import sys",
+            "from pathlib import Path",
+            "",
+            "workspace = Path(__file__).resolve().parent",
+            'sys.path.insert(0, str(workspace / "src"))',
+            "",
+        ]
+        lines.extend(dedent(import_block).strip().splitlines())
+        lines.extend(
+            [
+                "",
+                "",
+                "def main() -> None:",
+                f"    print(json.dumps({expression}, indent=2, sort_keys=True))",
+                "",
+                "",
+                'if __name__ == "__main__":',
+                "    main()",
+            ]
+        )
+        return "\n".join(lines) + "\n"
+
+    def _hidden_runner(self, *, asset_setup: str, import_block: str, test_methods: str) -> str:
+        lines = [
+            "from __future__ import annotations",
+            "",
+            "import json",
+            "import sys",
+            "import unittest",
+            "from pathlib import Path",
+            "",
+            "",
+            "def build_suite(workspace: Path) -> unittest.TestSuite:",
+            "    hidden_root = Path(__file__).resolve().parent",
+        ]
+        lines.extend(f"    {line}" if line else "" for line in dedent(asset_setup).strip().splitlines())
+        lines.append('    sys.path.insert(0, str(workspace / "src"))')
+        lines.extend(f"    {line}" if line else "" for line in dedent(import_block).strip().splitlines())
+        lines.extend(
+            [
+                "",
+                "    class HiddenTests(unittest.TestCase):",
+            ]
+        )
+        lines.extend(f"        {line}" if line else "" for line in dedent(test_methods).strip().splitlines())
+        lines.extend(
+            [
+                "",
+                "    return unittest.defaultTestLoader.loadTestsFromTestCase(HiddenTests)",
+                "",
+                "",
+                "def main() -> None:",
+                "    workspace = Path(sys.argv[1]).resolve()",
+                "    suite = build_suite(workspace)",
+                "    result = unittest.TextTestRunner(verbosity=2).run(suite)",
+                "    payload = {",
+                '        "success": result.wasSuccessful(),',
+                '        "score": 1.0 if result.wasSuccessful() else 0.0,',
+                '        "subscores": {',
+                '            "tests_passed": result.testsRun - len(result.failures) - len(result.errors),',
+                '            "tests_total": result.testsRun,',
+                "        },",
+                '        "failure_labels": ["hidden_tests_failed"] if not result.wasSuccessful() else [],',
+                '        "diagnostics": {',
+                '            "tests_run": result.testsRun,',
+                '            "failures": [case[0].id() for case in result.failures],',
+                '            "errors": [case[0].id() for case in result.errors],',
+                "        },",
+                "    }",
+                "    print(json.dumps(payload, sort_keys=True))",
+                "    sys.exit(0 if result.wasSuccessful() else 1)",
+                "",
+                "",
+                'if __name__ == "__main__":',
+                "    main()",
+            ]
+        )
+        return "\n".join(lines) + "\n"
+
+    def _scenario_pool(self) -> list[dict[str, object]]:
+        return [
+            self._inventory_report_scenario(),
+            self._path_batch_scenario(),
+            build_csv_schema_drift_scenario(self),
+            build_timestamp_normalization_scenario(self),
+            build_team_roster_export_scenario(self),
+        ]
 
     def _inventory_report_scenario(self) -> dict[str, object]:
         items = [
@@ -242,11 +349,18 @@ if __name__ == "__main__":
         return {
             "scenario_id": "inventory_report",
             "title": "Inventory Report Repair",
+            "debug_note": "The smoke test is reliable here, but some hidden assertions care about both summary counts and report ordering.\n",
             "hints": [
                 "The rolling average should include every complete 2-item window.",
                 "Archived rows still contribute to the summary counts.",
                 "The smoke test should print a stable JSON report.",
             ],
+            "structure": {
+                "repair_surface": "code",
+                "bug_scope": "cross_file",
+                "failure_mode": "semantic",
+                "smoke_test_quality": "informative",
+            },
             "files": {
                 "src/repair_target/__init__.py": "",
                 "src/repair_target/analytics.py": analytics,
@@ -395,11 +509,18 @@ if __name__ == "__main__":
         return {
             "scenario_id": "path_batch",
             "title": "Batch Summary Repair",
+            "debug_note": "This smoke test is execution-sensitive: import issues and small path errors surface immediately, but hidden tests still check the final aggregation.\n",
             "hints": [
                 "The measurement loader should read from the visible `data` directory.",
                 "The batch summary should aggregate every row in the CSV.",
                 "If the module fails to import, inspect recent edits around function signatures and imports.",
             ],
+            "structure": {
+                "repair_surface": "file_path",
+                "bug_scope": "local",
+                "failure_mode": "execution_and_semantic",
+                "smoke_test_quality": "informative",
+            },
             "files": {
                 "src/repair_target/__init__.py": "",
                 "src/repair_target/io_helpers.py": io_helpers,

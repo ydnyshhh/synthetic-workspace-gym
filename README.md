@@ -86,6 +86,13 @@ External difficulty is exposed as `1..5` or `easy/medium/hard`. Internally, gene
 | `script_repair` | Small Python project with bugs, smoke-test entrypoint | Hidden unit tests | syntax, off-by-one, condition bugs, path issues, imports, wrong return values | more files, more bugs, cross-file coupling, subtler faults |
 | `pipeline` | Multi-file mini-project with config + code + artifacts | Hidden execution + artifact validation | wrong config path, broken pipeline step, output format mismatch, aggregation error | more config coupling, broken assumptions, missing steps, stricter artifact requirements |
 
+### Current base scenario pools
+
+| Family | Current scenario ids | Coverage intent |
+| --- | --- | --- |
+| `script_repair` | `inventory_report`, `path_batch`, `csv_schema_drift`, `timestamp_normalization`, `team_roster_export` | aggregation repair, file/path handling, schema drift, datetime normalization, serialization and cross-file contract repair |
+| `pipeline` | `team_hours_pipeline`, `sales_csv_pipeline`, `artifact_stitch_pipeline`, `quality_gate_pipeline` | JSON summary generation, CSV normalization, artifact stitching, multi-stage quality/filter/aggregate pipelines |
+
 ## Runtime Model
 
 ### Tool API
