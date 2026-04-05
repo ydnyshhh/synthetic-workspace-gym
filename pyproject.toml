@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "Synthetic environment generation and evaluation infrastructure for workspace-style agent research."
 readme = "README.md"
 requires-python = ">=3.11"
-authors = [{ name = "OpenAI Codex" }]
+authors = [{ name = "Yadnyesh Chakane" }]
 dependencies = []
 
 [project.scripts]
