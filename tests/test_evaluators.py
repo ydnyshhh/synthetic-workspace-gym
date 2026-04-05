@@ -66,6 +66,22 @@ class EvaluatorCorrectnessTests(unittest.TestCase):
             self.assertGreater(result.score, 0.0)
             self.assertLess(result.score, 1.0)
 
+    def test_tabular_evaluator_rejects_wrong_json_shape(self) -> None:
+        with workspace_tempdir() as tmp_dir:
+            root = Path(tmp_dir)
+            generator = get_generator("tabular")
+            spec = generator.sample_spec(difficulty=2, seed=56)
+            bundle = generator.generate_instance(spec, root / "generated")
+            evaluator = get_evaluator(bundle.manifest.family)
+            bad_workspace = root / "bad-shape"
+            shutil.copytree(bundle.visible_root, bad_workspace)
+            output_path = bad_workspace / "outputs" / "report.json"
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            output_path.write_text(json.dumps({"month": "2024-01"}, indent=2) + "\n", encoding="utf-8")
+            result = evaluator.evaluate(bad_workspace, bundle.manifest, bundle.hidden_root)
+            self.assertFalse(result.success)
+            self.assertLess(result.score, 1.0)
+
 
 if __name__ == "__main__":
     unittest.main()

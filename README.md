@@ -31,9 +31,9 @@ I think one of the bottlenecks in agent research is that environments are still 
 | Install with local cache | `uv sync --cache-dir .uv-cache` |
 | Run tests | `uv run --no-project --cache-dir .uv-cache --python python python -B -m unittest discover -s tests -v` |
 | Generate one env | `uv run swg generate --family tabular --count 1 --difficulty 3 --seed 42 --output-dir generated` |
-| Run one episode | `uv run swg run --environment generated/<env_id> --agent react --output-dir episodes` |
+| Run one episode | `uv run swg run --environment generated/<env_id> --agent heuristic --output-dir episodes` |
 | Evaluate workspace | `uv run swg evaluate --environment generated/<env_id>` |
-| Benchmark baseline | `uv run swg benchmark --environments generated --agent react --output-dir benchmarks` |
+| Benchmark baseline | `uv run swg benchmark --environments generated --agent heuristic --output-dir benchmarks` |
 
 ## Core Design
 
@@ -171,9 +171,9 @@ Generation-time validation is built in: every environment is checked by applying
 
 ```bash
 uv run swg generate --family script_repair --count 10 --difficulty 4 --seed 100 --output-dir generated
-uv run swg run --environment generated/script_repair-d4-s100-XXXXXXXX --agent react --output-dir episodes
+uv run swg run --environment generated/script_repair-d4-s100-XXXXXXXX --agent heuristic --output-dir episodes
 uv run swg evaluate --environment generated/script_repair-d4-s100-XXXXXXXX
-uv run swg benchmark --environments generated --agent react --output-dir benchmarks
+uv run swg benchmark --environments generated --agent heuristic --output-dir benchmarks
 ```
 
 ## Baseline Agents
@@ -181,9 +181,10 @@ uv run swg benchmark --environments generated --agent react --output-dir benchma
 | Agent | Role |
 | --- | --- |
 | `scripted` | Minimal heuristic smoke-test baseline; intentionally weak |
-| `react` | Simple iterative tool-using baseline that reads instructions, inspects files, runs commands, edits, retries, and submits |
+| `heuristic` | Scenario-aware oracle-style baseline for infrastructure validation; it uses built-in knowledge of v1 scenario ids and hardcoded repairs |
+| `react` | Deprecated CLI alias for `heuristic`, kept only for backward compatibility |
 
-The baseline layer is intentionally modular so stronger model-backed agents can plug into the same runtime without changing the environment format.
+The baseline layer is intentionally modular so stronger model-backed agents can plug into the same runtime without changing the environment format. The `heuristic` baseline should not be treated as a language-model benchmark; it is a privileged validation baseline for the framework itself.
 
 ## Development Notes
 

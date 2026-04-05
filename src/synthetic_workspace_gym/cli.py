@@ -5,7 +5,7 @@ import json
 import time
 from pathlib import Path
 
-from synthetic_workspace_gym.agents import ReActBaselineAgent, ScriptedBaselineAgent
+from synthetic_workspace_gym.agents import HeuristicBaselineAgent, ScriptedBaselineAgent
 from synthetic_workspace_gym.evaluators.registry import get_evaluator
 from synthetic_workspace_gym.generators.common import normalize_difficulty
 from synthetic_workspace_gym.generators.registry import get_generator
@@ -28,7 +28,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     run = subparsers.add_parser("run", help="Run a single episode with a baseline agent")
     run.add_argument("--environment", type=Path, required=True)
-    run.add_argument("--agent", choices=["scripted", "react"], default="react")
+    run.add_argument("--agent", choices=["scripted", "heuristic", "react"], default="heuristic")
     run.add_argument("--output-dir", type=Path, default=Path("episodes"))
 
     evaluate = subparsers.add_parser("evaluate", help="Evaluate an environment workspace")
@@ -37,7 +37,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     benchmark = subparsers.add_parser("benchmark", help="Run a baseline across a directory of environments")
     benchmark.add_argument("--environments", type=Path, required=True)
-    benchmark.add_argument("--agent", choices=["scripted", "react"], default="react")
+    benchmark.add_argument("--agent", choices=["scripted", "heuristic", "react"], default="heuristic")
     benchmark.add_argument("--output-dir", type=Path, default=Path("benchmarks"))
 
     return parser
@@ -46,7 +46,9 @@ def build_parser() -> argparse.ArgumentParser:
 def get_agent(name: str):
     if name == "scripted":
         return ScriptedBaselineAgent()
-    return ReActBaselineAgent()
+    if name in {"heuristic", "react"}:
+        return HeuristicBaselineAgent()
+    raise ValueError(f"Unsupported agent: {name}")
 
 
 def command_generate(args: argparse.Namespace) -> int:
@@ -88,11 +90,11 @@ def command_benchmark(args: argparse.Namespace) -> int:
     if not env_roots:
         raise SystemExit(f"No environments found under {args.environments}")
     runner = EpisodeRunner(output_root=args.output_dir / "episodes")
-    agent_name = args.agent
+    agent_name = get_agent(args.agent).name
     summaries = []
     for env_root in env_roots:
         environment = load_environment(env_root)
-        summary = runner.run_episode(environment, get_agent(agent_name))
+        summary = runner.run_episode(environment, get_agent(args.agent))
         summaries.append(summary)
     success_rate = sum(1 for summary in summaries if summary.evaluation.success) / len(summaries)
     mean_score = sum(summary.evaluation.score for summary in summaries) / len(summaries)

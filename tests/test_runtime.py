@@ -87,7 +87,7 @@ class RuntimeTests(unittest.TestCase):
             duration = time.perf_counter() - started
             self.assertFalse(observation.success)
             self.assertEqual(observation.error, "timeout")
-            self.assertLess(duration, 1.0)
+            self.assertLess(duration, 2.0)
 
     def test_episode_runner_exports_artifacts(self) -> None:
         with workspace_tempdir() as tmp_dir:

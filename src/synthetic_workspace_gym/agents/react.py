@@ -6,15 +6,22 @@ from synthetic_workspace_gym.agents.base import BaseAgent, solve_tabular_task
 from synthetic_workspace_gym.schemas import Action, ActionType, ToolObservation, ToolState
 
 
-class ReActBaselineAgent(BaseAgent):
-    name = "react"
+class HeuristicBaselineAgent(BaseAgent):
+    """Scenario-aware heuristic baseline for infrastructure validation.
+
+    This agent is intentionally privileged: it keys off known scenario ids and
+    applies hardcoded edits for the built-in v1 environments. It is useful for
+    validating the generate -> run -> evaluate loop, but it is not a generic
+    ReAct-style reasoning baseline.
+    """
+
+    name = "heuristic"
 
     def __init__(self) -> None:
         super().__init__()
         self.plan: list[Action] = []
         self.edits_applied = False
         self.smoke_test_attempts = 0
-        self.submitted = False
 
     def reset(self, manifest, initial_observation):
         super().reset(manifest, initial_observation)
@@ -25,7 +32,6 @@ class ReActBaselineAgent(BaseAgent):
         ]
         self.edits_applied = False
         self.smoke_test_attempts = 0
-        self.submitted = False
 
     def act(self, observation: ToolObservation | dict[str, object], tool_state: ToolState) -> Action:
         self._consume_observation(observation)
@@ -72,10 +78,7 @@ class ReActBaselineAgent(BaseAgent):
         if self.smoke_test_attempts == 0:
             self.smoke_test_attempts += 1
             return self._set_last_action(Action(ActionType.RUN_SHELL, {"command": self.task["entrypoint"]}))
-        if not self.submitted:
-            self.submitted = True
-            return self._set_last_action(Action(ActionType.SUBMIT, {"path_or_answer": "hidden-tests"}))
-        return self._set_last_action(Action(ActionType.SUBMIT, {"path_or_answer": "done"}))
+        return self._set_last_action(Action(ActionType.SUBMIT, {"path_or_answer": "hidden-tests"}))
 
     def _pipeline_action(self, observation: ToolObservation | dict[str, object]) -> Action:
         assert self.task is not None
@@ -98,12 +101,9 @@ class ReActBaselineAgent(BaseAgent):
         if self.smoke_test_attempts == 0:
             self.smoke_test_attempts += 1
             return self._set_last_action(Action(ActionType.RUN_SHELL, {"command": self.task["entrypoint"]}))
-        if not self.submitted:
-            self.submitted = True
-            return self._set_last_action(
-                Action(ActionType.SUBMIT, {"path_or_answer": self.task["required_output_path"]})
-            )
-        return self._set_last_action(Action(ActionType.SUBMIT, {"path_or_answer": "done"}))
+        return self._set_last_action(
+            Action(ActionType.SUBMIT, {"path_or_answer": self.task["required_output_path"]})
+        )
 
     def _script_repair_edits(self) -> list[tuple[str, str]]:
         assert self.task is not None
@@ -182,3 +182,6 @@ class ReActBaselineAgent(BaseAgent):
         if fixed_io != io_utils:
             edits.append(("src/pipeline_app/io_utils.py", fixed_io))
         return edits
+
+
+ReActBaselineAgent = HeuristicBaselineAgent

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import unittest
+from pathlib import Path
 
 from test_support import ROOT
 
@@ -12,6 +13,7 @@ from synthetic_workspace_gym.schemas import (
     EvaluatorResult,
     ToolPermissions,
 )
+from synthetic_workspace_gym.utils.paths import ensure_within_root
 
 
 class SchemaRoundTripTests(unittest.TestCase):
@@ -71,6 +73,11 @@ class SchemaRoundTripTests(unittest.TestCase):
         restored_result = EvaluatorResult.from_dict(result.to_dict())
         self.assertTrue(restored_result.success)
         self.assertEqual(restored_result.subscores["exact_match"], 1.0)
+
+    def test_ensure_within_root_rejects_parent_escape(self) -> None:
+        root = ROOT / "src"
+        with self.assertRaises(ValueError):
+            ensure_within_root(root, "../README.md")
 
 
 if __name__ == "__main__":
