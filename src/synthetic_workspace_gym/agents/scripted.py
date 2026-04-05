@@ -43,7 +43,7 @@ class ScriptedBaselineAgent(BaseAgent):
                 )
             return self.set_last_action(Action(ActionType.SUBMIT, {"path_or_answer": self.task["output_path"]}))
 
-        if not self.smoke_test_ran and self.task is not None:
+        if not self.smoke_test_ran and self.task is not None and self.task.get("entrypoint"):
             self.smoke_test_ran = True
             return self.set_last_action(Action(ActionType.RUN_SHELL, {"command": self.task["entrypoint"]}))
         if not self.submitted and self.task is not None:
@@ -51,7 +51,12 @@ class ScriptedBaselineAgent(BaseAgent):
             return self.set_last_action(
                 Action(
                     ActionType.SUBMIT,
-                    {"path_or_answer": self.task.get("required_output_path", self.task.get("entrypoint", "done"))},
+                    {
+                        "path_or_answer": self.task.get(
+                            "required_output_path",
+                            self.task.get("target_path", self.task.get("entrypoint", "done")),
+                        )
+                    },
                 )
             )
         return self.set_last_action(Action(ActionType.SUBMIT, {"path_or_answer": "done"}))

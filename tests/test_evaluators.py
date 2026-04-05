@@ -118,6 +118,43 @@ class EvaluatorCorrectnessTests(unittest.TestCase):
             self.assertIn("timeout", result.failure_labels)
             self.assertEqual(result.score, 0.0)
 
+    def test_retrieval_workspace_evaluator_exposes_partial_credit(self) -> None:
+        with workspace_tempdir() as tmp_dir:
+            root = Path(tmp_dir)
+            generator = get_generator("retrieval_workspace")
+            spec = generator.sample_spec(
+                difficulty=4,
+                seed=77,
+                scenario_id="service_config_reconciliation",
+            )
+            bundle = generator.generate_instance(spec, root / "generated")
+            evaluator = get_evaluator(bundle.manifest.family)
+            partial_workspace = root / "partial"
+            shutil.copytree(bundle.visible_root, partial_workspace)
+            output_path = partial_workspace / "config" / "service_config.json"
+            output_path.write_text(
+                json.dumps(
+                    {
+                        "base_url": "https://svc.internal/v2",
+                        "cohort_limit": 250,
+                        "enable_shadow_mode": True,
+                        "region": "us-east-1",
+                        "retry_attempts": 1,
+                        "service_name": "ledger-sync",
+                        "timeout_seconds": 45,
+                    },
+                    indent=2,
+                    sort_keys=True,
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            result = evaluator.evaluate(partial_workspace, bundle.manifest, bundle.hidden_root)
+            self.assertFalse(result.success)
+            self.assertGreater(result.score, 0.0)
+            self.assertLess(result.score, 1.0)
+            self.assertGreater(result.subscores["field_f1"], 0.0)
+
     def inject_sleep(self, source: str) -> str:
         header = "from __future__ import annotations\n\n"
         payload = "import time\n\ntime.sleep(1)\n\n"

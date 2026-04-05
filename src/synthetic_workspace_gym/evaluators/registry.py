@@ -6,6 +6,7 @@ from synthetic_workspace_gym.schemas import EnvironmentFamily
 from synthetic_workspace_gym.evaluators.base import BaseEvaluator
 
 from .pipeline import PipelineEvaluator
+from .retrieval_workspace import RetrievalWorkspaceEvaluator
 from .script_repair import ScriptRepairEvaluator
 from .tabular import TabularEvaluator
 
@@ -13,6 +14,7 @@ EVALUATORS = {
     EnvironmentFamily.TABULAR: TabularEvaluator(),
     EnvironmentFamily.SCRIPT_REPAIR: ScriptRepairEvaluator(),
     EnvironmentFamily.PIPELINE: PipelineEvaluator(),
+    EnvironmentFamily.RETRIEVAL_WORKSPACE: RetrievalWorkspaceEvaluator(),
 }
 
 

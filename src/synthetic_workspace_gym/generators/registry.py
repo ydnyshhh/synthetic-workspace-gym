@@ -3,6 +3,7 @@ from __future__ import annotations
 from synthetic_workspace_gym.schemas import EnvironmentFamily
 
 from .pipeline_completion import PipelineCompletionGenerator
+from .retrieval_workspace import RetrievalWorkspaceGenerator
 from .script_repair import ScriptRepairGenerator
 from .tabular import TabularTransformationGenerator
 
@@ -10,6 +11,7 @@ GENERATORS = {
     EnvironmentFamily.TABULAR: TabularTransformationGenerator(),
     EnvironmentFamily.SCRIPT_REPAIR: ScriptRepairGenerator(),
     EnvironmentFamily.PIPELINE: PipelineCompletionGenerator(),
+    EnvironmentFamily.RETRIEVAL_WORKSPACE: RetrievalWorkspaceGenerator(),
 }
 
 

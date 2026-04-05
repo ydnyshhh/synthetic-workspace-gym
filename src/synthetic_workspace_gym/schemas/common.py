@@ -32,6 +32,7 @@ class EnvironmentFamily(str, Enum):
     TABULAR = "tabular"
     SCRIPT_REPAIR = "script_repair"
     PIPELINE = "pipeline"
+    RETRIEVAL_WORKSPACE = "retrieval_workspace"
 
 
 class ActionType(str, Enum):

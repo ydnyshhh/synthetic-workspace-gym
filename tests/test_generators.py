@@ -63,6 +63,12 @@ class GeneratorValidityTests(unittest.TestCase):
                 "artifact_stitch_pipeline",
                 "quality_gate_pipeline",
             },
+            "retrieval_workspace": {
+                "service_config_reconciliation",
+                "migration_plan_bundle",
+                "incident_report_bundle",
+                "client_adapter_sync",
+            },
         }
         with workspace_tempdir() as tmp_dir:
             root = Path(tmp_dir)
@@ -73,6 +79,62 @@ class GeneratorValidityTests(unittest.TestCase):
                     bundle = generator.generate_instance(spec, root / family)
                     self.assertEqual(str(bundle.manifest.metadata["scenario_id"]), scenario_id)
                     self.assertEqual(bundle.manifest.metadata["scenario_selection"]["selection_mode"], "explicit")
+
+    def test_retrieval_workspace_metadata_contains_retrieval_fields(self) -> None:
+        with workspace_tempdir() as tmp_dir:
+            generator = get_generator("retrieval_workspace")
+            spec = generator.sample_spec(
+                difficulty=4,
+                seed=31,
+                scenario_id="service_config_reconciliation",
+            )
+            bundle = generator.generate_instance(spec, Path(tmp_dir))
+            profile = dict(bundle.manifest.metadata["scenario_profile"])
+            for key in (
+                "task_type",
+                "document_count",
+                "retrieval_hops",
+                "evidence_distribution",
+                "distractor_count",
+                "staleness_pattern",
+                "output_style",
+            ):
+                self.assertIn(key, profile)
+            document_files = [
+                path
+                for path in bundle.manifest.visible_files
+                if path.startswith(("docs/", "notes/", "specs/", "logs/", "changelog/"))
+            ]
+            self.assertEqual(profile["document_count"], len(document_files))
+            self.assertEqual(profile["staleness_pattern"], "stale_note")
+
+    def test_retrieval_workspace_difficulty_increases_retrieval_complexity(self) -> None:
+        with workspace_tempdir() as tmp_dir:
+            root = Path(tmp_dir)
+            generator = get_generator("retrieval_workspace")
+            low = generator.generate_instance(
+                generator.sample_spec(
+                    difficulty=1,
+                    seed=44,
+                    scenario_id="service_config_reconciliation",
+                ),
+                root / "low",
+            )
+            high = generator.generate_instance(
+                generator.sample_spec(
+                    difficulty=5,
+                    seed=44,
+                    scenario_id="service_config_reconciliation",
+                ),
+                root / "high",
+            )
+            low_profile = dict(low.manifest.metadata["scenario_profile"])
+            high_profile = dict(high.manifest.metadata["scenario_profile"])
+            self.assertLess(int(low_profile["document_count"]), int(high_profile["document_count"]))
+            self.assertLess(int(low_profile["retrieval_hops"]), int(high_profile["retrieval_hops"]))
+            self.assertLess(int(low_profile["distractor_count"]), int(high_profile["distractor_count"]))
+            self.assertEqual(low_profile["staleness_pattern"], "none")
+            self.assertEqual(high_profile["staleness_pattern"], "superseded_changelog")
 
 
 if __name__ == "__main__":

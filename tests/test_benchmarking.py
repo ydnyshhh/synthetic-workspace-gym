@@ -19,6 +19,7 @@ class BenchmarkAnalysisTests(unittest.TestCase):
             ("tabular", "weekly_refund_rollup", 4, 102),
             ("script_repair", "csv_schema_drift", 3, 103),
             ("pipeline", "quality_gate_pipeline", 5, 104),
+            ("retrieval_workspace", "service_config_reconciliation", 4, 105),
         ]
         with workspace_tempdir() as tmp_dir:
             root = Path(tmp_dir)
@@ -40,13 +41,21 @@ class BenchmarkAnalysisTests(unittest.TestCase):
         self.assertIn("by_difficulty", report)
         self.assertIn("by_scenario_id", report)
         self.assertIn("by_family_and_difficulty", report)
+        self.assertIn("by_document_count", report)
+        self.assertIn("by_retrieval_hops", report)
+        self.assertIn("by_evidence_distribution", report)
+        self.assertIn("by_staleness_pattern", report)
+        self.assertTrue(report["by_document_count"])
+        self.assertIn("4", report["by_retrieval_hops"])
+        self.assertIn("stale_note", report["by_staleness_pattern"])
 
     def test_scenario_grouping_is_populated(self) -> None:
         report = build_benchmark_report(self.build_rows())
         self.assertIn("monthly_segment_report", report["by_scenario_id"])
         self.assertIn("csv_schema_drift", report["by_scenario_id"])
         self.assertIn("quality_gate_pipeline", report["by_scenario_id"])
-        self.assertGreaterEqual(len(report["by_scenario_id"]), 4)
+        self.assertIn("service_config_reconciliation", report["by_scenario_id"])
+        self.assertGreaterEqual(len(report["by_scenario_id"]), 5)
 
     def test_difficulty_grouping_works(self) -> None:
         report = build_benchmark_report(self.build_rows())
@@ -64,6 +73,7 @@ class BenchmarkAnalysisTests(unittest.TestCase):
             "by_scenario_id",
             "by_family_and_difficulty",
             "by_failure_mode",
+            "by_retrieval_hops",
         ):
             buckets.extend(report[section_name].values())
         for bucket in buckets:

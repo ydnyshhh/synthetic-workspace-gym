@@ -65,4 +65,9 @@ def build_complexity_profile(family: EnvironmentFamily, difficulty: int) -> Comp
     elif family == EnvironmentFamily.PIPELINE:
         base["dependency_depth"] += 1
         base["execution_required"] = True
+    elif family == EnvironmentFamily.RETRIEVAL_WORKSPACE:
+        base["file_count"] += 1
+        base["reasoning_hops"] = max(base["reasoning_hops"], difficulty)
+        base["bug_subtlety"] = 0 if difficulty <= 2 else 1
+        base["execution_required"] = difficulty >= 4
     return ComplexityProfile(**base)

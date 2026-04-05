@@ -9,7 +9,7 @@ from synthetic_workspace_gym.agents import HeuristicBaselineAgent, ScriptedBasel
 from synthetic_workspace_gym.analysis.benchmarking import build_benchmark_report, episode_to_row
 from synthetic_workspace_gym.evaluators.registry import get_evaluator
 from synthetic_workspace_gym.generators.common import normalize_difficulty
-from synthetic_workspace_gym.generators.registry import get_generator
+from synthetic_workspace_gym.generators.registry import get_generator, list_generators
 from synthetic_workspace_gym.runtime.environment import load_environment
 from synthetic_workspace_gym.runtime.runner import EpisodeRunner
 from synthetic_workspace_gym.utils.io import write_json
@@ -20,7 +20,7 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     generate = subparsers.add_parser("generate", help="Generate one or more environments")
-    generate.add_argument("--family", required=True, choices=["tabular", "script_repair", "pipeline"])
+    generate.add_argument("--family", required=True, choices=list_generators())
     generate.add_argument("--count", type=int, default=1)
     generate.add_argument("--difficulty", default="3")
     generate.add_argument("--seed", type=int, default=1)

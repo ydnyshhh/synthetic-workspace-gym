@@ -8,7 +8,7 @@ I think one of the bottlenecks in agent research is that environments are still 
 | --- | --- |
 | Primary unit | Environment instance, not prompt |
 | Focus | Synthetic workspace generation, execution, logging, and trusted evaluation |
-| v1 families | `tabular`, `script_repair`, `pipeline` |
+| v1 families | `tabular`, `script_repair`, `pipeline`, `retrieval_workspace` |
 | Runtime model | Local scratch workspace + hidden evaluator outside writable scope |
 | Evaluator resolution | Dynamic import from manifest `evaluator_entrypoint` |
 | Packaging | Python package with `uv` workflow and `swg` CLI |
@@ -31,6 +31,7 @@ I think one of the bottlenecks in agent research is that environments are still 
 | Install with local cache | `uv sync --cache-dir .uv-cache` |
 | Run tests | `uv run --no-project --cache-dir .uv-cache --python python python -B -m unittest discover -s tests -v` |
 | Generate one env | `uv run swg generate --family tabular --scenario monthly_segment_report --count 1 --difficulty 3 --seed 42 --output-dir generated` |
+| Generate retrieval env | `uv run swg generate --family retrieval_workspace --scenario service_config_reconciliation --count 1 --difficulty 4 --seed 42 --output-dir generated` |
 | Run one episode | `uv run swg run --environment generated/<env_id> --agent heuristic --output-dir episodes` |
 | Evaluate workspace | `uv run swg evaluate --environment generated/<env_id>` |
 | Benchmark baseline | `uv run swg benchmark --environments generated --agent heuristic --output-dir benchmarks` |
@@ -85,6 +86,7 @@ External difficulty is exposed as `1..5` or `easy/medium/hard`. Internally, gene
 | `tabular` | CSV/JSON inputs, task file, README, expected output path | Hidden exact-output comparison | Wrong parsing, dedup, joins, aggregations, sorting | more rows/files, schema mismatch, joins, distractors, stricter output |
 | `script_repair` | Small Python project with bugs, smoke-test entrypoint | Hidden unit tests | syntax, off-by-one, condition bugs, path issues, imports, wrong return values | more files, more bugs, cross-file coupling, subtler faults |
 | `pipeline` | Multi-file mini-project with config + code + artifacts | Hidden execution + artifact validation | wrong config path, broken pipeline step, output format mismatch, aggregation error | more config coupling, broken assumptions, missing steps, stricter artifact requirements |
+| `retrieval_workspace` | Local document set plus target config/report/code artifact | Hidden exact-artifact comparison or hidden tests | wrong evidence selection, stale-doc leakage, cross-document grounding mistakes, spec-to-code drift | more docs, more distractors, multi-source retrieval, stale notes, stricter artifact contract |
 
 ### Current base scenario pools
 
@@ -93,6 +95,9 @@ External difficulty is exposed as `1..5` or `easy/medium/hard`. Internally, gene
 | `tabular` | `monthly_segment_report`, `channel_status_pivot`, `weekly_refund_rollup`, `supplier_restock_summary` | grouped monthly reporting, pivot-style aggregation, ISO-week time bucketing, alias normalization plus restock joins |
 | `script_repair` | `inventory_report`, `path_batch`, `csv_schema_drift`, `timestamp_normalization`, `team_roster_export` | aggregation repair, file/path handling, schema drift, datetime normalization, serialization and cross-file contract repair |
 | `pipeline` | `team_hours_pipeline`, `sales_csv_pipeline`, `artifact_stitch_pipeline`, `quality_gate_pipeline` | JSON summary generation, CSV normalization, artifact stitching, multi-stage quality/filter/aggregate pipelines |
+| `retrieval_workspace` | `service_config_reconciliation`, `migration_plan_bundle`, `incident_report_bundle`, `client_adapter_sync` | local evidence-grounded config repair, migration-plan synthesis, incident report generation, and doc-assisted code alignment |
+
+`retrieval_workspace` is intentionally local-document retrieval, not browser/web retrieval. The agent must inspect files already present in the workspace and use that evidence to update or create a concrete artifact.
 
 ## Runtime Model
 
@@ -133,6 +138,7 @@ v1 is not a hardened OS sandbox. A model-backed agent should be treated as runni
 | `tabular` | Compare generated output to hidden expected JSON |
 | `script_repair` | Execute hidden tests against the repaired workspace |
 | `pipeline` | Execute repaired project and compare final artifact to hidden expected output |
+| `retrieval_workspace` | Compare grounded JSON/config artifacts to hidden expected outputs, or run hidden tests for doc-assisted code patch scenarios |
 
 Generation-time validation is built in: every environment is checked by applying the stored reference solution to a scratch copy of the workspace, verifying that the hidden evaluator returns success, and asserting that the stored solution actually changes visible artifacts. Evaluators expose partial credit through `score` and `subscores` instead of only binary pass/fail outputs, and subprocess-backed evaluators return structured timeout failures rather than raising raw exceptions.
 
@@ -165,11 +171,12 @@ Generation-time validation is built in: every environment is checked by applying
 | --- | --- |
 | `rows` | Per-episode normalized analysis rows merging runtime outcome and manifest metadata |
 | `overall` | Global aggregate metrics across the run set |
-| `by_family` | Aggregate by `tabular`, `script_repair`, `pipeline` |
+| `by_family` | Aggregate by `tabular`, `script_repair`, `pipeline`, `retrieval_workspace` |
 | `by_difficulty` | Aggregate by difficulty level |
 | `by_scenario_id` | Aggregate by concrete scenario id |
 | `by_family_and_difficulty` | Aggregate by combined family/difficulty buckets |
 | `by_bug_scope`, `by_failure_mode`, `by_repair_surface`, `by_smoke_test_quality` | Structure-aware slices for scenario analysis when metadata is available |
+| `by_document_count`, `by_retrieval_hops`, `by_evidence_distribution`, `by_staleness_pattern`, `by_distractor_count` | Retrieval-aware slices for local evidence complexity |
 
 Each bucket reports `count`, `success_rate`, `mean_score`, `median_score`, `perfect_rate`, `mean_step_count`, `mean_duration_seconds`, `failure_label_counts`, and `mean_subscores`.
 
@@ -199,6 +206,7 @@ Each bucket reports `count`, `success_rate`, `mean_score`, `median_score`, `perf
 
 ```bash
 uv run swg generate --family script_repair --scenario csv_schema_drift --count 10 --difficulty 4 --seed 100 --output-dir generated
+uv run swg generate --family retrieval_workspace --scenario service_config_reconciliation --count 5 --difficulty 4 --seed 200 --output-dir generated
 uv run swg run --environment generated/script_repair-d4-s100-XXXXXXXX --agent heuristic --output-dir episodes
 uv run swg evaluate --environment generated/script_repair-d4-s100-XXXXXXXX
 uv run swg benchmark --environments generated --agent heuristic --output-dir benchmarks
@@ -241,4 +249,4 @@ The baseline layer is intentionally modular so stronger model-backed agents can 
 
 | Included | Deferred |
 | --- | --- |
-| local runtime, hidden evaluators, trajectory logging, typed manifests, three families, explicit scenario selection, baseline agents, CLI, tests, dynamic evaluator loading, partial-credit scoring | integrity-aware compilation, reward-hacking variants, decoy leakage files, editable evaluators, provenance monitoring, multi-stage / lifelong environments |
+| local runtime, hidden evaluators, trajectory logging, typed manifests, four families, explicit scenario selection, baseline agents, CLI, tests, dynamic evaluator loading, partial-credit scoring | integrity-aware compilation, reward-hacking variants, decoy leakage files, editable evaluators, provenance monitoring, multi-stage / lifelong environments |

@@ -34,6 +34,12 @@ class EndToEndRolloutTests(unittest.TestCase):
                 "artifact_stitch_pipeline",
                 "quality_gate_pipeline",
             ],
+            EnvironmentFamily.RETRIEVAL_WORKSPACE: [
+                "service_config_reconciliation",
+                "migration_plan_bundle",
+                "incident_report_bundle",
+                "client_adapter_sync",
+            ],
         }
         for family, scenario_ids in scenario_plan.items():
             with workspace_tempdir() as tmp_dir:
