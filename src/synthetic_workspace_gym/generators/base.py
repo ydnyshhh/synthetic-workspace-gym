@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from synthetic_workspace_gym.generators.common import build_complexity_profile, make_env_id
-from synthetic_workspace_gym.schemas import EnvironmentManifest, EnvironmentSpec
+from synthetic_workspace_gym.schemas import EnvironmentFamily, EnvironmentManifest, EnvironmentSpec
 from synthetic_workspace_gym.utils.io import write_json, write_text
 from synthetic_workspace_gym.utils.paths import list_relative_files
 from synthetic_workspace_gym.utils.scratch import scratch_directory
@@ -29,12 +29,22 @@ class GeneratedPayload:
 
 
 class BaseGenerator(ABC):
-    family = None
+    family: EnvironmentFamily | None = None
+
+    def __init_subclass__(cls, **kwargs: object) -> None:
+        super().__init_subclass__(**kwargs)
+        if cls is BaseGenerator:
+            return
+        family = getattr(cls, "family", None)
+        if family is None:
+            raise TypeError(f"{cls.__name__} must define a concrete EnvironmentFamily on the 'family' class attribute.")
+        cls.family = EnvironmentFamily(family)
 
     def sample_spec(self, difficulty: int, seed: int, **overrides: object) -> EnvironmentSpec:
         difficulty = int(difficulty)
+        family = self._require_family()
         spec = EnvironmentSpec(
-            env_family=self.family,
+            env_family=family,
             difficulty=difficulty,
             seed=seed,
             max_steps=int(overrides.pop("max_steps", 12)),
@@ -42,7 +52,7 @@ class BaseGenerator(ABC):
             task_params=dict(overrides.pop("task_params", {})),
             evaluator_params=dict(overrides.pop("evaluator_params", {})),
             generation_params=dict(overrides.pop("generation_params", {})),
-            complexity_profile=build_complexity_profile(self.family, difficulty),
+            complexity_profile=build_complexity_profile(family, difficulty),
         )
         if overrides:
             raise ValueError(f"Unsupported spec overrides: {sorted(overrides.keys())}")
@@ -89,6 +99,7 @@ class BaseGenerator(ABC):
     def validate_instance(self, instance: GeneratedEnvironment):
         from synthetic_workspace_gym.evaluators.registry import get_evaluator
 
+        self._validate_reference_solution(instance)
         evaluator = get_evaluator(
             instance.manifest.family,
             evaluator_entrypoint=instance.manifest.evaluator_entrypoint,
@@ -105,3 +116,24 @@ class BaseGenerator(ABC):
     @abstractmethod
     def _build_environment(self, spec: EnvironmentSpec, *, root: Path, visible_root: Path, hidden_root: Path) -> GeneratedPayload:
         raise NotImplementedError
+
+    def _require_family(self) -> EnvironmentFamily:
+        if self.family is None:
+            raise TypeError(f"{type(self).__name__} must define a concrete EnvironmentFamily before use.")
+        return EnvironmentFamily(self.family)
+
+    def _validate_reference_solution(self, instance: GeneratedEnvironment) -> None:
+        solution_files = instance.manifest.reference_solution.get("files", {})
+        if not solution_files:
+            raise ValueError("Reference solution metadata must include at least one file artifact.")
+        unchanged_paths: list[str] = []
+        for relative_path, content in solution_files.items():
+            visible_path = instance.visible_root / relative_path
+            if visible_path.exists() and visible_path.read_text(encoding="utf-8") == str(content):
+                unchanged_paths.append(relative_path)
+        if unchanged_paths:
+            joined = ", ".join(sorted(unchanged_paths))
+            raise ValueError(
+                "Reference solution did not modify one or more visible files; generation likely failed to apply a change: "
+                f"{joined}"
+            )

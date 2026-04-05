@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import time
 import unittest
 from pathlib import Path
@@ -78,16 +79,29 @@ class RuntimeTests(unittest.TestCase):
                 workspace,
                 ToolPermissions(run_python=False, shell_timeout_seconds=5),
             )
+            sleep_command = "Start-Sleep -Seconds 1" if os.name == "nt" else "sleep 1"
 
             started = time.perf_counter()
             observation = executor.execute(
-                Action(ActionType.RUN_SHELL, {"command": "python -c \"import time; time.sleep(1)\""}),
+                Action(ActionType.RUN_SHELL, {"command": sleep_command}),
                 remaining_time_seconds=0.2,
             )
             duration = time.perf_counter() - started
             self.assertFalse(observation.success)
             self.assertEqual(observation.error, "timeout")
             self.assertLess(duration, 2.0)
+
+    def test_workspace_tool_executor_rejects_inline_python_in_shell(self) -> None:
+        with workspace_tempdir() as tmp_dir:
+            workspace = Path(tmp_dir)
+            executor = WorkspaceToolExecutor(workspace, ToolPermissions(run_python=False))
+
+            observation = executor.execute(
+                Action(ActionType.RUN_SHELL, {"command": "python -c \"print(1)\""})
+            )
+
+            self.assertFalse(observation.success)
+            self.assertEqual(observation.error, "command_rejected")
 
     def test_episode_runner_exports_artifacts(self) -> None:
         with workspace_tempdir() as tmp_dir:

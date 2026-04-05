@@ -5,8 +5,9 @@ from pathlib import Path
 
 from test_support import workspace_tempdir
 
+from synthetic_workspace_gym.generators.base import BaseGenerator, GeneratedPayload
 from synthetic_workspace_gym.generators.registry import get_generator
-from synthetic_workspace_gym.schemas import EnvironmentFamily
+from synthetic_workspace_gym.schemas import EnvironmentFamily, EnvironmentSpec
 
 
 class GeneratorValidityTests(unittest.TestCase):
@@ -27,6 +28,19 @@ class GeneratorValidityTests(unittest.TestCase):
                             self.assertTrue((bundle.visible_root / relative_path).exists())
                         for relative_path in bundle.manifest.hidden_files:
                             self.assertTrue((bundle.hidden_root / relative_path).exists())
+
+    def test_generator_subclasses_must_define_family(self) -> None:
+        with self.assertRaises(TypeError):
+            class MissingFamilyGenerator(BaseGenerator):
+                def _build_environment(
+                    self,
+                    spec: EnvironmentSpec,
+                    *,
+                    root: Path,
+                    visible_root: Path,
+                    hidden_root: Path,
+                ) -> GeneratedPayload:
+                    raise NotImplementedError
 
 
 if __name__ == "__main__":

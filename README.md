@@ -108,11 +108,11 @@ External difficulty is exposed as `1..5` or `easy/medium/hard`. Internally, gene
 | Hidden evaluator boundary | Hidden assets stay outside the agent writable workspace |
 | Logging | Every tool step is recorded as a structured trajectory event |
 | Limits | `max_steps` and wall-clock `time_limit_seconds` enforced |
-| Tool execution guard | Shell and Python execution are restricted to local workspace-oriented usage with path/network guardrails |
+| Tool execution guard | Shell and Python execution are restricted to local workspace-oriented usage with parent-traversal, absolute-path, inline-env, network, and inline-Python guardrails |
 | Evaluation trigger | Runs after episode termination or `submit` |
 | Artifacts | Manifest copy, trajectory, evaluator result, summary, final diff, final workspace |
 
-v1 is intentionally local and subprocess-based. The current guardrails block common parent-traversal, absolute-path, and network-style command patterns, but this is still not a hardened OS sandbox.
+v1 is intentionally local and subprocess-based. Hidden assets are hidden from the normal visible workspace and file-tool surface, but the runtime is still not a hardened OS sandbox. The command policy is a best-effort integrity layer for trusted research workflows, not a guarantee against determined adversarial agents.
 
 ## Trusted Evaluation
 
@@ -122,7 +122,7 @@ v1 is intentionally local and subprocess-based. The current guardrails block com
 | `script_repair` | Execute hidden tests against the repaired workspace |
 | `pipeline` | Execute repaired project and compare final artifact to hidden expected output |
 
-Generation-time validation is built in: every environment is checked by applying the stored reference solution to a scratch copy of the workspace and verifying that the hidden evaluator returns success. Evaluators now expose partial credit through `score` and `subscores` instead of only binary pass/fail outputs.
+Generation-time validation is built in: every environment is checked by applying the stored reference solution to a scratch copy of the workspace, verifying that the hidden evaluator returns success, and asserting that the stored solution actually changes visible artifacts. Evaluators expose partial credit through `score` and `subscores` instead of only binary pass/fail outputs, and subprocess-backed evaluators return structured timeout failures rather than raising raw exceptions.
 
 ## Artifact Layout
 
@@ -182,9 +182,8 @@ uv run swg benchmark --environments generated --agent heuristic --output-dir ben
 | --- | --- |
 | `scripted` | Minimal heuristic smoke-test baseline; intentionally weak |
 | `heuristic` | Scenario-aware oracle-style baseline for infrastructure validation; it uses built-in knowledge of v1 scenario ids and hardcoded repairs |
-| `react` | Deprecated CLI alias for `heuristic`, kept only for backward compatibility |
 
-The baseline layer is intentionally modular so stronger model-backed agents can plug into the same runtime without changing the environment format. The `heuristic` baseline should not be treated as a language-model benchmark; it is a privileged validation baseline for the framework itself.
+The baseline layer is intentionally modular so stronger model-backed agents can plug into the same runtime without changing the environment format. The `heuristic` baseline should not be treated as a language-model benchmark; it is a privileged validation baseline for the framework itself. A `ReActBaselineAgent` compatibility alias still exists in Python for older code, but the CLI now exposes only `scripted` and `heuristic`.
 
 ## Development Notes
 

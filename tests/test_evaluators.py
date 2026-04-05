@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import shutil
 import json
+import shutil
 import unittest
 from pathlib import Path
 
@@ -81,6 +81,49 @@ class EvaluatorCorrectnessTests(unittest.TestCase):
             result = evaluator.evaluate(bad_workspace, bundle.manifest, bundle.hidden_root)
             self.assertFalse(result.success)
             self.assertLess(result.score, 1.0)
+
+    def test_script_repair_timeout_returns_structured_result(self) -> None:
+        with workspace_tempdir() as tmp_dir:
+            root = Path(tmp_dir)
+            generator = get_generator("script_repair")
+            spec = generator.sample_spec(difficulty=3, seed=57)
+            bundle = generator.generate_instance(spec, root / "generated")
+            evaluator = get_evaluator(bundle.manifest.family)
+            timeout_workspace = root / "timeout-script"
+            shutil.copytree(bundle.visible_root, timeout_workspace)
+            target_relative_path = next(iter(bundle.manifest.reference_solution["files"]))
+            target_path = timeout_workspace / target_relative_path
+            target_path.write_text(self._inject_sleep(target_path.read_text(encoding="utf-8")), encoding="utf-8")
+            bundle.manifest.time_limit_seconds = 0.1
+            result = evaluator.evaluate(timeout_workspace, bundle.manifest, bundle.hidden_root)
+            self.assertFalse(result.success)
+            self.assertIn("timeout", result.failure_labels)
+            self.assertEqual(result.score, 0.0)
+
+    def test_pipeline_timeout_returns_structured_result(self) -> None:
+        with workspace_tempdir() as tmp_dir:
+            root = Path(tmp_dir)
+            generator = get_generator("pipeline")
+            spec = generator.sample_spec(difficulty=3, seed=58)
+            bundle = generator.generate_instance(spec, root / "generated")
+            evaluator = get_evaluator(bundle.manifest.family)
+            timeout_workspace = root / "timeout-pipeline"
+            shutil.copytree(bundle.visible_root, timeout_workspace)
+            entrypoint = json.loads((bundle.hidden_root / "evaluator_config.json").read_text(encoding="utf-8"))["entrypoint"]
+            entrypoint_path = timeout_workspace / entrypoint
+            entrypoint_path.write_text(self._inject_sleep(entrypoint_path.read_text(encoding="utf-8")), encoding="utf-8")
+            bundle.manifest.time_limit_seconds = 0.1
+            result = evaluator.evaluate(timeout_workspace, bundle.manifest, bundle.hidden_root)
+            self.assertFalse(result.success)
+            self.assertIn("timeout", result.failure_labels)
+            self.assertEqual(result.score, 0.0)
+
+    def _inject_sleep(self, source: str) -> str:
+        header = "from __future__ import annotations\n\n"
+        payload = "import time\n\ntime.sleep(1)\n\n"
+        if source.startswith(header):
+            return header + payload + source[len(header):]
+        return payload + source
 
 
 if __name__ == "__main__":

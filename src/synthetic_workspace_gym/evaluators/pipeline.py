@@ -17,14 +17,35 @@ class PipelineEvaluator(BaseEvaluator):
     def evaluate(self, workspace_path: Path, manifest: EnvironmentManifest, hidden_root: Path) -> EvaluatorResult:
         started = time.perf_counter()
         config = read_json(hidden_root / "evaluator_config.json")
-        completed = subprocess.run(
-            [sys.executable, str(workspace_path / config["entrypoint"])],
-            cwd=str(workspace_path),
-            capture_output=True,
-            text=True,
-            timeout=manifest.time_limit_seconds,
-            env={**dict(os.environ), "PYTHONDONTWRITEBYTECODE": "1"},
-        )
+        try:
+            completed = subprocess.run(
+                [sys.executable, str(workspace_path / config["entrypoint"])],
+                cwd=str(workspace_path),
+                capture_output=True,
+                text=True,
+                timeout=manifest.time_limit_seconds,
+                env={**dict(os.environ), "PYTHONDONTWRITEBYTECODE": "1"},
+            )
+        except subprocess.TimeoutExpired as exc:
+            return EvaluatorResult(
+                success=False,
+                score=0.0,
+                subscores={
+                    "execution": 0.0,
+                    "valid_json": 0.0,
+                    "row_precision": 0.0,
+                    "row_recall": 0.0,
+                    "row_f1": 0.0,
+                    "exact_match": 0.0,
+                },
+                failure_labels=["timeout"],
+                diagnostics={
+                    "stdout": exc.stdout or "",
+                    "stderr": exc.stderr or "",
+                    "entrypoint": config["entrypoint"],
+                },
+                runtime_seconds=time.perf_counter() - started,
+            )
         if completed.returncode != 0:
             return EvaluatorResult(
                 success=False,
@@ -91,6 +112,7 @@ class PipelineEvaluator(BaseEvaluator):
             "required_output_path": config["required_output_path"],
             "stdout": completed.stdout,
             "stderr": completed.stderr,
+            "returncode": completed.returncode,
         }
         if not success:
             diagnostics["expected_preview"] = expected[:2] if isinstance(expected, list) else expected

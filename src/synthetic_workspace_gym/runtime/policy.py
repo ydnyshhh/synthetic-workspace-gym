@@ -36,7 +36,10 @@ _DISALLOWED_EXECUTABLES = {
     "telnet",
 }
 _ABSOLUTE_WINDOWS_PATH = re.compile(r"(^|[\s'\"(])([A-Za-z]:[\\/])")
+_ABSOLUTE_POSIX_PATH = re.compile(r"(^|[\s'\"(])/")
 _PARENT_SEGMENT = re.compile(r"(^|[\s'\"(])\.\.([\\/]|$)")
+_ENV_ASSIGNMENT = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=.*$")
+_INLINE_PYTHON_FLAGS = {"-c", "-m"}
 
 
 def validate_shell_command(command: str) -> None:
@@ -50,13 +53,26 @@ def validate_shell_command(command: str) -> None:
         raise CommandPolicyError("Shell command rejected because parent-directory traversal is not allowed.")
     if _ABSOLUTE_WINDOWS_PATH.search(command):
         raise CommandPolicyError("Shell command rejected because absolute filesystem paths are not allowed.")
+    if _ABSOLUTE_POSIX_PATH.search(command):
+        raise CommandPolicyError("Shell command rejected because absolute filesystem paths are not allowed.")
     tokens = _split_command(command)
     if tokens:
+        assignment_tokens = _leading_env_assignments(tokens)
+        if assignment_tokens:
+            raise CommandPolicyError(
+                "Shell command rejected because inline environment assignment is not allowed in the local runtime."
+            )
         executable = Path(tokens[0]).name.lower()
         if executable in _DISALLOWED_EXECUTABLES:
             raise CommandPolicyError(
                 f"Shell command rejected because '{tokens[0]}' is outside the allowed local-runtime policy."
             )
+        if _is_python_executable(executable) and any(flag in _INLINE_PYTHON_FLAGS for flag in tokens[1:]):
+            raise CommandPolicyError(
+                "Shell command rejected because inline or module Python execution must use run_python with a workspace script."
+            )
+        if any(_looks_like_absolute_path(token) for token in tokens):
+            raise CommandPolicyError("Shell command rejected because absolute filesystem paths are not allowed.")
 
 
 def resolve_python_script_command(workspace_root: Path, payload: str) -> list[str]:
@@ -84,3 +100,25 @@ def _split_command(command: str) -> list[str]:
         return shlex.split(command, posix=os.name != "nt")
     except ValueError as exc:
         raise CommandPolicyError(f"Command rejected because it could not be parsed: {exc}") from exc
+
+
+def _leading_env_assignments(tokens: list[str]) -> list[str]:
+    assignments: list[str] = []
+    for token in tokens:
+        if _ENV_ASSIGNMENT.match(token):
+            assignments.append(token)
+            continue
+        break
+    return assignments
+
+
+def _looks_like_absolute_path(token: str) -> bool:
+    stripped = token.strip().strip("'\"")
+    return bool(stripped) and (
+        bool(re.match(r"^[A-Za-z]:[\\/]", stripped))
+        or stripped.startswith("/")
+    )
+
+
+def _is_python_executable(executable: str) -> bool:
+    return executable in {"python", "python.exe", "python3", "python3.exe", "py", "py.exe"}

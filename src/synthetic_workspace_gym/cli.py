@@ -28,7 +28,12 @@ def build_parser() -> argparse.ArgumentParser:
 
     run = subparsers.add_parser("run", help="Run a single episode with a baseline agent")
     run.add_argument("--environment", type=Path, required=True)
-    run.add_argument("--agent", choices=["scripted", "heuristic", "react"], default="heuristic")
+    run.add_argument(
+        "--agent",
+        choices=["scripted", "heuristic"],
+        default="heuristic",
+        help="Baseline agent to run: 'scripted' is a weak smoke test, 'heuristic' is the privileged validation baseline.",
+    )
     run.add_argument("--output-dir", type=Path, default=Path("episodes"))
 
     evaluate = subparsers.add_parser("evaluate", help="Evaluate an environment workspace")
@@ -37,7 +42,12 @@ def build_parser() -> argparse.ArgumentParser:
 
     benchmark = subparsers.add_parser("benchmark", help="Run a baseline across a directory of environments")
     benchmark.add_argument("--environments", type=Path, required=True)
-    benchmark.add_argument("--agent", choices=["scripted", "heuristic", "react"], default="heuristic")
+    benchmark.add_argument(
+        "--agent",
+        choices=["scripted", "heuristic"],
+        default="heuristic",
+        help="Baseline agent to run: 'scripted' is a weak smoke test, 'heuristic' is the privileged validation baseline.",
+    )
     benchmark.add_argument("--output-dir", type=Path, default=Path("benchmarks"))
 
     return parser

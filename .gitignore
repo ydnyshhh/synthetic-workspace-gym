@@ -11,3 +11,4 @@ benchmarks/
 smoke-generated/
 smoke-episodes/
 scratch-check/
+debug-*/

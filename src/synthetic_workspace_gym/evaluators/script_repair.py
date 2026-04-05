@@ -17,14 +17,28 @@ class ScriptRepairEvaluator(BaseEvaluator):
         started = time.perf_counter()
         config = read_json(hidden_root / "evaluator_config.json")
         runner_path = (hidden_root / config["runner"]).resolve()
-        completed = subprocess.run(
-            [sys.executable, str(runner_path), str(workspace_path)],
-            cwd=str(hidden_root.resolve()),
-            capture_output=True,
-            text=True,
-            timeout=manifest.time_limit_seconds,
-            env={**dict(os.environ), "PYTHONDONTWRITEBYTECODE": "1"},
-        )
+        try:
+            completed = subprocess.run(
+                [sys.executable, str(runner_path), str(workspace_path)],
+                cwd=str(hidden_root.resolve()),
+                capture_output=True,
+                text=True,
+                timeout=manifest.time_limit_seconds,
+                env={**dict(os.environ), "PYTHONDONTWRITEBYTECODE": "1"},
+            )
+        except subprocess.TimeoutExpired as exc:
+            return EvaluatorResult(
+                success=False,
+                score=0.0,
+                subscores={"tests_passed": 0.0, "tests_total": 0.0, "tests_passed_ratio": 0.0},
+                failure_labels=["timeout"],
+                diagnostics={
+                    "stdout": exc.stdout or "",
+                    "stderr": exc.stderr or "",
+                    "runner": str(runner_path),
+                },
+                runtime_seconds=time.perf_counter() - started,
+            )
         payload = self._extract_payload(completed.stdout)
         if payload is None:
             return EvaluatorResult(
