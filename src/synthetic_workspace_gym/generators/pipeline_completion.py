@@ -12,6 +12,17 @@ from synthetic_workspace_gym.utils.io import write_json, write_text
 class PipelineCompletionGenerator(BaseGenerator):
     family = EnvironmentFamily.PIPELINE
 
+    def _replace_once(self, old: str, new: str, *, label: str, target_path: str):
+        def apply(content: str) -> str:
+            updated = content.replace(old, new, 1)
+            if updated == content:
+                raise ValueError(
+                    f"Bug application '{label}' did not modify {target_path!r}; canonical source drifted."
+                )
+            return updated
+
+        return apply
+
     def _build_environment(self, spec: EnvironmentSpec, *, root: Path, visible_root: Path, hidden_root: Path) -> GeneratedPayload:
         rng = random.Random(spec.seed)
         jobs = self._build_jobs(rng, count=6 + spec.difficulty)
@@ -202,35 +213,51 @@ if __name__ == "__main__":
             {
                 "label": "wrong_input_path",
                 "target_path": "config/pipeline_config.json",
-                "apply": lambda content: content.replace("data/jobs.json", "data/job.json"),
+                "apply": self._replace_once(
+                    "data/jobs.json",
+                    "data/job.json",
+                    label="wrong_input_path",
+                    target_path="config/pipeline_config.json",
+                ),
             },
             {
                 "label": "wrong_output_path",
                 "target_path": "config/pipeline_config.json",
-                "apply": lambda content: content.replace("artifacts/summary.json", "artifacts/result.json"),
+                "apply": self._replace_once(
+                    "artifacts/summary.json",
+                    "artifacts/result.json",
+                    label="wrong_output_path",
+                    target_path="config/pipeline_config.json",
+                ),
             },
             {
                 "label": "missing_normalization_step",
                 "target_path": "run_pipeline.py",
-                "apply": lambda content: content.replace(
+                "apply": self._replace_once(
                     "normalized = normalize_rows(rows)",
                     "normalized = rows",
+                    label="missing_normalization_step",
+                    target_path="run_pipeline.py",
                 ),
             },
             {
                 "label": "aggregation_bug",
                 "target_path": "src/pipeline_app/steps.py",
-                "apply": lambda content: content.replace(
+                "apply": self._replace_once(
                     'summary[team]["total_hours"] = round(float(summary[team]["total_hours"]) + float(row["hours"]), 1)',
                     'summary[team]["total_hours"] = round(float(summary[team]["total_hours"]) + 1, 1)',
+                    label="aggregation_bug",
+                    target_path="src/pipeline_app/steps.py",
                 ),
             },
             {
                 "label": "output_format_bug",
                 "target_path": "src/pipeline_app/io_utils.py",
-                "apply": lambda content: content.replace(
+                "apply": self._replace_once(
                     'Path(path).write_text(json.dumps(payload, indent=2, sort_keys=True) + "\\n", encoding="utf-8")',
                     'Path(path).write_text(str(payload), encoding="utf-8")',
+                    label="output_format_bug",
+                    target_path="src/pipeline_app/io_utils.py",
                 ),
             },
         ]

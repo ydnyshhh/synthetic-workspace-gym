@@ -74,7 +74,10 @@ def command_run(args: argparse.Namespace) -> int:
 def command_evaluate(args: argparse.Namespace) -> int:
     environment = load_environment(args.environment)
     workspace = args.workspace.resolve() if args.workspace else environment.visible_root
-    evaluator = get_evaluator(environment.manifest.family)
+    evaluator = get_evaluator(
+        environment.manifest.family,
+        evaluator_entrypoint=environment.manifest.evaluator_entrypoint,
+    )
     result = evaluator.evaluate(workspace, environment.manifest, environment.hidden_root)
     print(json.dumps(result.to_dict(), indent=2, sort_keys=True))
     return 0 if result.success else 1

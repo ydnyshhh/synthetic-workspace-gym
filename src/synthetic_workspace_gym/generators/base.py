@@ -89,7 +89,10 @@ class BaseGenerator(ABC):
     def validate_instance(self, instance: GeneratedEnvironment):
         from synthetic_workspace_gym.evaluators.registry import get_evaluator
 
-        evaluator = get_evaluator(instance.manifest.family)
+        evaluator = get_evaluator(
+            instance.manifest.family,
+            evaluator_entrypoint=instance.manifest.evaluator_entrypoint,
+        )
         scratch_root = instance.root.parent / ".validation"
         scratch_root.mkdir(parents=True, exist_ok=True)
         with scratch_directory(scratch_root, "swg-validate-") as tmp_dir:

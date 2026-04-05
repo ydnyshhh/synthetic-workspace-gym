@@ -8,14 +8,13 @@ from shutil import copytree
 from synthetic_workspace_gym.agents.base import BaseAgent
 from synthetic_workspace_gym.analysis.artifacts import (
     build_unified_diff,
-    compute_workspace_digest,
     export_episode_artifacts,
     snapshot_texts,
 )
 from synthetic_workspace_gym.evaluators.registry import get_evaluator
 from synthetic_workspace_gym.runtime.environment import LoadedEnvironment
 from synthetic_workspace_gym.runtime.tools import WorkspaceToolExecutor
-from synthetic_workspace_gym.schemas import Action, EpisodeSummary, ToolObservation, ToolState, TrajectoryEvent, utc_timestamp
+from synthetic_workspace_gym.schemas import ActionType, EpisodeSummary, ToolObservation, ToolState, TrajectoryEvent, utc_timestamp
 from synthetic_workspace_gym.utils.scratch import scratch_directory
 
 
@@ -24,7 +23,10 @@ class EpisodeRunner:
     output_root: Path
 
     def run_episode(self, environment: LoadedEnvironment, agent: BaseAgent) -> EpisodeSummary:
-        evaluator = get_evaluator(environment.manifest.family)
+        evaluator = get_evaluator(
+            environment.manifest.family,
+            evaluator_entrypoint=environment.manifest.evaluator_entrypoint,
+        )
         episode_id = f"{environment.manifest.env_id}-{agent.name}-{int(time.time() * 1000)}"
         artifact_root = self.output_root / episode_id
         started = time.perf_counter()
@@ -40,7 +42,6 @@ class EpisodeRunner:
             initial_observation = {
                 "instruction": environment.manifest.instruction,
                 "top_level_files": sorted(item.name for item in workspace.iterdir()),
-                "workspace_root": str(workspace),
             }
             agent.reset(environment.manifest, initial_observation)
             observation: ToolObservation | dict[str, object] = initial_observation
@@ -51,26 +52,19 @@ class EpisodeRunner:
 
             for step_index in range(environment.manifest.max_steps):
                 elapsed = time.perf_counter() - started
-                if elapsed > environment.manifest.time_limit_seconds:
+                remaining_time_seconds = environment.manifest.time_limit_seconds - elapsed
+                if remaining_time_seconds <= 0:
                     break
                 state = ToolState(
                     step_index=step_index,
                     remaining_steps=environment.manifest.max_steps - step_index,
-                    available_tools=[
-                        "read_file",
-                        "write_file",
-                        "append_file",
-                        "list_directory",
-                        "run_shell",
-                        "run_python",
-                        "submit",
-                    ],
+                    available_tools=environment.manifest.tool_permissions.enabled_tools(),
                     recent_files=recent_files,
                     last_exit_code=last_exit_code,
                     submitted=submitted,
                 )
                 action = agent.act(observation, state)
-                observation = executor.execute(action)
+                observation = executor.execute(action, remaining_time_seconds=remaining_time_seconds)
                 recent_files = observation.touched_files
                 touched_files.update(observation.touched_files)
                 last_exit_code = observation.exit_code
@@ -85,11 +79,11 @@ class EpisodeRunner:
                         stderr=observation.stderr,
                         exit_code=observation.exit_code,
                         files_touched=observation.touched_files,
-                        workspace_digest=compute_workspace_digest(workspace),
+                        workspace_digest=observation.workspace_digest or executor.workspace_digest,
                         success=observation.success,
                     )
                 )
-                if action.action_type.value == "submit":
+                if action.action_type == ActionType.SUBMIT:
                     submitted = True
                     break
 

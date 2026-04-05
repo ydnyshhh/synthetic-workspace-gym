@@ -26,10 +26,14 @@ def snapshot_texts(root: Path) -> dict[str, str]:
 
 
 def compute_workspace_digest(root: Path) -> str:
+    return compute_digest_from_hashes(snapshot_hashes(root))
+
+
+def compute_digest_from_hashes(file_hashes: dict[str, str]) -> str:
     digest = hashlib.sha256()
-    for relative_path in list_relative_files(root):
+    for relative_path in sorted(file_hashes):
         digest.update(relative_path.encode("utf-8"))
-        digest.update(file_sha256(root / relative_path).encode("utf-8"))
+        digest.update(file_hashes[relative_path].encode("utf-8"))
     return digest.hexdigest()
 
 

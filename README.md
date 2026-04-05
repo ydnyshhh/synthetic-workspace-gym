@@ -10,6 +10,7 @@ I think one of the bottlenecks in agent research is that environments are still 
 | Focus | Synthetic workspace generation, execution, logging, and trusted evaluation |
 | v1 families | `tabular`, `script_repair`, `pipeline` |
 | Runtime model | Local scratch workspace + hidden evaluator outside writable scope |
+| Evaluator resolution | Dynamic import from manifest `evaluator_entrypoint` |
 | Packaging | Python package with `uv` workflow and `swg` CLI |
 | Status | v1 research infrastructure |
 
@@ -107,10 +108,11 @@ External difficulty is exposed as `1..5` or `easy/medium/hard`. Internally, gene
 | Hidden evaluator boundary | Hidden assets stay outside the agent writable workspace |
 | Logging | Every tool step is recorded as a structured trajectory event |
 | Limits | `max_steps` and wall-clock `time_limit_seconds` enforced |
+| Tool execution guard | Shell and Python execution are restricted to local workspace-oriented usage with path/network guardrails |
 | Evaluation trigger | Runs after episode termination or `submit` |
 | Artifacts | Manifest copy, trajectory, evaluator result, summary, final diff, final workspace |
 
-v1 is intentionally local and subprocess-based. It is a research runtime, not a hardened security sandbox.
+v1 is intentionally local and subprocess-based. The current guardrails block common parent-traversal, absolute-path, and network-style command patterns, but this is still not a hardened OS sandbox.
 
 ## Trusted Evaluation
 
@@ -120,7 +122,7 @@ v1 is intentionally local and subprocess-based. It is a research runtime, not a 
 | `script_repair` | Execute hidden tests against the repaired workspace |
 | `pipeline` | Execute repaired project and compare final artifact to hidden expected output |
 
-Generation-time validation is built in: every environment is checked by applying the stored reference solution to a scratch copy of the workspace and verifying that the hidden evaluator returns success.
+Generation-time validation is built in: every environment is checked by applying the stored reference solution to a scratch copy of the workspace and verifying that the hidden evaluator returns success. Evaluators now expose partial credit through `score` and `subscores` instead of only binary pass/fail outputs.
 
 ## Artifact Layout
 
@@ -209,4 +211,4 @@ The baseline layer is intentionally modular so stronger model-backed agents can 
 
 | Included | Deferred |
 | --- | --- |
-| local runtime, hidden evaluators, trajectory logging, typed manifests, three families, baseline agents, CLI, tests | integrity-aware compilation, reward-hacking variants, decoy leakage files, editable evaluators, provenance monitoring, multi-stage / lifelong environments |
+| local runtime, hidden evaluators, trajectory logging, typed manifests, three families, baseline agents, CLI, tests, dynamic evaluator loading, partial-credit scoring | integrity-aware compilation, reward-hacking variants, decoy leakage files, editable evaluators, provenance monitoring, multi-stage / lifelong environments, broader scenario diversity per family |

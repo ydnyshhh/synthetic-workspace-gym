@@ -8,6 +8,7 @@ import time
 from pathlib import Path
 
 from synthetic_workspace_gym.evaluators.base import BaseEvaluator
+from synthetic_workspace_gym.evaluators.metrics import row_overlap_metrics, weighted_match_score
 from synthetic_workspace_gym.schemas import EnvironmentManifest, EvaluatorResult
 from synthetic_workspace_gym.utils.io import read_json
 
@@ -28,7 +29,14 @@ class PipelineEvaluator(BaseEvaluator):
             return EvaluatorResult(
                 success=False,
                 score=0.0,
-                subscores={"execution": 0.0, "exact_match": 0.0},
+                subscores={
+                    "execution": 0.0,
+                    "valid_json": 0.0,
+                    "row_precision": 0.0,
+                    "row_recall": 0.0,
+                    "row_f1": 0.0,
+                    "exact_match": 0.0,
+                },
                 failure_labels=["execution_failed"],
                 diagnostics={
                     "stdout": completed.stdout,
@@ -42,8 +50,15 @@ class PipelineEvaluator(BaseEvaluator):
         if not output_path.exists():
             return EvaluatorResult(
                 success=False,
-                score=0.0,
-                subscores={"execution": 1.0, "exact_match": 0.0},
+                score=0.2,
+                subscores={
+                    "execution": 1.0,
+                    "valid_json": 0.0,
+                    "row_precision": 0.0,
+                    "row_recall": 0.0,
+                    "row_f1": 0.0,
+                    "exact_match": 0.0,
+                },
                 failure_labels=["output_missing"],
                 diagnostics={"required_output_path": config["required_output_path"]},
                 runtime_seconds=time.perf_counter() - started,
@@ -54,8 +69,15 @@ class PipelineEvaluator(BaseEvaluator):
         except json.JSONDecodeError as exc:
             return EvaluatorResult(
                 success=False,
-                score=0.0,
-                subscores={"execution": 1.0, "exact_match": 0.0},
+                score=0.4,
+                subscores={
+                    "execution": 1.0,
+                    "valid_json": 0.0,
+                    "row_precision": 0.0,
+                    "row_recall": 0.0,
+                    "row_f1": 0.0,
+                    "exact_match": 0.0,
+                },
                 failure_labels=["invalid_json"],
                 diagnostics={"error": str(exc)},
                 runtime_seconds=time.perf_counter() - started,
@@ -63,6 +85,8 @@ class PipelineEvaluator(BaseEvaluator):
 
         expected = read_json(hidden_root / "expected_output.json")
         success = actual == expected
+        metrics = row_overlap_metrics(expected, actual)
+        score = weighted_match_score(output_exists=1.0, valid_structure=1.0, metrics=metrics)
         diagnostics = {
             "required_output_path": config["required_output_path"],
             "stdout": completed.stdout,
@@ -73,8 +97,8 @@ class PipelineEvaluator(BaseEvaluator):
             diagnostics["actual_preview"] = actual[:2] if isinstance(actual, list) else actual
         return EvaluatorResult(
             success=success,
-            score=1.0 if success else 0.0,
-            subscores={"execution": 1.0, "exact_match": 1.0 if success else 0.0},
+            score=score,
+            subscores={"execution": 1.0, "valid_json": 1.0, **metrics},
             failure_labels=[] if success else ["output_mismatch"],
             diagnostics=diagnostics,
             runtime_seconds=time.perf_counter() - started,

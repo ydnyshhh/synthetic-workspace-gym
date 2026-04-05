@@ -16,10 +16,10 @@ class ScriptRepairEvaluator(BaseEvaluator):
     def evaluate(self, workspace_path: Path, manifest: EnvironmentManifest, hidden_root: Path) -> EvaluatorResult:
         started = time.perf_counter()
         config = read_json(hidden_root / "evaluator_config.json")
-        runner_path = hidden_root / config["runner"]
+        runner_path = (hidden_root / config["runner"]).resolve()
         completed = subprocess.run(
             [sys.executable, str(runner_path), str(workspace_path)],
-            cwd=str(hidden_root),
+            cwd=str(hidden_root.resolve()),
             capture_output=True,
             text=True,
             timeout=manifest.time_limit_seconds,
@@ -30,7 +30,7 @@ class ScriptRepairEvaluator(BaseEvaluator):
             return EvaluatorResult(
                 success=False,
                 score=0.0,
-                subscores={"tests_passed_ratio": 0.0},
+                subscores={"tests_passed": 0.0, "tests_total": 0.0, "tests_passed_ratio": 0.0},
                 failure_labels=["hidden_tests_failed"],
                 diagnostics={
                     "stdout": completed.stdout,
@@ -40,15 +40,16 @@ class ScriptRepairEvaluator(BaseEvaluator):
                 runtime_seconds=time.perf_counter() - started,
             )
 
+        tests_passed = float(payload["subscores"].get("tests_passed", 0))
+        tests_total = float(payload["subscores"].get("tests_total", 0))
+        tests_passed_ratio = (tests_passed / tests_total) if tests_total else 0.0
         return EvaluatorResult(
             success=bool(payload["success"]),
-            score=float(payload["score"]),
+            score=1.0 if bool(payload["success"]) else round(tests_passed_ratio, 6),
             subscores={
-                "tests_passed_ratio": (
-                    float(payload["subscores"]["tests_passed"]) / float(payload["subscores"]["tests_total"])
-                    if payload["subscores"]["tests_total"]
-                    else 0.0
-                )
+                "tests_passed": tests_passed,
+                "tests_total": tests_total,
+                "tests_passed_ratio": round(tests_passed_ratio, 6),
             },
             failure_labels=list(payload.get("failure_labels", [])),
             diagnostics={

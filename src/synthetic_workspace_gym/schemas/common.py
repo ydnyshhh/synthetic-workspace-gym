@@ -56,6 +56,24 @@ class ToolPermissions(SerializableDataclass):
     shell_timeout_seconds: int = 10
     python_timeout_seconds: int = 10
 
+    def enabled_tools(self) -> list[str]:
+        enabled: list[str] = []
+        if self.read_file:
+            enabled.append(ActionType.READ_FILE.value)
+        if self.write_file:
+            enabled.append(ActionType.WRITE_FILE.value)
+        if self.append_file:
+            enabled.append(ActionType.APPEND_FILE.value)
+        if self.list_directory:
+            enabled.append(ActionType.LIST_DIRECTORY.value)
+        if self.run_shell:
+            enabled.append(ActionType.RUN_SHELL.value)
+        if self.run_python:
+            enabled.append(ActionType.RUN_PYTHON.value)
+        if self.submit:
+            enabled.append(ActionType.SUBMIT.value)
+        return enabled
+
     @classmethod
     def from_dict(cls, payload: dict[str, Any]) -> "ToolPermissions":
         return cls(**payload)
@@ -215,6 +233,7 @@ class ToolObservation(SerializableDataclass):
     listing: list[str] = field(default_factory=list)
     error: str | None = None
     touched_files: list[str] = field(default_factory=list)
+    workspace_digest: str | None = None
 
 
 @dataclass(slots=True)

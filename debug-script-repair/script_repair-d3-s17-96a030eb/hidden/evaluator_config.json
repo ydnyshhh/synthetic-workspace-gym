@@ -1,0 +1,4 @@
+{
+  "runner": "run_hidden_tests.py",
+  "scenario_id": "path_batch"
+}

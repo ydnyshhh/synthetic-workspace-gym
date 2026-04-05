@@ -12,6 +12,17 @@ from synthetic_workspace_gym.utils.io import write_json, write_text
 class ScriptRepairGenerator(BaseGenerator):
     family = EnvironmentFamily.SCRIPT_REPAIR
 
+    def _replace_once(self, old: str, new: str, *, label: str, target_path: str):
+        def apply(content: str) -> str:
+            updated = content.replace(old, new, 1)
+            if updated == content:
+                raise ValueError(
+                    f"Bug application '{label}' did not modify {target_path!r}; canonical source drifted."
+                )
+            return updated
+
+        return apply
+
     def _build_environment(self, spec: EnvironmentSpec, *, root: Path, visible_root: Path, hidden_root: Path) -> GeneratedPayload:
         rng = random.Random(spec.seed)
         scenario = rng.choice([self._inventory_report_scenario(), self._path_batch_scenario()])
@@ -54,6 +65,8 @@ class ScriptRepairGenerator(BaseGenerator):
 
         hidden_runner = scenario["test_runner"](task_descriptor)
         write_text(hidden_root / "run_hidden_tests.py", hidden_runner)
+        for relative_path, payload in scenario.get("hidden_json_assets", {}).items():
+            write_json(hidden_root / relative_path, payload)
         reference_solution = {
             "files": {path: correct_files[path] for path in sorted(touched_files)},
             "scenario_id": scenario["scenario_id"],
@@ -171,7 +184,7 @@ def main() -> None:
 if __name__ == "__main__":
     main()
 """
-        test_runner = f"""from __future__ import annotations
+        test_runner = """from __future__ import annotations
 
 import json
 import sys
@@ -180,6 +193,8 @@ from pathlib import Path
 
 
 def build_suite(workspace: Path) -> unittest.TestSuite:
+    hidden_root = Path(__file__).resolve().parent
+    expected = json.loads((hidden_root / "expected_inventory_report.json").read_text(encoding="utf-8"))
     sys.path.insert(0, str(workspace / "src"))
     from repair_target.analytics import rolling_average, summarize_items
     from repair_target.report import build_report
@@ -190,11 +205,11 @@ def build_suite(workspace: Path) -> unittest.TestSuite:
 
         def test_summary(self) -> None:
             rows = json.loads((workspace / "data" / "items.json").read_text(encoding="utf-8"))
-            self.assertEqual(summarize_items(rows), {json.dumps(expected_report["summary"])})
+            self.assertEqual(summarize_items(rows), expected["summary"])
 
         def test_report(self) -> None:
             actual = build_report(workspace / "data" / "items.json")
-            self.assertEqual(actual, {json.dumps(expected_report)})
+            self.assertEqual(actual, expected)
 
     return unittest.defaultTestLoader.loadTestsFromTestCase(HiddenTests)
 
@@ -203,20 +218,20 @@ def main() -> None:
     workspace = Path(sys.argv[1]).resolve()
     suite = build_suite(workspace)
     result = unittest.TextTestRunner(verbosity=2).run(suite)
-    payload = {{
+    payload = {
         "success": result.wasSuccessful(),
         "score": 1.0 if result.wasSuccessful() else 0.0,
-        "subscores": {{
+        "subscores": {
             "tests_passed": result.testsRun - len(result.failures) - len(result.errors),
             "tests_total": result.testsRun,
-        }},
+        },
         "failure_labels": ["hidden_tests_failed"] if not result.wasSuccessful() else [],
-        "diagnostics": {{
+        "diagnostics": {
             "tests_run": result.testsRun,
             "failures": [case[0].id() for case in result.failures],
             "errors": [case[0].id() for case in result.errors],
-        }},
-    }}
+        },
+    }
     print(json.dumps(payload, sort_keys=True))
     sys.exit(0 if result.wasSuccessful() else 1)
 
@@ -239,29 +254,38 @@ if __name__ == "__main__":
                 "run_example.py": runner,
                 "data/items.json": json.dumps(items, indent=2, sort_keys=True) + "\n",
             },
+            "hidden_json_assets": {
+                "expected_inventory_report.json": expected_report,
+            },
             "bugs": [
                 {
                     "label": "off_by_one",
                     "target_path": "src/repair_target/analytics.py",
-                    "apply": lambda content: content.replace(
+                    "apply": self._replace_once(
                         "range(len(values) - window + 1)",
                         "range(len(values) - window)",
+                        label="off_by_one",
+                        target_path="src/repair_target/analytics.py",
                     ),
                 },
                 {
                     "label": "wrong_condition",
                     "target_path": "src/repair_target/analytics.py",
-                    "apply": lambda content: content.replace(
+                    "apply": self._replace_once(
                         "if status not in summary:",
                         'if status == "archived":',
+                        label="wrong_condition",
+                        target_path="src/repair_target/analytics.py",
                     ),
                 },
                 {
                     "label": "wrong_return_value",
                     "target_path": "src/repair_target/report.py",
-                    "apply": lambda content: content.replace(
+                    "apply": self._replace_once(
                         '"rolling_average": rolling_average(active_counts, 2),',
                         '"rolling_average": rolling_average(active_counts, 3),',
+                        label="wrong_return_value",
+                        target_path="src/repair_target/report.py",
                     ),
                 },
             ],
@@ -317,7 +341,7 @@ def main() -> None:
 if __name__ == "__main__":
     main()
 """
-        test_runner = f"""from __future__ import annotations
+        test_runner = """from __future__ import annotations
 
 import json
 import sys
@@ -326,6 +350,8 @@ from pathlib import Path
 
 
 def build_suite(workspace: Path) -> unittest.TestSuite:
+    hidden_root = Path(__file__).resolve().parent
+    expected = json.loads((hidden_root / "expected_batch_summary.json").read_text(encoding="utf-8"))
     sys.path.insert(0, str(workspace / "src"))
     from repair_target.batch import compute_batch_summary
     from repair_target.io_helpers import load_measurements
@@ -336,7 +362,7 @@ def build_suite(workspace: Path) -> unittest.TestSuite:
             self.assertEqual(values, [5, 8, 3, 9])
 
         def test_summary(self) -> None:
-            self.assertEqual(compute_batch_summary(workspace), {json.dumps(expected_summary)})
+            self.assertEqual(compute_batch_summary(workspace), expected)
 
     return unittest.defaultTestLoader.loadTestsFromTestCase(HiddenTests)
 
@@ -345,20 +371,20 @@ def main() -> None:
     workspace = Path(sys.argv[1]).resolve()
     suite = build_suite(workspace)
     result = unittest.TextTestRunner(verbosity=2).run(suite)
-    payload = {{
+    payload = {
         "success": result.wasSuccessful(),
         "score": 1.0 if result.wasSuccessful() else 0.0,
-        "subscores": {{
+        "subscores": {
             "tests_passed": result.testsRun - len(result.failures) - len(result.errors),
             "tests_total": result.testsRun,
-        }},
+        },
         "failure_labels": ["hidden_tests_failed"] if not result.wasSuccessful() else [],
-        "diagnostics": {{
+        "diagnostics": {
             "tests_run": result.testsRun,
             "failures": [case[0].id() for case in result.failures],
             "errors": [case[0].id() for case in result.errors],
-        }},
-    }}
+        },
+    }
     print(json.dumps(payload, sort_keys=True))
     sys.exit(0 if result.wasSuccessful() else 1)
 
@@ -381,31 +407,48 @@ if __name__ == "__main__":
                 "run_example.py": runner,
                 "data/measurements.csv": measurements,
             },
+            "hidden_json_assets": {
+                "expected_batch_summary.json": expected_summary,
+            },
             "bugs": [
                 {
                     "label": "missing_import",
                     "target_path": "src/repair_target/io_helpers.py",
-                    "apply": lambda content: content.replace("from pathlib import Path\n\n", ""),
+                    "apply": self._replace_once(
+                        "from pathlib import Path\n\n",
+                        "",
+                        label="missing_import",
+                        target_path="src/repair_target/io_helpers.py",
+                    ),
                 },
                 {
                     "label": "file_path_issue",
                     "target_path": "src/repair_target/io_helpers.py",
-                    "apply": lambda content: content.replace(
+                    "apply": self._replace_once(
                         'data_dir / "measurements.csv"',
                         'data_dir.parent / "measurements.csv"',
+                        label="file_path_issue",
+                        target_path="src/repair_target/io_helpers.py",
                     ),
                 },
                 {
                     "label": "aggregation_bug",
                     "target_path": "src/repair_target/batch.py",
-                    "apply": lambda content: content.replace('"total": sum(values),', '"total": len(values),'),
+                    "apply": self._replace_once(
+                        '"total": sum(values),',
+                        '"total": len(values),',
+                        label="aggregation_bug",
+                        target_path="src/repair_target/batch.py",
+                    ),
                 },
                 {
                     "label": "syntax_error",
                     "target_path": "src/repair_target/batch.py",
-                    "apply": lambda content: content.replace(
+                    "apply": self._replace_once(
                         "def compute_batch_summary(base_dir: Path) -> dict[str, int]:",
                         "def compute_batch_summary(base_dir: Path) -> dict[str, int]",
+                        label="syntax_error",
+                        target_path="src/repair_target/batch.py",
                     ),
                 },
             ],

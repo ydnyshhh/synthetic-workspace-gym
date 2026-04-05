@@ -1,0 +1,80 @@
+{
+  "difficulty": 3,
+  "env_id": "script_repair-d3-s17-96a030eb",
+  "evaluator_entrypoint": "synthetic_workspace_gym.evaluators.script_repair:ScriptRepairEvaluator",
+  "family": "script_repair",
+  "hidden_files": [
+    "evaluator_config.json",
+    "expected_batch_summary.json",
+    "run_hidden_tests.py",
+    "solution_files.json"
+  ],
+  "hidden_root": "hidden",
+  "instruction": "Repair the provided Python workspace so that the hidden tests pass.",
+  "max_steps": 12,
+  "metadata": {
+    "bug_labels": [
+      "file_path_issue",
+      "aggregation_bug"
+    ],
+    "complexity_profile": {
+      "bug_subtlety": 2,
+      "dependency_depth": 2,
+      "distractor_count": 1,
+      "execution_required": true,
+      "file_count": 5,
+      "output_constraint_strength": 3,
+      "reasoning_hops": 3,
+      "transformation_count": 2
+    },
+    "scenario_id": "path_batch",
+    "task_descriptor": {
+      "entrypoint": "python run_example.py",
+      "family": "script_repair",
+      "hints": [
+        "The measurement loader should read from the visible `data` directory.",
+        "The batch summary should aggregate every row in the CSV.",
+        "If the module fails to import, inspect recent edits around function signatures and imports."
+      ],
+      "scenario_id": "path_batch",
+      "target_files": [
+        "src/repair_target/batch.py",
+        "src/repair_target/io_helpers.py"
+      ]
+    }
+  },
+  "reference_solution": {
+    "bug_labels": [
+      "file_path_issue",
+      "aggregation_bug"
+    ],
+    "files": {
+      "src/repair_target/batch.py": "from __future__ import annotations\n\nfrom pathlib import Path\n\nfrom repair_target.io_helpers import load_measurements\n\n\ndef compute_batch_summary(base_dir: Path) -> dict[str, int]:\n    data_dir = Path(base_dir) / \"data\"\n    values = load_measurements(data_dir)\n    return {\n        \"count\": len(values),\n        \"minimum\": min(values),\n        \"maximum\": max(values),\n        \"total\": sum(values),\n    }\n",
+      "src/repair_target/io_helpers.py": "from __future__ import annotations\n\nfrom pathlib import Path\n\n\ndef load_measurements(data_dir: Path) -> list[int]:\n    path = data_dir / \"measurements.csv\"\n    rows = Path(path).read_text(encoding=\"utf-8\").strip().splitlines()[1:]\n    return [int(row.split(\",\")[1]) for row in rows]\n"
+    },
+    "scenario_id": "path_batch"
+  },
+  "seed": 17,
+  "time_limit_seconds": 60,
+  "tool_permissions": {
+    "append_file": true,
+    "list_directory": true,
+    "python_timeout_seconds": 10,
+    "read_file": true,
+    "run_python": true,
+    "run_shell": true,
+    "shell_timeout_seconds": 10,
+    "submit": true,
+    "write_file": true
+  },
+  "visible_files": [
+    "README.md",
+    "data/measurements.csv",
+    "run_example.py",
+    "src/repair_target/__init__.py",
+    "src/repair_target/batch.py",
+    "src/repair_target/io_helpers.py",
+    "task.json"
+  ],
+  "workspace_root": "visible"
+}
