@@ -39,7 +39,7 @@ class ScriptRepairEvaluator(BaseEvaluator):
                 },
                 runtime_seconds=time.perf_counter() - started,
             )
-        payload = self._extract_payload(completed.stdout)
+        payload = self.extract_payload(completed.stdout)
         if payload is None:
             return EvaluatorResult(
                 success=False,
@@ -75,7 +75,7 @@ class ScriptRepairEvaluator(BaseEvaluator):
             runtime_seconds=time.perf_counter() - started,
         )
 
-    def _extract_payload(self, stdout: str) -> dict[str, object] | None:
+    def extract_payload(self, stdout: str) -> dict[str, object] | None:
         for line in reversed([item.strip() for item in stdout.splitlines() if item.strip()]):
             try:
                 return json.loads(line)

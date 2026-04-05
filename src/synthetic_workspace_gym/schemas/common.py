@@ -12,19 +12,19 @@ class SerializableDataclass:
     def to_dict(self) -> dict[str, Any]:
         payload: dict[str, Any] = {}
         for item in fields(self):
-            payload[item.name] = _serialize_value(getattr(self, item.name))
+            payload[item.name] = serialize_value(getattr(self, item.name))
         return payload
 
 
-def _serialize_value(value: Any) -> Any:
+def serialize_value(value: Any) -> Any:
     if isinstance(value, Enum):
         return value.value
     if isinstance(value, SerializableDataclass):
         return value.to_dict()
     if isinstance(value, list):
-        return [_serialize_value(item) for item in value]
+        return [serialize_value(item) for item in value]
     if isinstance(value, dict):
-        return {str(key): _serialize_value(item) for key, item in value.items()}
+        return {str(key): serialize_value(item) for key, item in value.items()}
     return value
 
 

@@ -8,9 +8,9 @@ from pathlib import Path
 from typing import Any
 
 
-def _to_json_compatible(value: Any) -> Any:
+def convert_to_json_compatible(value: Any) -> Any:
     if is_dataclass(value):
-        return {key: _to_json_compatible(item) for key, item in asdict(value).items()}
+        return {key: convert_to_json_compatible(item) for key, item in asdict(value).items()}
     if isinstance(value, Enum):
         return value.value
     if isinstance(value, Path):
@@ -20,16 +20,16 @@ def _to_json_compatible(value: Any) -> Any:
             value = value.replace(tzinfo=timezone.utc)
         return value.isoformat()
     if isinstance(value, dict):
-        return {str(key): _to_json_compatible(item) for key, item in value.items()}
+        return {str(key): convert_to_json_compatible(item) for key, item in value.items()}
     if isinstance(value, (list, tuple, set)):
-        return [_to_json_compatible(item) for item in value]
+        return [convert_to_json_compatible(item) for item in value]
     return value
 
 
 def to_json_compatible(value: Any) -> Any:
     """Convert a value into a JSON-safe structure."""
 
-    return _to_json_compatible(value)
+    return convert_to_json_compatible(value)
 
 
 def write_json(path: Path, payload: Any, *, indent: int = 2) -> None:

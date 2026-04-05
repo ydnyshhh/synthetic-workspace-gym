@@ -89,7 +89,7 @@ def build_sales_csv_pipeline_scenario(generator) -> dict[str, object]:
         "files": {
             "src/pipeline_app/__init__.py": "",
             "src/pipeline_app/csv_loader.py": csv_loader,
-            "src/pipeline_app/io_utils.py": generator._io_utils_module(),
+            "src/pipeline_app/io_utils.py": generator.io_utils_module(),
             "src/pipeline_app/steps.py": steps,
             "run_pipeline.py": dedent(
                 """\
@@ -127,7 +127,7 @@ def build_sales_csv_pipeline_scenario(generator) -> dict[str, object]:
             {
                 "label": "stale_input_path",
                 "target_path": "config/pipeline_config.json",
-                "apply": generator._replace_once(
+                "apply": generator.replace_once(
                     "data/sales.csv",
                     "data/sale.csv",
                     label="stale_input_path",
@@ -137,7 +137,7 @@ def build_sales_csv_pipeline_scenario(generator) -> dict[str, object]:
             {
                 "label": "wrong_output_path",
                 "target_path": "config/pipeline_config.json",
-                "apply": generator._replace_once(
+                "apply": generator.replace_once(
                     "artifacts/normalized_sales.json",
                     "artifacts/sales.json",
                     label="wrong_output_path",
@@ -147,7 +147,7 @@ def build_sales_csv_pipeline_scenario(generator) -> dict[str, object]:
             {
                 "label": "missing_normalization_step",
                 "target_path": "run_pipeline.py",
-                "apply": generator._replace_once(
+                "apply": generator.replace_once(
                     "normalized = normalize_rows(rows)",
                     "normalized = rows",
                     label="missing_normalization_step",
@@ -157,7 +157,7 @@ def build_sales_csv_pipeline_scenario(generator) -> dict[str, object]:
             {
                 "label": "wrong_filter_policy",
                 "target_path": "src/pipeline_app/steps.py",
-                "apply": generator._replace_once(
+                "apply": generator.replace_once(
                     'if not include_inactive and not row["active"]:',
                     'if not include_inactive and row["active"]:',
                     label="wrong_filter_policy",
@@ -167,7 +167,7 @@ def build_sales_csv_pipeline_scenario(generator) -> dict[str, object]:
             {
                 "label": "invalid_serialization",
                 "target_path": "src/pipeline_app/io_utils.py",
-                "apply": generator._replace_once(
+                "apply": generator.replace_once(
                     'Path(path).write_text(json.dumps(payload, indent=2, sort_keys=True) + "\\n", encoding="utf-8")',
                     'Path(path).write_text(str(payload), encoding="utf-8")',
                     label="invalid_serialization",
@@ -239,7 +239,7 @@ def build_artifact_stitch_pipeline_scenario(generator) -> dict[str, object]:
         },
         "files": {
             "src/pipeline_app/__init__.py": "",
-            "src/pipeline_app/io_utils.py": generator._io_utils_module(),
+            "src/pipeline_app/io_utils.py": generator.io_utils_module(),
             "src/pipeline_app/loader.py": loader,
             "src/pipeline_app/merge.py": merge,
             "run_pipeline.py": dedent(
@@ -278,7 +278,7 @@ def build_artifact_stitch_pipeline_scenario(generator) -> dict[str, object]:
             {
                 "label": "stale_fragment_dir",
                 "target_path": "config/pipeline_config.json",
-                "apply": generator._replace_once(
+                "apply": generator.replace_once(
                     "data/fragments",
                     "data/fragment",
                     label="stale_fragment_dir",
@@ -288,7 +288,7 @@ def build_artifact_stitch_pipeline_scenario(generator) -> dict[str, object]:
             {
                 "label": "wrong_output_path",
                 "target_path": "config/pipeline_config.json",
-                "apply": generator._replace_once(
+                "apply": generator.replace_once(
                     "artifacts/merged_report.json",
                     "artifacts/report.json",
                     label="wrong_output_path",
@@ -298,7 +298,7 @@ def build_artifact_stitch_pipeline_scenario(generator) -> dict[str, object]:
             {
                 "label": "omitted_merge_stage",
                 "target_path": "run_pipeline.py",
-                "apply": generator._replace_once(
+                "apply": generator.replace_once(
                     "stitched = stitch_fragments(rows)",
                     "stitched = rows",
                     label="omitted_merge_stage",
@@ -308,7 +308,7 @@ def build_artifact_stitch_pipeline_scenario(generator) -> dict[str, object]:
             {
                 "label": "aggregation_bug",
                 "target_path": "src/pipeline_app/merge.py",
-                "apply": generator._replace_once(
+                "apply": generator.replace_once(
                     'summary[report]["count"] = int(summary[report]["count"]) + int(row["count"])',
                     'summary[report]["count"] = int(summary[report]["count"]) + 1',
                     label="aggregation_bug",
@@ -404,7 +404,7 @@ def build_quality_gate_pipeline_scenario(generator) -> dict[str, object]:
         },
         "files": {
             "src/pipeline_app/__init__.py": "",
-            "src/pipeline_app/io_utils.py": generator._io_utils_module(include_loader=True),
+            "src/pipeline_app/io_utils.py": generator.io_utils_module(include_loader=True),
             "src/pipeline_app/quality.py": quality,
             "run_pipeline.py": dedent(
                 """\
@@ -446,7 +446,7 @@ def build_quality_gate_pipeline_scenario(generator) -> dict[str, object]:
             {
                 "label": "wrong_output_path",
                 "target_path": "config/pipeline_config.json",
-                "apply": generator._replace_once(
+                "apply": generator.replace_once(
                     "artifacts/quality_report.json",
                     "artifacts/report.json",
                     label="wrong_output_path",
@@ -456,7 +456,7 @@ def build_quality_gate_pipeline_scenario(generator) -> dict[str, object]:
             {
                 "label": "missing_normalization_stage",
                 "target_path": "run_pipeline.py",
-                "apply": generator._replace_once(
+                "apply": generator.replace_once(
                     "normalized = normalize_rows(rows)",
                     "normalized = rows",
                     label="missing_normalization_stage",
@@ -466,7 +466,7 @@ def build_quality_gate_pipeline_scenario(generator) -> dict[str, object]:
             {
                 "label": "wrong_filter_policy",
                 "target_path": "src/pipeline_app/quality.py",
-                "apply": generator._replace_once(
+                "apply": generator.replace_once(
                     'if row["quality"] != minimum_quality:',
                     'if row["quality"] == minimum_quality:',
                     label="wrong_filter_policy",
@@ -476,7 +476,7 @@ def build_quality_gate_pipeline_scenario(generator) -> dict[str, object]:
             {
                 "label": "helper_drift",
                 "target_path": "src/pipeline_app/quality.py",
-                "apply": generator._replace_once(
+                "apply": generator.replace_once(
                     'float(summary[team]["total_hours"]) + float(row["hours"])',
                     'float(summary[team]["total_hours"]) + 1',
                     label="helper_drift",

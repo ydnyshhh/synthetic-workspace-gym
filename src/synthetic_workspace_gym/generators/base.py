@@ -42,7 +42,7 @@ class BaseGenerator(ABC):
 
     def sample_spec(self, difficulty: int, seed: int, **overrides: object) -> EnvironmentSpec:
         difficulty = int(difficulty)
-        family = self._require_family()
+        family = self.require_family()
         spec = EnvironmentSpec(
             env_family=family,
             difficulty=difficulty,
@@ -68,7 +68,7 @@ class BaseGenerator(ABC):
         visible_root.mkdir(parents=True, exist_ok=True)
         hidden_root.mkdir(parents=True, exist_ok=True)
 
-        payload = self._build_environment(spec, root=root, visible_root=visible_root, hidden_root=hidden_root)
+        payload = self.build_environment(spec, root=root, visible_root=visible_root, hidden_root=hidden_root)
         manifest = EnvironmentManifest(
             env_id=env_id,
             family=spec.env_family,
@@ -99,7 +99,7 @@ class BaseGenerator(ABC):
     def validate_instance(self, instance: GeneratedEnvironment):
         from synthetic_workspace_gym.evaluators.registry import get_evaluator
 
-        self._validate_reference_solution(instance)
+        self.validate_reference_solution(instance)
         evaluator = get_evaluator(
             instance.manifest.family,
             evaluator_entrypoint=instance.manifest.evaluator_entrypoint,
@@ -114,15 +114,15 @@ class BaseGenerator(ABC):
             return evaluator.evaluate(workspace, instance.manifest, instance.hidden_root)
 
     @abstractmethod
-    def _build_environment(self, spec: EnvironmentSpec, *, root: Path, visible_root: Path, hidden_root: Path) -> GeneratedPayload:
+    def build_environment(self, spec: EnvironmentSpec, *, root: Path, visible_root: Path, hidden_root: Path) -> GeneratedPayload:
         raise NotImplementedError
 
-    def _require_family(self) -> EnvironmentFamily:
+    def require_family(self) -> EnvironmentFamily:
         if self.family is None:
             raise TypeError(f"{type(self).__name__} must define a concrete EnvironmentFamily before use.")
         return EnvironmentFamily(self.family)
 
-    def _validate_reference_solution(self, instance: GeneratedEnvironment) -> None:
+    def validate_reference_solution(self, instance: GeneratedEnvironment) -> None:
         solution_files = instance.manifest.reference_solution.get("files", {})
         if not solution_files:
             raise ValueError("Reference solution metadata must include at least one file artifact.")

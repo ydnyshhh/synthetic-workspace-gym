@@ -14,21 +14,21 @@ from synthetic_workspace_gym.utils.io import write_json, write_text
 class TabularTransformationGenerator(BaseGenerator):
     family = EnvironmentFamily.TABULAR
 
-    _date_formats = ("%Y-%m-%d", "%m/%d/%Y", "%d-%b-%Y")
-    _segments = ("enterprise", "midmarket", "smb")
-    _regions = ("north", "south", "east", "west")
-    _statuses = ("completed", "processing", "cancelled")
+    date_formats = ("%Y-%m-%d", "%m/%d/%Y", "%d-%b-%Y")
+    segments = ("enterprise", "midmarket", "smb")
+    regions = ("north", "south", "east", "west")
+    statuses = ("completed", "processing", "cancelled")
 
-    def _build_environment(self, spec: EnvironmentSpec, *, root: Path, visible_root: Path, hidden_root: Path) -> GeneratedPayload:
+    def build_environment(self, spec: EnvironmentSpec, *, root: Path, visible_root: Path, hidden_root: Path) -> GeneratedPayload:
         rng = random.Random(spec.seed)
         include_customers = spec.difficulty >= 3
         include_adjustments = spec.difficulty >= 4
         include_duplicates = spec.difficulty >= 2
         include_distractor = spec.difficulty >= 4
 
-        customers = self._build_customers(rng, count=4 + spec.difficulty)
-        orders = self._build_orders(rng, customers, row_count=10 + (spec.difficulty * 5), include_duplicates=include_duplicates)
-        adjustments = self._build_adjustments(rng, orders) if include_adjustments else []
+        customers = self.build_customers(rng, count=4 + spec.difficulty)
+        orders = self.build_orders(rng, customers, row_count=10 + (spec.difficulty * 5), include_duplicates=include_duplicates)
+        adjustments = self.build_adjustments(rng, orders) if include_adjustments else []
 
         output_path = "outputs/report.json"
         task_descriptor = {
@@ -51,7 +51,7 @@ class TabularTransformationGenerator(BaseGenerator):
             task_descriptor["input_files"].append("data/adjustments.csv")
             task_descriptor["operations"].append("apply_adjustments")
 
-        expected_output = self._compute_expected_output(
+        expected_output = self.compute_expected_output(
             orders=orders,
             customers=customers,
             adjustments=adjustments,
@@ -60,18 +60,18 @@ class TabularTransformationGenerator(BaseGenerator):
             include_adjustments=include_adjustments,
         )
 
-        self._write_orders_csv(visible_root / "data" / "orders.csv", orders)
+        self.write_orders_csv(visible_root / "data" / "orders.csv", orders)
         if include_customers:
             write_json(visible_root / "data" / "customers.json", customers)
         if include_adjustments:
-            self._write_adjustments_csv(visible_root / "data" / "adjustments.csv", adjustments)
+            self.write_adjustments_csv(visible_root / "data" / "adjustments.csv", adjustments)
         if include_distractor:
             write_text(
                 visible_root / "notes" / "legacy_columns.md",
                 "The `sales_owner` and `legacy_code` fields are historical artifacts and do not belong in the final report.\n",
             )
 
-        write_text(visible_root / "README.md", self._build_readme(task_descriptor))
+        write_text(visible_root / "README.md", self.build_readme(task_descriptor))
         write_json(visible_root / "task.json", task_descriptor)
 
         write_json(hidden_root / "expected_output.json", expected_output)
@@ -103,26 +103,26 @@ class TabularTransformationGenerator(BaseGenerator):
             },
         }
         return GeneratedPayload(
-            instruction=self._build_instruction(task_descriptor),
+            instruction=self.build_instruction(task_descriptor),
             metadata=metadata,
             reference_solution=reference_solution,
             evaluator_entrypoint="synthetic_workspace_gym.evaluators.tabular:TabularEvaluator",
         )
 
-    def _build_customers(self, rng: random.Random, *, count: int) -> list[dict[str, str]]:
+    def build_customers(self, rng: random.Random, *, count: int) -> list[dict[str, str]]:
         customers: list[dict[str, str]] = []
         for index in range(count):
             customers.append(
                 {
                     "customer_id": f"C{index + 1:03d}",
-                    "segment": self._segments[index % len(self._segments)],
-                    "region": self._regions[(index + 1) % len(self._regions)],
+                    "segment": self.segments[index % len(self.segments)],
+                    "region": self.regions[(index + 1) % len(self.regions)],
                 }
             )
         rng.shuffle(customers)
         return customers
 
-    def _build_orders(
+    def build_orders(
         self,
         rng: random.Random,
         customers: list[dict[str, str]],
@@ -140,8 +140,8 @@ class TabularTransformationGenerator(BaseGenerator):
             row = {
                 "order_id": f"O{index + 1:04d}",
                 "customer_id": customer["customer_id"],
-                "status": rng.choices(self._statuses, weights=(0.65, 0.2, 0.15), k=1)[0],
-                "order_date": order_date.strftime(rng.choice(self._date_formats)),
+                "status": rng.choices(self.statuses, weights=(0.65, 0.2, 0.15), k=1)[0],
+                "order_date": order_date.strftime(rng.choice(self.date_formats)),
                 "updated_at": updated_at.isoformat(),
                 "amount": f"{amount:.2f}",
                 "sales_owner": f"rep-{rng.randint(1, 8)}",
@@ -165,7 +165,7 @@ class TabularTransformationGenerator(BaseGenerator):
         rng.shuffle(orders)
         return orders
 
-    def _build_adjustments(self, rng: random.Random, orders: list[dict[str, str]]) -> list[dict[str, str]]:
+    def build_adjustments(self, rng: random.Random, orders: list[dict[str, str]]) -> list[dict[str, str]]:
         unique_order_ids = sorted({row["order_id"] for row in orders})
         selected = rng.sample(unique_order_ids, k=max(2, len(unique_order_ids) // 4))
         adjustments = []
@@ -178,7 +178,7 @@ class TabularTransformationGenerator(BaseGenerator):
             )
         return adjustments
 
-    def _compute_expected_output(
+    def compute_expected_output(
         self,
         *,
         orders: list[dict[str, str]],
@@ -203,7 +203,7 @@ class TabularTransformationGenerator(BaseGenerator):
         for row in iterable:
             if row["status"] == "cancelled":
                 continue
-            parsed_date = self._parse_date(row["order_date"])
+            parsed_date = self.parse_date(row["order_date"])
             month = parsed_date.strftime("%Y-%m")
             amount = float(row["amount"])
             if include_adjustments:
@@ -226,29 +226,29 @@ class TabularTransformationGenerator(BaseGenerator):
         sort_keys = ["month"] + (["segment"] if include_customers else [])
         return sorted(rows, key=lambda item: tuple(str(item[key]) for key in sort_keys))
 
-    def _parse_date(self, value: str) -> datetime:
-        for fmt in self._date_formats:
+    def parse_date(self, value: str) -> datetime:
+        for fmt in self.date_formats:
             try:
                 return datetime.strptime(value, fmt)
             except ValueError:
                 continue
         raise ValueError(f"Unsupported date format: {value}")
 
-    def _write_orders_csv(self, path: Path, rows: list[dict[str, str]]) -> None:
+    def write_orders_csv(self, path: Path, rows: list[dict[str, str]]) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
         with path.open("w", encoding="utf-8", newline="") as handle:
             writer = csv.DictWriter(handle, fieldnames=list(rows[0].keys()))
             writer.writeheader()
             writer.writerows(rows)
 
-    def _write_adjustments_csv(self, path: Path, rows: list[dict[str, str]]) -> None:
+    def write_adjustments_csv(self, path: Path, rows: list[dict[str, str]]) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
         with path.open("w", encoding="utf-8", newline="") as handle:
             writer = csv.DictWriter(handle, fieldnames=["order_id", "adjustment"])
             writer.writeheader()
             writer.writerows(rows)
 
-    def _build_instruction(self, task_descriptor: dict[str, object]) -> str:
+    def build_instruction(self, task_descriptor: dict[str, object]) -> str:
         parts = [
             "Create the cleaned monthly report described in README.md.",
             f"Write the final artifact to {task_descriptor['output_path']}.",
@@ -256,7 +256,7 @@ class TabularTransformationGenerator(BaseGenerator):
         ]
         return " ".join(parts)
 
-    def _build_readme(self, task_descriptor: dict[str, object]) -> str:
+    def build_readme(self, task_descriptor: dict[str, object]) -> str:
         operations = "\n".join(
             f"{index}. `{operation}`"
             for index, operation in enumerate(task_descriptor["operations"], start=1)

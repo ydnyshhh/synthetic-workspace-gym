@@ -84,7 +84,7 @@ def build_csv_schema_drift_scenario(generator) -> dict[str, object]:
             "src/repair_target/__init__.py": "",
             "src/repair_target/parser.py": parser,
             "src/repair_target/report.py": report,
-            "run_example.py": generator._json_runner(
+            "run_example.py": generator.json_runner(
                 import_block="""
                 from repair_target.parser import load_orders
                 from repair_target.report import build_region_report
@@ -100,7 +100,7 @@ def build_csv_schema_drift_scenario(generator) -> dict[str, object]:
             {
                 "label": "schema_mapping_bug",
                 "target_path": "src/repair_target/parser.py",
-                "apply": generator._replace_once(
+                "apply": generator.replace_once(
                     '"account_id": row["account_id"],',
                     '"account_id": row["customer_id"],',
                     label="schema_mapping_bug",
@@ -110,7 +110,7 @@ def build_csv_schema_drift_scenario(generator) -> dict[str, object]:
             {
                 "label": "missing_rows_bug",
                 "target_path": "src/repair_target/parser.py",
-                "apply": generator._replace_once(
+                "apply": generator.replace_once(
                     'if not row.get("account_id"):',
                     'if not row.get("customer_id"):',
                     label="missing_rows_bug",
@@ -120,7 +120,7 @@ def build_csv_schema_drift_scenario(generator) -> dict[str, object]:
             {
                 "label": "wrong_sort_key",
                 "target_path": "src/repair_target/report.py",
-                "apply": generator._replace_once(
+                "apply": generator.replace_once(
                     'return sorted(summary.values(), key=lambda item: str(item["region"]))',
                     'return sorted(summary.values(), key=lambda item: str(item["row_count"]))',
                     label="wrong_sort_key",
@@ -128,7 +128,7 @@ def build_csv_schema_drift_scenario(generator) -> dict[str, object]:
                 ),
             },
         ],
-        "test_runner": generator._hidden_runner(
+        "test_runner": generator.hidden_runner(
             asset_setup='expected = json.loads((hidden_root / "expected_region_report.json").read_text(encoding="utf-8"))',
             import_block="""
             from repair_target.parser import load_orders
@@ -174,11 +174,11 @@ def build_timestamp_normalization_scenario(generator) -> dict[str, object]:
 
         from datetime import datetime
 
-        _FORMATS = ("%Y-%m-%d %H:%M", "%m/%d/%Y %H:%M", "%Y/%m/%d %H:%M", "%d-%b-%Y %H:%M")
+        FORMATS = ("%Y-%m-%d %H:%M", "%m/%d/%Y %H:%M", "%Y/%m/%d %H:%M", "%d-%b-%Y %H:%M")
 
 
         def parse_timestamp(value: str) -> datetime:
-            for fmt in _FORMATS:
+            for fmt in FORMATS:
                 try:
                     return datetime.strptime(value, fmt)
                 except ValueError:
@@ -234,7 +234,7 @@ def build_timestamp_normalization_scenario(generator) -> dict[str, object]:
             "src/repair_target/__init__.py": "",
             "src/repair_target/time_utils.py": time_utils,
             "src/repair_target/report.py": report,
-            "run_example.py": generator._json_runner(
+            "run_example.py": generator.json_runner(
                 import_block="from repair_target.report import build_report",
                 expression='build_report(json.loads((workspace / "data" / "events.json").read_text(encoding="utf-8")))',
             ),
@@ -247,7 +247,7 @@ def build_timestamp_normalization_scenario(generator) -> dict[str, object]:
             {
                 "label": "missing_format",
                 "target_path": "src/repair_target/time_utils.py",
-                "apply": generator._replace_once(
+                "apply": generator.replace_once(
                     '"%Y/%m/%d %H:%M"',
                     '"%Y-%d-%m %H:%M"',
                     label="missing_format",
@@ -257,7 +257,7 @@ def build_timestamp_normalization_scenario(generator) -> dict[str, object]:
             {
                 "label": "wrong_sort_key",
                 "target_path": "src/repair_target/time_utils.py",
-                "apply": generator._replace_once(
+                "apply": generator.replace_once(
                     'return sorted(rows, key=lambda row: parse_timestamp(str(row["timestamp"])))',
                     'return sorted(rows, key=lambda row: str(row["timestamp"]))',
                     label="wrong_sort_key",
@@ -267,7 +267,7 @@ def build_timestamp_normalization_scenario(generator) -> dict[str, object]:
             {
                 "label": "wrong_output_schema",
                 "target_path": "src/repair_target/report.py",
-                "apply": generator._replace_once(
+                "apply": generator.replace_once(
                     'day = stamp.strftime("%Y-%m-%d")',
                     'day = stamp.strftime("%m/%d/%Y")',
                     label="wrong_output_schema",
@@ -275,7 +275,7 @@ def build_timestamp_normalization_scenario(generator) -> dict[str, object]:
                 ),
             },
         ],
-        "test_runner": generator._hidden_runner(
+        "test_runner": generator.hidden_runner(
             asset_setup='expected = json.loads((hidden_root / "expected_timeline_report.json").read_text(encoding="utf-8"))',
             import_block="""
             from repair_target.report import build_report
@@ -396,7 +396,7 @@ def build_team_roster_export_scenario(generator) -> dict[str, object]:
             {
                 "label": "cross_file_contract_bug",
                 "target_path": "src/repair_target/contracts.py",
-                "apply": generator._replace_once(
+                "apply": generator.replace_once(
                     '{"team": team, "member_count": 0, "total_score": 0}',
                     '{"team_name": team, "member_count": 0, "total_score": 0}',
                     label="cross_file_contract_bug",
@@ -406,7 +406,7 @@ def build_team_roster_export_scenario(generator) -> dict[str, object]:
             {
                 "label": "wrong_sort_key",
                 "target_path": "src/repair_target/contracts.py",
-                "apply": generator._replace_once(
+                "apply": generator.replace_once(
                     'return sorted(summary.values(), key=lambda item: str(item["team"]))',
                     'return sorted(summary.values(), key=lambda item: int(item["member_count"]))',
                     label="wrong_sort_key",
@@ -416,7 +416,7 @@ def build_team_roster_export_scenario(generator) -> dict[str, object]:
             {
                 "label": "serialization_bug",
                 "target_path": "src/repair_target/writer.py",
-                "apply": generator._replace_once(
+                "apply": generator.replace_once(
                     'Path(path).write_text(json.dumps(payload, indent=2, sort_keys=True) + "\\n", encoding="utf-8")',
                     'Path(path).write_text(str(payload), encoding="utf-8")',
                     label="serialization_bug",
@@ -424,7 +424,7 @@ def build_team_roster_export_scenario(generator) -> dict[str, object]:
                 ),
             },
         ],
-        "test_runner": generator._hidden_runner(
+        "test_runner": generator.hidden_runner(
             asset_setup='expected = json.loads((hidden_root / "expected_roster_report.json").read_text(encoding="utf-8"))',
             import_block="""
             from repair_target.contracts import build_rows

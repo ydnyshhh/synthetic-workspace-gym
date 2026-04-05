@@ -18,7 +18,7 @@ from synthetic_workspace_gym.utils.io import write_json, write_text
 class PipelineCompletionGenerator(BaseGenerator):
     family = EnvironmentFamily.PIPELINE
 
-    def _replace_once(self, old: str, new: str, *, label: str, target_path: str):
+    def replace_once(self, old: str, new: str, *, label: str, target_path: str):
         def apply(content: str) -> str:
             updated = content.replace(old, new, 1)
             if updated == content:
@@ -29,9 +29,9 @@ class PipelineCompletionGenerator(BaseGenerator):
 
         return apply
 
-    def _build_environment(self, spec: EnvironmentSpec, *, root: Path, visible_root: Path, hidden_root: Path) -> GeneratedPayload:
+    def build_environment(self, spec: EnvironmentSpec, *, root: Path, visible_root: Path, hidden_root: Path) -> GeneratedPayload:
         rng = random.Random(spec.seed)
-        scenarios = self._scenario_pool(rng, spec)
+        scenarios = self.scenario_pool(rng, spec)
         scenario = scenarios[(spec.seed - 1) % len(scenarios)]
         expected_output = scenario["expected_output"]
         correct_files = dict(scenario["files"])
@@ -67,9 +67,9 @@ class PipelineCompletionGenerator(BaseGenerator):
             "entrypoint": "python run_pipeline.py",
             "required_output_path": scenario["required_output_path"],
             "target_files": sorted(touched_files),
-            "hints": self._visible_hints(list(scenario["hints"]), spec.difficulty),
+            "hints": self.visible_hints(list(scenario["hints"]), spec.difficulty),
         }
-        write_text(visible_root / "README.md", self._build_readme(scenario, task_descriptor))
+        write_text(visible_root / "README.md", self.build_readme(scenario, task_descriptor))
         write_json(visible_root / "task.json", task_descriptor)
 
         reference_solution = {
@@ -101,23 +101,23 @@ class PipelineCompletionGenerator(BaseGenerator):
             evaluator_entrypoint="synthetic_workspace_gym.evaluators.pipeline:PipelineEvaluator",
         )
 
-    def _visible_hints(self, hints: list[str], difficulty: int) -> list[str]:
+    def visible_hints(self, hints: list[str], difficulty: int) -> list[str]:
         if difficulty <= 2:
             return hints
         if difficulty == 3:
             return hints[: max(2, min(len(hints), 2))]
         return hints[:1]
 
-    def _scenario_pool(self, rng: random.Random, spec: EnvironmentSpec) -> list[dict[str, object]]:
+    def scenario_pool(self, rng: random.Random, spec: EnvironmentSpec) -> list[dict[str, object]]:
         return [
-            self._team_hours_pipeline_scenario(rng, spec),
+            self.team_hours_pipeline_scenario(rng, spec),
             build_sales_csv_pipeline_scenario(self),
             build_artifact_stitch_pipeline_scenario(self),
             build_quality_gate_pipeline_scenario(self),
         ]
 
-    def _team_hours_pipeline_scenario(self, rng: random.Random, spec: EnvironmentSpec) -> dict[str, object]:
-        jobs = self._build_jobs(rng, count=6 + spec.difficulty)
+    def team_hours_pipeline_scenario(self, rng: random.Random, spec: EnvironmentSpec) -> dict[str, object]:
+        jobs = self.build_jobs(rng, count=6 + spec.difficulty)
         return {
             "scenario_id": "team_hours_pipeline",
             "title": "Team Hours Pipeline",
@@ -134,12 +134,12 @@ class PipelineCompletionGenerator(BaseGenerator):
                 "failure_mode": "semantic_and_formatting",
                 "smoke_test_quality": "informative",
             },
-            "files": self._correct_files(jobs),
-            "expected_output": self._build_expected_output(jobs),
-            "bugs": self._bug_candidates(),
+            "files": self.correct_files(jobs),
+            "expected_output": self.build_expected_output(jobs),
+            "bugs": self.bug_candidates(),
         }
 
-    def _io_utils_module(self, *, include_loader: bool = False) -> str:
+    def io_utils_module(self, *, include_loader: bool = False) -> str:
         loader = ""
         if include_loader:
             loader = dedent(
@@ -159,7 +159,7 @@ class PipelineCompletionGenerator(BaseGenerator):
             '    Path(path).write_text(json.dumps(payload, indent=2, sort_keys=True) + "\\n", encoding="utf-8")\n'
         )
 
-    def _build_jobs(self, rng: random.Random, *, count: int) -> list[dict[str, object]]:
+    def build_jobs(self, rng: random.Random, *, count: int) -> list[dict[str, object]]:
         teams = ["platform", "research", "ops"]
         states = ["ready", "complete", "cancelled"]
         jobs = []
@@ -174,7 +174,7 @@ class PipelineCompletionGenerator(BaseGenerator):
             )
         return jobs
 
-    def _build_expected_output(self, jobs: list[dict[str, object]]) -> list[dict[str, object]]:
+    def build_expected_output(self, jobs: list[dict[str, object]]) -> list[dict[str, object]]:
         summary: dict[str, dict[str, object]] = {}
         for row in jobs:
             team = str(row["team"]).lower()
@@ -187,13 +187,13 @@ class PipelineCompletionGenerator(BaseGenerator):
             summary[team]["total_hours"] = round(float(summary[team]["total_hours"]) + float(row["hours"]), 1)
         return sorted(summary.values(), key=lambda item: str(item["team"]))
 
-    def _correct_files(self, jobs: list[dict[str, object]]) -> dict[str, str]:
+    def correct_files(self, jobs: list[dict[str, object]]) -> dict[str, str]:
         config = {
             "input_path": "data/jobs.json",
             "output_path": "artifacts/summary.json",
             "exclude_states": ["cancelled"],
         }
-        io_utils = self._io_utils_module(include_loader=True)
+        io_utils = self.io_utils_module(include_loader=True)
         steps = """from __future__ import annotations
 
 
@@ -255,12 +255,12 @@ if __name__ == "__main__":
             "data/jobs.json": json.dumps(jobs, indent=2, sort_keys=True) + "\n",
         }
 
-    def _bug_candidates(self) -> list[dict[str, object]]:
+    def bug_candidates(self) -> list[dict[str, object]]:
         return [
             {
                 "label": "wrong_input_path",
                 "target_path": "config/pipeline_config.json",
-                "apply": self._replace_once(
+                "apply": self.replace_once(
                     "data/jobs.json",
                     "data/job.json",
                     label="wrong_input_path",
@@ -270,7 +270,7 @@ if __name__ == "__main__":
             {
                 "label": "wrong_output_path",
                 "target_path": "config/pipeline_config.json",
-                "apply": self._replace_once(
+                "apply": self.replace_once(
                     "artifacts/summary.json",
                     "artifacts/result.json",
                     label="wrong_output_path",
@@ -280,7 +280,7 @@ if __name__ == "__main__":
             {
                 "label": "missing_normalization_step",
                 "target_path": "run_pipeline.py",
-                "apply": self._replace_once(
+                "apply": self.replace_once(
                     "normalized = normalize_rows(rows)",
                     "normalized = rows",
                     label="missing_normalization_step",
@@ -290,7 +290,7 @@ if __name__ == "__main__":
             {
                 "label": "aggregation_bug",
                 "target_path": "src/pipeline_app/steps.py",
-                "apply": self._replace_once(
+                "apply": self.replace_once(
                     'summary[team]["total_hours"] = round(float(summary[team]["total_hours"]) + float(row["hours"]), 1)',
                     'summary[team]["total_hours"] = round(float(summary[team]["total_hours"]) + 1, 1)',
                     label="aggregation_bug",
@@ -300,7 +300,7 @@ if __name__ == "__main__":
             {
                 "label": "output_format_bug",
                 "target_path": "src/pipeline_app/io_utils.py",
-                "apply": self._replace_once(
+                "apply": self.replace_once(
                     'Path(path).write_text(json.dumps(payload, indent=2, sort_keys=True) + "\\n", encoding="utf-8")',
                     'Path(path).write_text(str(payload), encoding="utf-8")',
                     label="output_format_bug",
@@ -309,7 +309,7 @@ if __name__ == "__main__":
             },
         ]
 
-    def _build_readme(self, scenario: dict[str, object], task_descriptor: dict[str, object]) -> str:
+    def build_readme(self, scenario: dict[str, object], task_descriptor: dict[str, object]) -> str:
         hints = "\n".join(f"- {hint}" for hint in task_descriptor["hints"])
         targets = "\n".join(f"- `{item}`" for item in task_descriptor["target_files"])
         return (

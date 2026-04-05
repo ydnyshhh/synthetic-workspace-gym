@@ -6,7 +6,7 @@ from .pipeline_completion import PipelineCompletionGenerator
 from .script_repair import ScriptRepairGenerator
 from .tabular import TabularTransformationGenerator
 
-_GENERATORS = {
+GENERATORS = {
     EnvironmentFamily.TABULAR: TabularTransformationGenerator(),
     EnvironmentFamily.SCRIPT_REPAIR: ScriptRepairGenerator(),
     EnvironmentFamily.PIPELINE: PipelineCompletionGenerator(),
@@ -14,8 +14,8 @@ _GENERATORS = {
 
 
 def get_generator(family: EnvironmentFamily | str):
-    return _GENERATORS[EnvironmentFamily(family)]
+    return GENERATORS[EnvironmentFamily(family)]
 
 
 def list_generators() -> list[str]:
-    return [family.value for family in _GENERATORS]
+    return [family.value for family in GENERATORS]

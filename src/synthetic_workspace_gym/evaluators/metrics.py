@@ -13,8 +13,8 @@ def row_overlap_metrics(expected: Any, actual: Any) -> dict[str, float]:
             "row_f1": 0.0,
             "exact_match": 1.0 if actual == expected else 0.0,
         }
-    expected_rows = Counter(_normalize_row(row) for row in expected)
-    actual_rows = Counter(_normalize_row(row) for row in actual)
+    expected_rows = Counter(normalize_row(row) for row in expected)
+    actual_rows = Counter(normalize_row(row) for row in actual)
     matches = sum((expected_rows & actual_rows).values())
     precision = matches / len(actual) if actual else (1.0 if not expected else 0.0)
     recall = matches / len(expected) if expected else (1.0 if not actual else 0.0)
@@ -43,5 +43,5 @@ def weighted_match_score(*, output_exists: float, valid_structure: float, metric
     return round(min(1.0, max(0.0, score)), 6)
 
 
-def _normalize_row(row: Any) -> str:
+def normalize_row(row: Any) -> str:
     return json.dumps(row, sort_keys=True, separators=(",", ":"))

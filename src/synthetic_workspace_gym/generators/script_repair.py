@@ -18,7 +18,7 @@ from synthetic_workspace_gym.utils.io import write_json, write_text
 class ScriptRepairGenerator(BaseGenerator):
     family = EnvironmentFamily.SCRIPT_REPAIR
 
-    def _replace_once(self, old: str, new: str, *, label: str, target_path: str):
+    def replace_once(self, old: str, new: str, *, label: str, target_path: str):
         def apply(content: str) -> str:
             updated = content.replace(old, new, 1)
             if updated == content:
@@ -29,9 +29,9 @@ class ScriptRepairGenerator(BaseGenerator):
 
         return apply
 
-    def _build_environment(self, spec: EnvironmentSpec, *, root: Path, visible_root: Path, hidden_root: Path) -> GeneratedPayload:
+    def build_environment(self, spec: EnvironmentSpec, *, root: Path, visible_root: Path, hidden_root: Path) -> GeneratedPayload:
         rng = random.Random(spec.seed)
-        scenarios = self._scenario_pool()
+        scenarios = self.scenario_pool()
         scenario = scenarios[(spec.seed - 1) % len(scenarios)]
         bug_budget = min(len(scenario["bugs"]), {1: 1, 2: 1, 3: 2, 4: 3, 5: 4}[spec.difficulty])
         candidates = list(scenario["bugs"])
@@ -62,9 +62,9 @@ class ScriptRepairGenerator(BaseGenerator):
             "scenario_id": scenario["scenario_id"],
             "entrypoint": "python run_example.py",
             "target_files": sorted(touched_files),
-            "hints": self._visible_hints(list(scenario["hints"]), spec.difficulty),
+            "hints": self.visible_hints(list(scenario["hints"]), spec.difficulty),
         }
-        write_text(visible_root / "README.md", self._build_readme(scenario, task_descriptor))
+        write_text(visible_root / "README.md", self.build_readme(scenario, task_descriptor))
         write_json(visible_root / "task.json", task_descriptor)
 
         hidden_runner = scenario["test_runner"]
@@ -101,14 +101,14 @@ class ScriptRepairGenerator(BaseGenerator):
             evaluator_entrypoint="synthetic_workspace_gym.evaluators.script_repair:ScriptRepairEvaluator",
         )
 
-    def _visible_hints(self, hints: list[str], difficulty: int) -> list[str]:
+    def visible_hints(self, hints: list[str], difficulty: int) -> list[str]:
         if difficulty <= 2:
             return hints
         if difficulty == 3:
             return hints[: max(2, min(len(hints), 2))]
         return hints[:1]
 
-    def _build_readme(self, scenario: dict[str, object], task_descriptor: dict[str, object]) -> str:
+    def build_readme(self, scenario: dict[str, object], task_descriptor: dict[str, object]) -> str:
         hints = "\n".join(f"- {hint}" for hint in task_descriptor["hints"])
         targets = "\n".join(f"- `{item}`" for item in task_descriptor["target_files"])
         return (
@@ -126,7 +126,7 @@ class ScriptRepairGenerator(BaseGenerator):
             f"{hints}\n"
         )
 
-    def _json_runner(self, *, import_block: str, expression: str) -> str:
+    def json_runner(self, *, import_block: str, expression: str) -> str:
         lines = [
             "from __future__ import annotations",
             "",
@@ -153,7 +153,7 @@ class ScriptRepairGenerator(BaseGenerator):
         )
         return "\n".join(lines) + "\n"
 
-    def _hidden_runner(self, *, asset_setup: str, import_block: str, test_methods: str) -> str:
+    def hidden_runner(self, *, asset_setup: str, import_block: str, test_methods: str) -> str:
         lines = [
             "from __future__ import annotations",
             "",
@@ -210,16 +210,16 @@ class ScriptRepairGenerator(BaseGenerator):
         )
         return "\n".join(lines) + "\n"
 
-    def _scenario_pool(self) -> list[dict[str, object]]:
+    def scenario_pool(self) -> list[dict[str, object]]:
         return [
-            self._inventory_report_scenario(),
-            self._path_batch_scenario(),
+            self.inventory_report_scenario(),
+            self.path_batch_scenario(),
             build_csv_schema_drift_scenario(self),
             build_timestamp_normalization_scenario(self),
             build_team_roster_export_scenario(self),
         ]
 
-    def _inventory_report_scenario(self) -> dict[str, object]:
+    def inventory_report_scenario(self) -> dict[str, object]:
         items = [
             {"name": "alpha", "status": "active", "count": 3},
             {"name": "beta", "status": "archived", "count": 2},
@@ -375,7 +375,7 @@ if __name__ == "__main__":
                 {
                     "label": "off_by_one",
                     "target_path": "src/repair_target/analytics.py",
-                    "apply": self._replace_once(
+                    "apply": self.replace_once(
                         "range(len(values) - window + 1)",
                         "range(len(values) - window)",
                         label="off_by_one",
@@ -385,7 +385,7 @@ if __name__ == "__main__":
                 {
                     "label": "wrong_condition",
                     "target_path": "src/repair_target/analytics.py",
-                    "apply": self._replace_once(
+                    "apply": self.replace_once(
                         "if status not in summary:",
                         'if status == "archived":',
                         label="wrong_condition",
@@ -395,7 +395,7 @@ if __name__ == "__main__":
                 {
                     "label": "wrong_return_value",
                     "target_path": "src/repair_target/report.py",
-                    "apply": self._replace_once(
+                    "apply": self.replace_once(
                         '"rolling_average": rolling_average(active_counts, 2),',
                         '"rolling_average": rolling_average(active_counts, 3),',
                         label="wrong_return_value",
@@ -403,10 +403,10 @@ if __name__ == "__main__":
                     ),
                 },
             ],
-            "test_runner": lambda _task: test_runner,
+            "test_runner": lambda task: test_runner,
         }
 
-    def _path_batch_scenario(self) -> dict[str, object]:
+    def path_batch_scenario(self) -> dict[str, object]:
         measurements = "day,value\nmon,5\ntue,8\nwed,3\nthu,9\n"
         expected_summary = {"count": 4, "maximum": 9, "minimum": 3, "total": 25}
         io_helpers = """from __future__ import annotations
@@ -535,7 +535,7 @@ if __name__ == "__main__":
                 {
                     "label": "missing_import",
                     "target_path": "src/repair_target/io_helpers.py",
-                    "apply": self._replace_once(
+                    "apply": self.replace_once(
                         "from pathlib import Path\n\n",
                         "",
                         label="missing_import",
@@ -545,7 +545,7 @@ if __name__ == "__main__":
                 {
                     "label": "file_path_issue",
                     "target_path": "src/repair_target/io_helpers.py",
-                    "apply": self._replace_once(
+                    "apply": self.replace_once(
                         'data_dir / "measurements.csv"',
                         'data_dir.parent / "measurements.csv"',
                         label="file_path_issue",
@@ -555,7 +555,7 @@ if __name__ == "__main__":
                 {
                     "label": "aggregation_bug",
                     "target_path": "src/repair_target/batch.py",
-                    "apply": self._replace_once(
+                    "apply": self.replace_once(
                         '"total": sum(values),',
                         '"total": len(values),',
                         label="aggregation_bug",
@@ -565,7 +565,7 @@ if __name__ == "__main__":
                 {
                     "label": "syntax_error",
                     "target_path": "src/repair_target/batch.py",
-                    "apply": self._replace_once(
+                    "apply": self.replace_once(
                         "def compute_batch_summary(base_dir: Path) -> dict[str, int]:",
                         "def compute_batch_summary(base_dir: Path) -> dict[str, int]",
                         label="syntax_error",
@@ -573,5 +573,5 @@ if __name__ == "__main__":
                     ),
                 },
             ],
-            "test_runner": lambda _task: test_runner,
+            "test_runner": lambda task: test_runner,
         }

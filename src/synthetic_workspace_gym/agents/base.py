@@ -34,7 +34,7 @@ class BaseAgent(ABC):
     def act(self, observation: ToolObservation | dict[str, object], tool_state: ToolState) -> Action:
         raise NotImplementedError
 
-    def _consume_observation(self, observation: ToolObservation | dict[str, object]) -> None:
+    def consume_observation(self, observation: ToolObservation | dict[str, object]) -> None:
         if self.last_action is None or not isinstance(observation, ToolObservation):
             return
         action = self.last_action
@@ -51,7 +51,7 @@ class BaseAgent(ABC):
             listed_path = str(action.arguments.get("path", "."))
             self.directory_cache[listed_path] = observation.listing
 
-    def _set_last_action(self, action: Action) -> Action:
+    def set_last_action(self, action: Action) -> Action:
         self.last_action = action
         return action
 

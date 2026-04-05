@@ -9,7 +9,7 @@ from .pipeline import PipelineEvaluator
 from .script_repair import ScriptRepairEvaluator
 from .tabular import TabularEvaluator
 
-_EVALUATORS = {
+EVALUATORS = {
     EnvironmentFamily.TABULAR: TabularEvaluator(),
     EnvironmentFamily.SCRIPT_REPAIR: ScriptRepairEvaluator(),
     EnvironmentFamily.PIPELINE: PipelineEvaluator(),
@@ -18,15 +18,15 @@ _EVALUATORS = {
 
 def get_evaluator(family: EnvironmentFamily | str, evaluator_entrypoint: str | None = None):
     if evaluator_entrypoint:
-        return _load_evaluator_from_entrypoint(evaluator_entrypoint)
-    return _EVALUATORS[EnvironmentFamily(family)]
+        return load_evaluator_from_entrypoint(evaluator_entrypoint)
+    return EVALUATORS[EnvironmentFamily(family)]
 
 
 def list_evaluators() -> list[str]:
-    return [family.value for family in _EVALUATORS]
+    return [family.value for family in EVALUATORS]
 
 
-def _load_evaluator_from_entrypoint(entrypoint: str) -> BaseEvaluator:
+def load_evaluator_from_entrypoint(entrypoint: str) -> BaseEvaluator:
     module_name, separator, attr_name = entrypoint.partition(":")
     if not separator or not module_name or not attr_name:
         raise ValueError(f"Invalid evaluator entrypoint: {entrypoint}")

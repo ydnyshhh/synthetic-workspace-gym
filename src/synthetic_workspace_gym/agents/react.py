@@ -34,60 +34,60 @@ class HeuristicBaselineAgent(BaseAgent):
         self.smoke_test_attempts = 0
 
     def act(self, observation: ToolObservation | dict[str, object], tool_state: ToolState) -> Action:
-        self._consume_observation(observation)
+        self.consume_observation(observation)
         if self.plan:
-            return self._set_last_action(self.plan.pop(0))
+            return self.set_last_action(self.plan.pop(0))
 
         assert self.manifest is not None
         assert self.task is not None
 
         if self.manifest.family.value == "tabular":
-            return self._tabular_action()
+            return self.tabular_action()
         if self.manifest.family.value == "script_repair":
-            return self._script_repair_action(observation)
-        return self._pipeline_action(observation)
+            return self.script_repair_action(observation)
+        return self.pipeline_action(observation)
 
-    def _tabular_action(self) -> Action:
+    def tabular_action(self) -> Action:
         assert self.task is not None
         missing_inputs = [path for path in self.task["input_files"] if path not in self.file_cache]
         if missing_inputs:
-            return self._set_last_action(Action(ActionType.READ_FILE, {"path": missing_inputs[0]}))
+            return self.set_last_action(Action(ActionType.READ_FILE, {"path": missing_inputs[0]}))
         if self.task["output_path"] not in self.file_cache:
             content = solve_tabular_task(self.task, self.file_cache)
-            return self._set_last_action(
+            return self.set_last_action(
                 Action(ActionType.WRITE_FILE, {"path": self.task["output_path"], "content": content})
             )
-        return self._set_last_action(Action(ActionType.SUBMIT, {"path_or_answer": self.task["output_path"]}))
+        return self.set_last_action(Action(ActionType.SUBMIT, {"path_or_answer": self.task["output_path"]}))
 
-    def _script_repair_action(self, observation: ToolObservation | dict[str, object]) -> Action:
+    def script_repair_action(self, observation: ToolObservation | dict[str, object]) -> Action:
         assert self.task is not None
         missing_targets = [path for path in self.task["target_files"] if path not in self.file_cache]
         if missing_targets:
-            return self._set_last_action(Action(ActionType.READ_FILE, {"path": missing_targets[0]}))
+            return self.set_last_action(Action(ActionType.READ_FILE, {"path": missing_targets[0]}))
 
         if not self.edits_applied:
-            edits = self._script_repair_edits()
+            edits = self.script_repair_edits()
             if edits:
                 self.edits_applied = True
                 path, content = edits[0]
                 self.plan.extend(Action(ActionType.WRITE_FILE, {"path": p, "content": c}) for p, c in edits[1:])
                 self.plan.append(Action(ActionType.RUN_SHELL, {"command": self.task["entrypoint"]}))
                 self.plan.append(Action(ActionType.SUBMIT, {"path_or_answer": "hidden-tests"}))
-                return self._set_last_action(Action(ActionType.WRITE_FILE, {"path": path, "content": content}))
+                return self.set_last_action(Action(ActionType.WRITE_FILE, {"path": path, "content": content}))
 
         if self.smoke_test_attempts == 0:
             self.smoke_test_attempts += 1
-            return self._set_last_action(Action(ActionType.RUN_SHELL, {"command": self.task["entrypoint"]}))
-        return self._set_last_action(Action(ActionType.SUBMIT, {"path_or_answer": "hidden-tests"}))
+            return self.set_last_action(Action(ActionType.RUN_SHELL, {"command": self.task["entrypoint"]}))
+        return self.set_last_action(Action(ActionType.SUBMIT, {"path_or_answer": "hidden-tests"}))
 
-    def _pipeline_action(self, observation: ToolObservation | dict[str, object]) -> Action:
+    def pipeline_action(self, observation: ToolObservation | dict[str, object]) -> Action:
         assert self.task is not None
         missing_targets = [path for path in self.task["target_files"] if path not in self.file_cache]
         if missing_targets:
-            return self._set_last_action(Action(ActionType.READ_FILE, {"path": missing_targets[0]}))
+            return self.set_last_action(Action(ActionType.READ_FILE, {"path": missing_targets[0]}))
 
         if not self.edits_applied:
-            edits = self._pipeline_edits()
+            edits = self.pipeline_edits()
             if edits:
                 self.edits_applied = True
                 path, content = edits[0]
@@ -96,16 +96,16 @@ class HeuristicBaselineAgent(BaseAgent):
                 self.plan.append(
                     Action(ActionType.SUBMIT, {"path_or_answer": self.task["required_output_path"]})
                 )
-                return self._set_last_action(Action(ActionType.WRITE_FILE, {"path": path, "content": content}))
+                return self.set_last_action(Action(ActionType.WRITE_FILE, {"path": path, "content": content}))
 
         if self.smoke_test_attempts == 0:
             self.smoke_test_attempts += 1
-            return self._set_last_action(Action(ActionType.RUN_SHELL, {"command": self.task["entrypoint"]}))
-        return self._set_last_action(
+            return self.set_last_action(Action(ActionType.RUN_SHELL, {"command": self.task["entrypoint"]}))
+        return self.set_last_action(
             Action(ActionType.SUBMIT, {"path_or_answer": self.task["required_output_path"]})
         )
 
-    def _script_repair_edits(self) -> list[tuple[str, str]]:
+    def script_repair_edits(self) -> list[tuple[str, str]]:
         assert self.task is not None
         edits: list[tuple[str, str]] = []
         scenario_id = self.task["scenario_id"]
@@ -181,14 +181,14 @@ class HeuristicBaselineAgent(BaseAgent):
                 'return sorted(summary.values(), key=lambda item: int(item["member_count"]))',
                 'return sorted(summary.values(), key=lambda item: str(item["team"]))',
             )
-            fixed_writer = self._restore_json_writer(writer)
+            fixed_writer = self.restore_json_writer(writer)
             if fixed_contracts != contracts:
                 edits.append(("src/repair_target/contracts.py", fixed_contracts))
             if fixed_writer != writer:
                 edits.append(("src/repair_target/writer.py", fixed_writer))
         return edits
 
-    def _pipeline_edits(self) -> list[tuple[str, str]]:
+    def pipeline_edits(self) -> list[tuple[str, str]]:
         assert self.task is not None
         edits: list[tuple[str, str]] = []
         scenario_id = self.task["scenario_id"]
@@ -214,7 +214,7 @@ class HeuristicBaselineAgent(BaseAgent):
                 edits.append(("run_pipeline.py", fixed_runner))
             if fixed_steps != steps:
                 edits.append(("src/pipeline_app/steps.py", fixed_steps))
-            fixed_io = self._restore_json_writer(io_utils)
+            fixed_io = self.restore_json_writer(io_utils)
             if fixed_io != io_utils:
                 edits.append(("src/pipeline_app/io_utils.py", fixed_io))
         elif scenario_id == "sales_csv_pipeline":
@@ -235,7 +235,7 @@ class HeuristicBaselineAgent(BaseAgent):
                 edits.append(("run_pipeline.py", fixed_runner))
             if fixed_steps != steps:
                 edits.append(("src/pipeline_app/steps.py", fixed_steps))
-            fixed_io = self._restore_json_writer(io_utils)
+            fixed_io = self.restore_json_writer(io_utils)
             if fixed_io != io_utils:
                 edits.append(("src/pipeline_app/io_utils.py", fixed_io))
         elif scenario_id == "artifact_stitch_pipeline":
@@ -278,12 +278,12 @@ class HeuristicBaselineAgent(BaseAgent):
                 edits.append(("run_pipeline.py", fixed_runner))
             if fixed_quality != quality:
                 edits.append(("src/pipeline_app/quality.py", fixed_quality))
-        fixed_io = self._restore_json_writer(io_utils)
+        fixed_io = self.restore_json_writer(io_utils)
         if fixed_io != io_utils and not any(path == "src/pipeline_app/io_utils.py" for path, _ in edits):
             edits.append(("src/pipeline_app/io_utils.py", fixed_io))
         return edits
 
-    def _restore_json_writer(self, content: str) -> str:
+    def restore_json_writer(self, content: str) -> str:
         return content.replace(
             'Path(path).write_text(str(payload), encoding="utf-8")',
             'Path(path).write_text(json.dumps(payload, indent=2, sort_keys=True) + "\\n", encoding="utf-8")',

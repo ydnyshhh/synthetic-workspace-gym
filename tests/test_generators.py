@@ -32,7 +32,7 @@ class GeneratorValidityTests(unittest.TestCase):
     def test_generator_subclasses_must_define_family(self) -> None:
         with self.assertRaises(TypeError):
             class MissingFamilyGenerator(BaseGenerator):
-                def _build_environment(
+                def build_environment(
                     self,
                     spec: EnvironmentSpec,
                     *,
