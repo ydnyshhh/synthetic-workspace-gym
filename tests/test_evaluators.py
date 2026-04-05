@@ -52,7 +52,7 @@ class EvaluatorCorrectnessTests(unittest.TestCase):
         with workspace_tempdir() as tmp_dir:
             root = Path(tmp_dir)
             generator = get_generator("tabular")
-            spec = generator.sample_spec(difficulty=3, seed=55)
+            spec = generator.sample_spec(difficulty=3, seed=55, scenario_id="monthly_segment_report")
             bundle = generator.generate_instance(spec, root / "generated")
             evaluator = get_evaluator(bundle.manifest.family)
             expected = json.loads((bundle.hidden_root / "expected_output.json").read_text(encoding="utf-8"))
@@ -70,7 +70,7 @@ class EvaluatorCorrectnessTests(unittest.TestCase):
         with workspace_tempdir() as tmp_dir:
             root = Path(tmp_dir)
             generator = get_generator("tabular")
-            spec = generator.sample_spec(difficulty=2, seed=56)
+            spec = generator.sample_spec(difficulty=2, seed=56, scenario_id="monthly_segment_report")
             bundle = generator.generate_instance(spec, root / "generated")
             evaluator = get_evaluator(bundle.manifest.family)
             bad_workspace = root / "bad-shape"

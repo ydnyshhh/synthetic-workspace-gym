@@ -42,8 +42,14 @@ class GeneratorValidityTests(unittest.TestCase):
                 ) -> GeneratedPayload:
                     raise NotImplementedError
 
-    def test_script_and_pipeline_generators_cover_expected_base_scenarios(self) -> None:
+    def test_generators_support_explicit_scenario_selection(self) -> None:
         expected = {
+            "tabular": {
+                "monthly_segment_report",
+                "channel_status_pivot",
+                "weekly_refund_rollup",
+                "supplier_restock_summary",
+            },
             "script_repair": {
                 "inventory_report",
                 "path_batch",
@@ -62,12 +68,11 @@ class GeneratorValidityTests(unittest.TestCase):
             root = Path(tmp_dir)
             for family, scenario_ids in expected.items():
                 generator = get_generator(family)
-                seen: set[str] = set()
-                for seed in range(1, len(scenario_ids) + 1):
-                    spec = generator.sample_spec(difficulty=3, seed=seed)
+                for scenario_id in scenario_ids:
+                    spec = generator.sample_spec(difficulty=3, seed=99, scenario_id=scenario_id)
                     bundle = generator.generate_instance(spec, root / family)
-                    seen.add(str(bundle.manifest.metadata["scenario_id"]))
-                self.assertEqual(seen, scenario_ids)
+                    self.assertEqual(str(bundle.manifest.metadata["scenario_id"]), scenario_id)
+                    self.assertEqual(bundle.manifest.metadata["scenario_selection"]["selection_mode"], "explicit")
 
 
 if __name__ == "__main__":

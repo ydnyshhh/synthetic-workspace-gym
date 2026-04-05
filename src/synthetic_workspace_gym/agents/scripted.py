@@ -31,6 +31,8 @@ class ScriptedBaselineAgent(BaseAgent):
         assert self.manifest is not None
         if self.manifest.family.value == "tabular":
             assert self.task is not None
+            if self.task.get("scenario_id") != "monthly_segment_report":
+                return self.set_last_action(Action(ActionType.SUBMIT, {"path_or_answer": self.task["output_path"]}))
             missing_inputs = [path for path in self.task["input_files"] if path not in self.file_cache]
             if missing_inputs:
                 return self.set_last_action(Action(ActionType.READ_FILE, {"path": missing_inputs[0]}))

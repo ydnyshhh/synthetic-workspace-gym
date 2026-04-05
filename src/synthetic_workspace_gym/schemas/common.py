@@ -111,6 +111,7 @@ class EnvironmentSpec(SerializableDataclass):
     env_family: EnvironmentFamily
     difficulty: int
     seed: int
+    scenario_id: str | None = None
     max_steps: int = 12
     time_limit_seconds: int = 60
     tool_permissions: ToolPermissions = field(default_factory=ToolPermissions)
@@ -122,6 +123,8 @@ class EnvironmentSpec(SerializableDataclass):
 
     def __post_init__(self) -> None:
         self.env_family = EnvironmentFamily(self.env_family)
+        if self.scenario_id == "":
+            self.scenario_id = None
         if not 1 <= self.difficulty <= 5:
             raise ValueError("difficulty must be between 1 and 5")
         if self.max_steps <= 0:
@@ -135,6 +138,7 @@ class EnvironmentSpec(SerializableDataclass):
             env_family=EnvironmentFamily(payload["env_family"]),
             difficulty=payload["difficulty"],
             seed=payload["seed"],
+            scenario_id=payload.get("scenario_id"),
             max_steps=payload.get("max_steps", 12),
             time_limit_seconds=payload.get("time_limit_seconds", 60),
             tool_permissions=ToolPermissions.from_dict(payload.get("tool_permissions", {})),

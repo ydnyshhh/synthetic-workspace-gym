@@ -22,6 +22,7 @@ class SchemaRoundTripTests(unittest.TestCase):
             env_family=EnvironmentFamily.TABULAR,
             difficulty=3,
             seed=7,
+            scenario_id="monthly_segment_report",
             tool_permissions=ToolPermissions(run_shell=False),
             task_params={"scenario": "demo"},
             complexity_profile=ComplexityProfile(
@@ -37,6 +38,7 @@ class SchemaRoundTripTests(unittest.TestCase):
         )
         restored = EnvironmentSpec.from_dict(spec.to_dict())
         self.assertEqual(restored.env_family, EnvironmentFamily.TABULAR)
+        self.assertEqual(restored.scenario_id, "monthly_segment_report")
         self.assertEqual(restored.tool_permissions.run_shell, False)
         self.assertEqual(restored.task_params["scenario"], "demo")
         self.assertEqual(restored.complexity_profile.reasoning_hops, 3)

@@ -32,7 +32,7 @@ class PipelineCompletionGenerator(BaseGenerator):
     def build_environment(self, spec: EnvironmentSpec, *, root: Path, visible_root: Path, hidden_root: Path) -> GeneratedPayload:
         rng = random.Random(spec.seed)
         scenarios = self.scenario_pool(rng, spec)
-        scenario = scenarios[(spec.seed - 1) % len(scenarios)]
+        scenario = self.select_scenario(spec, scenarios)
         expected_output = scenario["expected_output"]
         correct_files = dict(scenario["files"])
 
@@ -93,6 +93,10 @@ class PipelineCompletionGenerator(BaseGenerator):
             "bug_labels": bug_labels,
             "scenario_id": scenario["scenario_id"],
             "scenario_profile": scenario["structure"],
+            "scenario_selection": {
+                "requested_scenario_id": spec.scenario_id,
+                "selection_mode": "explicit" if spec.scenario_id else "seed_modulo",
+            },
         }
         return GeneratedPayload(
             instruction="Repair the mini-project so running the pipeline produces the required final artifact.",
@@ -105,7 +109,7 @@ class PipelineCompletionGenerator(BaseGenerator):
         if difficulty <= 2:
             return hints
         if difficulty == 3:
-            return hints[: max(2, min(len(hints), 2))]
+            return hints[:2]
         return hints[:1]
 
     def scenario_pool(self, rng: random.Random, spec: EnvironmentSpec) -> list[dict[str, object]]:

@@ -107,7 +107,7 @@ class RuntimeTests(unittest.TestCase):
         with workspace_tempdir() as tmp_dir:
             root = Path(tmp_dir)
             generator = get_generator("tabular")
-            spec = generator.sample_spec(difficulty=3, seed=31)
+            spec = generator.sample_spec(difficulty=3, seed=31, scenario_id="monthly_segment_report")
             bundle = generator.generate_instance(spec, root / "generated")
             environment = load_environment(bundle.root)
             runner = EpisodeRunner(output_root=root / "episodes")

@@ -13,19 +13,35 @@ from synthetic_workspace_gym.schemas import EnvironmentFamily
 
 
 class EndToEndRolloutTests(unittest.TestCase):
-    def test_heuristic_baseline_solves_seeded_scenarios(self) -> None:
-        seed_plan = {
-            EnvironmentFamily.TABULAR: [41],
-            EnvironmentFamily.SCRIPT_REPAIR: [1, 2, 3, 4, 5],
-            EnvironmentFamily.PIPELINE: [1, 2, 3, 4],
+    def test_heuristic_baseline_solves_explicit_scenarios(self) -> None:
+        scenario_plan = {
+            EnvironmentFamily.TABULAR: [
+                "monthly_segment_report",
+                "channel_status_pivot",
+                "weekly_refund_rollup",
+                "supplier_restock_summary",
+            ],
+            EnvironmentFamily.SCRIPT_REPAIR: [
+                "inventory_report",
+                "path_batch",
+                "csv_schema_drift",
+                "timestamp_normalization",
+                "team_roster_export",
+            ],
+            EnvironmentFamily.PIPELINE: [
+                "team_hours_pipeline",
+                "sales_csv_pipeline",
+                "artifact_stitch_pipeline",
+                "quality_gate_pipeline",
+            ],
         }
-        for family, seeds in seed_plan.items():
+        for family, scenario_ids in scenario_plan.items():
             with workspace_tempdir() as tmp_dir:
                 root = Path(tmp_dir)
                 generator = get_generator(family)
-                for seed in seeds:
-                    with self.subTest(family=family.value, seed=seed):
-                        spec = generator.sample_spec(difficulty=3, seed=seed)
+                for scenario_id in scenario_ids:
+                    with self.subTest(family=family.value, scenario_id=scenario_id):
+                        spec = generator.sample_spec(difficulty=3, seed=41, scenario_id=scenario_id)
                         bundle = generator.generate_instance(spec, root / "generated")
                         environment = load_environment(bundle.root)
                         runner = EpisodeRunner(output_root=root / "episodes")

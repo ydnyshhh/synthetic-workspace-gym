@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 from typing import Any
 
 from synthetic_workspace_gym.schemas import ComplexityProfile, EnvironmentFamily
@@ -23,9 +24,28 @@ def normalize_difficulty(value: int | str) -> int:
     return difficulty
 
 
-def make_env_id(family: EnvironmentFamily, difficulty: int, seed: int, task_params: dict[str, Any]) -> str:
+def make_env_id(
+    family: EnvironmentFamily,
+    difficulty: int,
+    seed: int,
+    task_params: dict[str, Any],
+    *,
+    scenario_id: str | None = None,
+    generation_params: dict[str, Any] | None = None,
+) -> str:
     fingerprint = hashlib.sha1(
-        f"{family.value}:{difficulty}:{seed}:{sorted(task_params.items())}".encode("utf-8")
+        json.dumps(
+            {
+                "family": family.value,
+                "difficulty": difficulty,
+                "seed": seed,
+                "scenario_id": scenario_id,
+                "task_params": task_params,
+                "generation_params": generation_params or {},
+            },
+            sort_keys=True,
+            default=str,
+        ).encode("utf-8")
     ).hexdigest()[:8]
     return f"{family.value}-d{difficulty}-s{seed}-{fingerprint}"
 

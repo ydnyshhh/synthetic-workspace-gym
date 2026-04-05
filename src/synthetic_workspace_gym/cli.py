@@ -23,6 +23,7 @@ def build_parser() -> argparse.ArgumentParser:
     generate.add_argument("--count", type=int, default=1)
     generate.add_argument("--difficulty", default="3")
     generate.add_argument("--seed", type=int, default=1)
+    generate.add_argument("--scenario")
     generate.add_argument("--output-dir", type=Path, default=Path("generated"))
     generate.add_argument("--skip-validate", action="store_true")
 
@@ -68,7 +69,11 @@ def command_generate(args: argparse.Namespace) -> int:
     manifests = []
     for index in range(args.count):
         seed = args.seed + index
-        spec = generator.sample_spec(difficulty=difficulty, seed=seed)
+        spec = generator.sample_spec(
+            difficulty=difficulty,
+            seed=seed,
+            scenario_id=getattr(args, "scenario", None),
+        )
         bundle = generator.generate_instance(spec, args.output_dir, validate=not args.skip_validate)
         manifests.append(bundle.manifest.to_dict())
     print(json.dumps({"generated": manifests}, indent=2, sort_keys=True))

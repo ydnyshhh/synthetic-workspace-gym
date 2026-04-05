@@ -32,7 +32,7 @@ class ScriptRepairGenerator(BaseGenerator):
     def build_environment(self, spec: EnvironmentSpec, *, root: Path, visible_root: Path, hidden_root: Path) -> GeneratedPayload:
         rng = random.Random(spec.seed)
         scenarios = self.scenario_pool()
-        scenario = scenarios[(spec.seed - 1) % len(scenarios)]
+        scenario = self.select_scenario(spec, scenarios)
         bug_budget = min(len(scenario["bugs"]), {1: 1, 2: 1, 3: 2, 4: 3, 5: 4}[spec.difficulty])
         candidates = list(scenario["bugs"])
         if spec.difficulty < 5:
@@ -93,6 +93,10 @@ class ScriptRepairGenerator(BaseGenerator):
             "bug_labels": applied_bug_labels,
             "scenario_id": scenario["scenario_id"],
             "scenario_profile": scenario["structure"],
+            "scenario_selection": {
+                "requested_scenario_id": spec.scenario_id,
+                "selection_mode": "explicit" if spec.scenario_id else "seed_modulo",
+            },
         }
         return GeneratedPayload(
             instruction="Repair the provided Python workspace so that the hidden tests pass.",
@@ -105,7 +109,7 @@ class ScriptRepairGenerator(BaseGenerator):
         if difficulty <= 2:
             return hints
         if difficulty == 3:
-            return hints[: max(2, min(len(hints), 2))]
+            return hints[:2]
         return hints[:1]
 
     def build_readme(self, scenario: dict[str, object], task_descriptor: dict[str, object]) -> str:
@@ -356,7 +360,7 @@ if __name__ == "__main__":
                 "The smoke test should print a stable JSON report.",
             ],
             "structure": {
-                "repair_surface": "code",
+                "repair_surface": "aggregation_and_reporting",
                 "bug_scope": "cross_file",
                 "failure_mode": "semantic",
                 "smoke_test_quality": "informative",
@@ -516,7 +520,7 @@ if __name__ == "__main__":
                 "If the module fails to import, inspect recent edits around function signatures and imports.",
             ],
             "structure": {
-                "repair_surface": "file_path",
+                "repair_surface": "file_path_and_batching",
                 "bug_scope": "local",
                 "failure_mode": "execution_and_semantic",
                 "smoke_test_quality": "informative",

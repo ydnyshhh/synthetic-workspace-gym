@@ -43,15 +43,18 @@ class BaseGenerator(ABC):
     def sample_spec(self, difficulty: int, seed: int, **overrides: object) -> EnvironmentSpec:
         difficulty = int(difficulty)
         family = self.require_family()
+        generation_params = dict(overrides.pop("generation_params", {}))
+        scenario_id = overrides.pop("scenario_id", generation_params.pop("scenario_id", None))
         spec = EnvironmentSpec(
             env_family=family,
             difficulty=difficulty,
             seed=seed,
+            scenario_id=str(scenario_id) if scenario_id is not None else None,
             max_steps=int(overrides.pop("max_steps", 12)),
             time_limit_seconds=int(overrides.pop("time_limit_seconds", 60)),
             task_params=dict(overrides.pop("task_params", {})),
             evaluator_params=dict(overrides.pop("evaluator_params", {})),
-            generation_params=dict(overrides.pop("generation_params", {})),
+            generation_params=generation_params,
             complexity_profile=build_complexity_profile(family, difficulty),
         )
         if overrides:
@@ -59,7 +62,14 @@ class BaseGenerator(ABC):
         return spec
 
     def generate_instance(self, spec: EnvironmentSpec, output_dir: Path, *, validate: bool = True) -> GeneratedEnvironment:
-        env_id = make_env_id(spec.env_family, spec.difficulty, spec.seed, spec.task_params)
+        env_id = make_env_id(
+            spec.env_family,
+            spec.difficulty,
+            spec.seed,
+            spec.task_params,
+            scenario_id=spec.scenario_id,
+            generation_params=spec.generation_params,
+        )
         root = output_dir / env_id
         if root.exists():
             shutil.rmtree(root)
@@ -121,6 +131,21 @@ class BaseGenerator(ABC):
         if self.family is None:
             raise TypeError(f"{type(self).__name__} must define a concrete EnvironmentFamily before use.")
         return EnvironmentFamily(self.family)
+
+    def select_scenario(self, spec: EnvironmentSpec, scenarios: list[dict[str, object]]) -> dict[str, object]:
+        requested = spec.scenario_id
+        if requested is None:
+            requested = spec.generation_params.get("scenario_id")
+        if requested:
+            requested = str(requested)
+            for scenario in scenarios:
+                if str(scenario.get("scenario_id")) == requested:
+                    return scenario
+            available = ", ".join(sorted(str(scenario.get("scenario_id")) for scenario in scenarios))
+            raise ValueError(
+                f"Unknown scenario_id '{requested}' for {self.require_family().value}. Available: {available}"
+            )
+        return scenarios[(spec.seed - 1) % len(scenarios)]
 
     def validate_reference_solution(self, instance: GeneratedEnvironment) -> None:
         solution_files = instance.manifest.reference_solution.get("files", {})

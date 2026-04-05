@@ -1,18 +1,15 @@
 from __future__ import annotations
 
-import json
-
-from synthetic_workspace_gym.agents.base import BaseAgent, solve_tabular_task
+from synthetic_workspace_gym.agents.base import BaseAgent
 from synthetic_workspace_gym.schemas import Action, ActionType, ToolObservation, ToolState
 
 
 class HeuristicBaselineAgent(BaseAgent):
-    """Scenario-aware heuristic baseline for infrastructure validation.
+    """Privileged reference-solution baseline for infrastructure validation.
 
-    This agent is intentionally privileged: it keys off known scenario ids and
-    applies hardcoded edits for the built-in v1 environments. It is useful for
-    validating the generate -> run -> evaluate loop, but it is not a generic
-    ReAct-style reasoning baseline.
+    This agent intentionally uses the manifest's stored reference solution
+    instead of reasoning over the workspace. It is useful for validating the
+    generate -> run -> evaluate loop, but it is not a general-purpose agent.
     """
 
     name = "heuristic"
@@ -20,274 +17,30 @@ class HeuristicBaselineAgent(BaseAgent):
     def __init__(self) -> None:
         super().__init__()
         self.plan: list[Action] = []
-        self.edits_applied = False
-        self.smoke_test_attempts = 0
 
     def reset(self, manifest, initial_observation):
         super().reset(manifest, initial_observation)
+        solution_files = manifest.reference_solution.get("files", {})
         self.plan = [
-            Action(ActionType.LIST_DIRECTORY, {"path": "."}),
-            Action(ActionType.READ_FILE, {"path": "README.md"}),
-            Action(ActionType.READ_FILE, {"path": "task.json"}),
+            Action(ActionType.WRITE_FILE, {"path": path, "content": content})
+            for path, content in sorted(solution_files.items())
         ]
-        self.edits_applied = False
-        self.smoke_test_attempts = 0
+        submit_target = self.default_submit_target(solution_files)
+        self.plan.append(Action(ActionType.SUBMIT, {"path_or_answer": submit_target}))
 
     def act(self, observation: ToolObservation | dict[str, object], tool_state: ToolState) -> Action:
-        self.consume_observation(observation)
         if self.plan:
             return self.set_last_action(self.plan.pop(0))
+        return self.set_last_action(Action(ActionType.SUBMIT, {"path_or_answer": "reference-solution"}))
 
-        assert self.manifest is not None
-        assert self.task is not None
-
-        if self.manifest.family.value == "tabular":
-            return self.tabular_action()
-        if self.manifest.family.value == "script_repair":
-            return self.script_repair_action(observation)
-        return self.pipeline_action(observation)
-
-    def tabular_action(self) -> Action:
-        assert self.task is not None
-        missing_inputs = [path for path in self.task["input_files"] if path not in self.file_cache]
-        if missing_inputs:
-            return self.set_last_action(Action(ActionType.READ_FILE, {"path": missing_inputs[0]}))
-        if self.task["output_path"] not in self.file_cache:
-            content = solve_tabular_task(self.task, self.file_cache)
-            return self.set_last_action(
-                Action(ActionType.WRITE_FILE, {"path": self.task["output_path"], "content": content})
-            )
-        return self.set_last_action(Action(ActionType.SUBMIT, {"path_or_answer": self.task["output_path"]}))
-
-    def script_repair_action(self, observation: ToolObservation | dict[str, object]) -> Action:
-        assert self.task is not None
-        missing_targets = [path for path in self.task["target_files"] if path not in self.file_cache]
-        if missing_targets:
-            return self.set_last_action(Action(ActionType.READ_FILE, {"path": missing_targets[0]}))
-
-        if not self.edits_applied:
-            edits = self.script_repair_edits()
-            if edits:
-                self.edits_applied = True
-                path, content = edits[0]
-                self.plan.extend(Action(ActionType.WRITE_FILE, {"path": p, "content": c}) for p, c in edits[1:])
-                self.plan.append(Action(ActionType.RUN_SHELL, {"command": self.task["entrypoint"]}))
-                self.plan.append(Action(ActionType.SUBMIT, {"path_or_answer": "hidden-tests"}))
-                return self.set_last_action(Action(ActionType.WRITE_FILE, {"path": path, "content": content}))
-
-        if self.smoke_test_attempts == 0:
-            self.smoke_test_attempts += 1
-            return self.set_last_action(Action(ActionType.RUN_SHELL, {"command": self.task["entrypoint"]}))
-        return self.set_last_action(Action(ActionType.SUBMIT, {"path_or_answer": "hidden-tests"}))
-
-    def pipeline_action(self, observation: ToolObservation | dict[str, object]) -> Action:
-        assert self.task is not None
-        missing_targets = [path for path in self.task["target_files"] if path not in self.file_cache]
-        if missing_targets:
-            return self.set_last_action(Action(ActionType.READ_FILE, {"path": missing_targets[0]}))
-
-        if not self.edits_applied:
-            edits = self.pipeline_edits()
-            if edits:
-                self.edits_applied = True
-                path, content = edits[0]
-                self.plan.extend(Action(ActionType.WRITE_FILE, {"path": p, "content": c}) for p, c in edits[1:])
-                self.plan.append(Action(ActionType.RUN_SHELL, {"command": self.task["entrypoint"]}))
-                self.plan.append(
-                    Action(ActionType.SUBMIT, {"path_or_answer": self.task["required_output_path"]})
-                )
-                return self.set_last_action(Action(ActionType.WRITE_FILE, {"path": path, "content": content}))
-
-        if self.smoke_test_attempts == 0:
-            self.smoke_test_attempts += 1
-            return self.set_last_action(Action(ActionType.RUN_SHELL, {"command": self.task["entrypoint"]}))
-        return self.set_last_action(
-            Action(ActionType.SUBMIT, {"path_or_answer": self.task["required_output_path"]})
-        )
-
-    def script_repair_edits(self) -> list[tuple[str, str]]:
-        assert self.task is not None
-        edits: list[tuple[str, str]] = []
-        scenario_id = self.task["scenario_id"]
-        if scenario_id == "inventory_report":
-            analytics = self.file_cache.get("src/repair_target/analytics.py", "")
-            report = self.file_cache.get("src/repair_target/report.py", "")
-            fixed_analytics = analytics
-            fixed_report = report
-            fixed_analytics = fixed_analytics.replace(
-                "range(len(values) - window)",
-                "range(len(values) - window + 1)",
-            )
-            fixed_analytics = fixed_analytics.replace(
-                'if status == "archived":',
-                "if status not in summary:",
-            )
-            fixed_report = fixed_report.replace(
-                '"rolling_average": rolling_average(active_counts, 3),',
-                '"rolling_average": rolling_average(active_counts, 2),',
-            )
-            if fixed_analytics != analytics:
-                edits.append(("src/repair_target/analytics.py", fixed_analytics))
-            if fixed_report != report:
-                edits.append(("src/repair_target/report.py", fixed_report))
-        elif scenario_id == "path_batch":
-            io_helpers = self.file_cache.get("src/repair_target/io_helpers.py", "")
-            batch = self.file_cache.get("src/repair_target/batch.py", "")
-            fixed_io = io_helpers
-            fixed_batch = batch
-            if "from pathlib import Path" not in fixed_io:
-                fixed_io = fixed_io.replace("from __future__ import annotations\n\n", "from __future__ import annotations\n\nfrom pathlib import Path\n\n")
-            fixed_io = fixed_io.replace('data_dir.parent / "measurements.csv"', 'data_dir / "measurements.csv"')
-            fixed_batch = fixed_batch.replace('"total": len(values),', '"total": sum(values),')
-            fixed_batch = fixed_batch.replace(
-                "def compute_batch_summary(base_dir: Path) -> dict[str, int]\n",
-                "def compute_batch_summary(base_dir: Path) -> dict[str, int]:\n",
-            )
-            if fixed_io != io_helpers:
-                edits.append(("src/repair_target/io_helpers.py", fixed_io))
-            if fixed_batch != batch:
-                edits.append(("src/repair_target/batch.py", fixed_batch))
-        elif scenario_id == "csv_schema_drift":
-            parser = self.file_cache.get("src/repair_target/parser.py", "")
-            report = self.file_cache.get("src/repair_target/report.py", "")
-            fixed_parser = parser.replace('row["customer_id"]', 'row["account_id"]')
-            fixed_parser = fixed_parser.replace('row.get("customer_id")', 'row.get("account_id")')
-            fixed_report = report.replace(
-                'return sorted(summary.values(), key=lambda item: str(item["row_count"]))',
-                'return sorted(summary.values(), key=lambda item: str(item["region"]))',
-            )
-            if fixed_parser != parser:
-                edits.append(("src/repair_target/parser.py", fixed_parser))
-            if fixed_report != report:
-                edits.append(("src/repair_target/report.py", fixed_report))
-        elif scenario_id == "timestamp_normalization":
-            time_utils = self.file_cache.get("src/repair_target/time_utils.py", "")
-            report = self.file_cache.get("src/repair_target/report.py", "")
-            fixed_utils = time_utils.replace('"%Y-%d-%m %H:%M"', '"%Y/%m/%d %H:%M"')
-            fixed_utils = fixed_utils.replace(
-                'return sorted(rows, key=lambda row: str(row["timestamp"]))',
-                'return sorted(rows, key=lambda row: parse_timestamp(str(row["timestamp"])))',
-            )
-            fixed_report = report.replace('stamp.strftime("%m/%d/%Y")', 'stamp.strftime("%Y-%m-%d")')
-            if fixed_utils != time_utils:
-                edits.append(("src/repair_target/time_utils.py", fixed_utils))
-            if fixed_report != report:
-                edits.append(("src/repair_target/report.py", fixed_report))
-        elif scenario_id == "team_roster_export":
-            contracts = self.file_cache.get("src/repair_target/contracts.py", "")
-            writer = self.file_cache.get("src/repair_target/writer.py", "")
-            fixed_contracts = contracts.replace('{"team_name": team, "member_count": 0, "total_score": 0}', '{"team": team, "member_count": 0, "total_score": 0}')
-            fixed_contracts = fixed_contracts.replace(
-                'return sorted(summary.values(), key=lambda item: int(item["member_count"]))',
-                'return sorted(summary.values(), key=lambda item: str(item["team"]))',
-            )
-            fixed_writer = self.restore_json_writer(writer)
-            if fixed_contracts != contracts:
-                edits.append(("src/repair_target/contracts.py", fixed_contracts))
-            if fixed_writer != writer:
-                edits.append(("src/repair_target/writer.py", fixed_writer))
-        return edits
-
-    def pipeline_edits(self) -> list[tuple[str, str]]:
-        assert self.task is not None
-        edits: list[tuple[str, str]] = []
-        scenario_id = self.task["scenario_id"]
-        config_text = self.file_cache.get("config/pipeline_config.json", "")
-        runner = self.file_cache.get("run_pipeline.py", "")
-        io_utils = self.file_cache.get("src/pipeline_app/io_utils.py", "")
-
-        if scenario_id == "team_hours_pipeline":
-            if config_text:
-                config = json.loads(config_text)
-                config["input_path"] = "data/jobs.json"
-                config["output_path"] = self.task["required_output_path"]
-                normalized = json.dumps(config, indent=2, sort_keys=True) + "\n"
-                if normalized != config_text:
-                    edits.append(("config/pipeline_config.json", normalized))
-            fixed_runner = runner.replace("normalized = rows", "normalized = normalize_rows(rows)")
-            steps = self.file_cache.get("src/pipeline_app/steps.py", "")
-            fixed_steps = steps.replace(
-                'summary[team]["total_hours"] = round(float(summary[team]["total_hours"]) + 1, 1)',
-                'summary[team]["total_hours"] = round(float(summary[team]["total_hours"]) + float(row["hours"]), 1)',
-            )
-            if fixed_runner != runner:
-                edits.append(("run_pipeline.py", fixed_runner))
-            if fixed_steps != steps:
-                edits.append(("src/pipeline_app/steps.py", fixed_steps))
-            fixed_io = self.restore_json_writer(io_utils)
-            if fixed_io != io_utils:
-                edits.append(("src/pipeline_app/io_utils.py", fixed_io))
-        elif scenario_id == "sales_csv_pipeline":
-            if config_text:
-                config = json.loads(config_text)
-                config["input_path"] = "data/sales.csv"
-                config["output_path"] = self.task["required_output_path"]
-                normalized = json.dumps(config, indent=2, sort_keys=True) + "\n"
-                if normalized != config_text:
-                    edits.append(("config/pipeline_config.json", normalized))
-            fixed_runner = runner.replace("normalized = rows", "normalized = normalize_rows(rows)")
-            steps = self.file_cache.get("src/pipeline_app/steps.py", "")
-            fixed_steps = steps.replace(
-                'if not include_inactive and row["active"]:',
-                'if not include_inactive and not row["active"]:',
-            )
-            if fixed_runner != runner:
-                edits.append(("run_pipeline.py", fixed_runner))
-            if fixed_steps != steps:
-                edits.append(("src/pipeline_app/steps.py", fixed_steps))
-            fixed_io = self.restore_json_writer(io_utils)
-            if fixed_io != io_utils:
-                edits.append(("src/pipeline_app/io_utils.py", fixed_io))
-        elif scenario_id == "artifact_stitch_pipeline":
-            if config_text:
-                config = json.loads(config_text)
-                config["fragment_dir"] = "data/fragments"
-                config["output_path"] = self.task["required_output_path"]
-                normalized = json.dumps(config, indent=2, sort_keys=True) + "\n"
-                if normalized != config_text:
-                    edits.append(("config/pipeline_config.json", normalized))
-            fixed_runner = runner.replace("stitched = rows", "stitched = stitch_fragments(rows)")
-            merge = self.file_cache.get("src/pipeline_app/merge.py", "")
-            fixed_merge = merge.replace(
-                'summary[report]["count"] = int(summary[report]["count"]) + 1',
-                'summary[report]["count"] = int(summary[report]["count"]) + int(row["count"])',
-            )
-            if fixed_runner != runner:
-                edits.append(("run_pipeline.py", fixed_runner))
-            if fixed_merge != merge:
-                edits.append(("src/pipeline_app/merge.py", fixed_merge))
-        elif scenario_id == "quality_gate_pipeline":
-            if config_text:
-                config = json.loads(config_text)
-                config["input_path"] = "data/events.json"
-                config["output_path"] = self.task["required_output_path"]
-                normalized = json.dumps(config, indent=2, sort_keys=True) + "\n"
-                if normalized != config_text:
-                    edits.append(("config/pipeline_config.json", normalized))
-            fixed_runner = runner.replace("normalized = rows", "normalized = normalize_rows(rows)")
-            quality = self.file_cache.get("src/pipeline_app/quality.py", "")
-            fixed_quality = quality.replace(
-                'if row["quality"] == minimum_quality:',
-                'if row["quality"] != minimum_quality:',
-            )
-            fixed_quality = fixed_quality.replace(
-                'float(summary[team]["total_hours"]) + 1',
-                'float(summary[team]["total_hours"]) + float(row["hours"])',
-            )
-            if fixed_runner != runner:
-                edits.append(("run_pipeline.py", fixed_runner))
-            if fixed_quality != quality:
-                edits.append(("src/pipeline_app/quality.py", fixed_quality))
-        fixed_io = self.restore_json_writer(io_utils)
-        if fixed_io != io_utils and not any(path == "src/pipeline_app/io_utils.py" for path, _ in edits):
-            edits.append(("src/pipeline_app/io_utils.py", fixed_io))
-        return edits
-
-    def restore_json_writer(self, content: str) -> str:
-        return content.replace(
-            'Path(path).write_text(str(payload), encoding="utf-8")',
-            'Path(path).write_text(json.dumps(payload, indent=2, sort_keys=True) + "\\n", encoding="utf-8")',
-        )
+    def default_submit_target(self, solution_files: dict[str, object]) -> str:
+        if len(solution_files) == 1:
+            return next(iter(solution_files))
+        if self.manifest is not None and self.manifest.family.value == "pipeline":
+            return "pipeline-reference"
+        if self.manifest is not None and self.manifest.family.value == "script_repair":
+            return "hidden-tests"
+        return "reference-solution"
 
 
 ReActBaselineAgent = HeuristicBaselineAgent

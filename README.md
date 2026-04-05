@@ -30,7 +30,7 @@ I think one of the bottlenecks in agent research is that environments are still 
 | Install | `uv sync` |
 | Install with local cache | `uv sync --cache-dir .uv-cache` |
 | Run tests | `uv run --no-project --cache-dir .uv-cache --python python python -B -m unittest discover -s tests -v` |
-| Generate one env | `uv run swg generate --family tabular --count 1 --difficulty 3 --seed 42 --output-dir generated` |
+| Generate one env | `uv run swg generate --family tabular --scenario monthly_segment_report --count 1 --difficulty 3 --seed 42 --output-dir generated` |
 | Run one episode | `uv run swg run --environment generated/<env_id> --agent heuristic --output-dir episodes` |
 | Evaluate workspace | `uv run swg evaluate --environment generated/<env_id>` |
 | Benchmark baseline | `uv run swg benchmark --environments generated --agent heuristic --output-dir benchmarks` |
@@ -90,6 +90,7 @@ External difficulty is exposed as `1..5` or `easy/medium/hard`. Internally, gene
 
 | Family | Current scenario ids | Coverage intent |
 | --- | --- | --- |
+| `tabular` | `monthly_segment_report`, `channel_status_pivot`, `weekly_refund_rollup`, `supplier_restock_summary` | grouped monthly reporting, pivot-style aggregation, ISO-week time bucketing, alias normalization plus restock joins |
 | `script_repair` | `inventory_report`, `path_batch`, `csv_schema_drift`, `timestamp_normalization`, `team_roster_export` | aggregation repair, file/path handling, schema drift, datetime normalization, serialization and cross-file contract repair |
 | `pipeline` | `team_hours_pipeline`, `sales_csv_pipeline`, `artifact_stitch_pipeline`, `quality_gate_pipeline` | JSON summary generation, CSV normalization, artifact stitching, multi-stage quality/filter/aggregate pipelines |
 
@@ -119,7 +120,11 @@ External difficulty is exposed as `1..5` or `easy/medium/hard`. Internally, gene
 | Evaluation trigger | Runs after episode termination or `submit` |
 | Artifacts | Manifest copy, trajectory, evaluator result, summary, final diff, final workspace |
 
-v1 is intentionally local and subprocess-based. Hidden assets are hidden from the normal visible workspace and file-tool surface, but the runtime is still not a hardened OS sandbox. The command policy is a best-effort integrity layer for trusted research workflows, not a guarantee against determined adversarial agents.
+### Runtime Security Model
+
+The runtime policy blocks common workspace-escape patterns such as parent traversal (`../`), absolute filesystem paths, inline environment-variable assignment in shell commands, inline/module Python execution through `run_shell`, and common network utilities like `curl` and `wget`. This improves evaluator integrity for local research workflows, but it is still a denylist policy wrapped around normal local subprocesses.
+
+v1 is not a hardened OS sandbox. A model-backed agent should be treated as running in a best-effort local integrity envelope rather than in a security boundary suitable for hostile code. "Hidden evaluator" in this project means hidden from the normal visible workspace layout and file-tool surface, not cryptographically or kernel-level isolated from a determined adversary.
 
 ## Trusted Evaluation
 
@@ -169,7 +174,7 @@ Generation-time validation is built in: every environment is checked by applying
 
 | Command | Description |
 | --- | --- |
-| `swg generate` | Generate one or more environments from a family and difficulty |
+| `swg generate` | Generate one or more environments from a family, difficulty, and optional explicit `--scenario` id |
 | `swg run` | Run a baseline agent on one environment |
 | `swg evaluate` | Evaluate a workspace against the hidden evaluator |
 | `swg benchmark` | Run a baseline across a directory of generated environments |
@@ -177,20 +182,22 @@ Generation-time validation is built in: every environment is checked by applying
 ### Examples
 
 ```bash
-uv run swg generate --family script_repair --count 10 --difficulty 4 --seed 100 --output-dir generated
+uv run swg generate --family script_repair --scenario csv_schema_drift --count 10 --difficulty 4 --seed 100 --output-dir generated
 uv run swg run --environment generated/script_repair-d4-s100-XXXXXXXX --agent heuristic --output-dir episodes
 uv run swg evaluate --environment generated/script_repair-d4-s100-XXXXXXXX
 uv run swg benchmark --environments generated --agent heuristic --output-dir benchmarks
 ```
+
+For comparable benchmarks, prefer explicit scenario addressing: `--scenario <scenario_id> --seed <seed>`. Seed-only routing remains available as a convenience, but by design it follows the current scenario pool order and can change when new scenarios are added to a family.
 
 ## Baseline Agents
 
 | Agent | Role |
 | --- | --- |
 | `scripted` | Minimal heuristic smoke-test baseline; intentionally weak |
-| `heuristic` | Scenario-aware oracle-style baseline for infrastructure validation; it uses built-in knowledge of v1 scenario ids and hardcoded repairs |
+| `heuristic` | Privileged validation baseline that applies `manifest.reference_solution["files"]` directly and submits |
 
-The baseline layer is intentionally modular so stronger model-backed agents can plug into the same runtime without changing the environment format. The `heuristic` baseline should not be treated as a language-model benchmark; it is a privileged validation baseline for the framework itself. A `ReActBaselineAgent` compatibility alias still exists in Python for older code, but the CLI now exposes only `scripted` and `heuristic`.
+The baseline layer is intentionally modular so stronger model-backed agents can plug into the same runtime without changing the environment format. The `heuristic` baseline should not be treated as a language-model benchmark; it is a privileged infrastructure check that replays the stored reference solution rather than reasoning about the task. A `ReActBaselineAgent` compatibility alias still exists in Python for older code, but the CLI now exposes only `scripted` and `heuristic`.
 
 ## Development Notes
 
@@ -218,4 +225,4 @@ The baseline layer is intentionally modular so stronger model-backed agents can 
 
 | Included | Deferred |
 | --- | --- |
-| local runtime, hidden evaluators, trajectory logging, typed manifests, three families, baseline agents, CLI, tests, dynamic evaluator loading, partial-credit scoring | integrity-aware compilation, reward-hacking variants, decoy leakage files, editable evaluators, provenance monitoring, multi-stage / lifelong environments, broader scenario diversity per family |
+| local runtime, hidden evaluators, trajectory logging, typed manifests, three families, explicit scenario selection, baseline agents, CLI, tests, dynamic evaluator loading, partial-credit scoring | integrity-aware compilation, reward-hacking variants, decoy leakage files, editable evaluators, provenance monitoring, multi-stage / lifelong environments |
