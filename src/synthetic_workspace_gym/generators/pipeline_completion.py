@@ -1,0 +1,256 @@
+from __future__ import annotations
+
+import json
+import random
+from pathlib import Path
+
+from synthetic_workspace_gym.generators.base import BaseGenerator, GeneratedPayload
+from synthetic_workspace_gym.schemas import EnvironmentFamily, EnvironmentSpec
+from synthetic_workspace_gym.utils.io import write_json, write_text
+
+
+class PipelineCompletionGenerator(BaseGenerator):
+    family = EnvironmentFamily.PIPELINE
+
+    def _build_environment(self, spec: EnvironmentSpec, *, root: Path, visible_root: Path, hidden_root: Path) -> GeneratedPayload:
+        rng = random.Random(spec.seed)
+        jobs = self._build_jobs(rng, count=6 + spec.difficulty)
+        expected_output = self._build_expected_output(jobs)
+        correct_files = self._correct_files(jobs)
+
+        bug_budget = {1: 1, 2: 2, 3: 2, 4: 3, 5: 4}[spec.difficulty]
+        bug_candidates = self._bug_candidates()
+        selected_bugs = bug_candidates[:bug_budget]
+        if len(bug_candidates) > bug_budget:
+            selected_bugs = rng.sample(bug_candidates, k=bug_budget)
+
+        buggy_files = dict(correct_files)
+        touched_files: set[str] = set()
+        bug_labels: list[str] = []
+        for bug in selected_bugs:
+            target_path = bug["target_path"]
+            buggy_files[target_path] = bug["apply"](buggy_files[target_path])
+            touched_files.add(target_path)
+            bug_labels.append(bug["label"])
+
+        for relative_path, content in buggy_files.items():
+            write_text(visible_root / relative_path, content)
+
+        if spec.difficulty >= 4:
+            write_text(
+                visible_root / "config" / "README.txt",
+                "Only `config/pipeline_config.json` is authoritative. Other config snippets are legacy leftovers.\n",
+            )
+            write_text(
+                visible_root / "notes" / "handoff.md",
+                "The final artifact must land in `artifacts/summary.json` even if the current config disagrees.\n",
+            )
+
+        task_descriptor = {
+            "family": "pipeline",
+            "scenario_id": "team_hours_pipeline",
+            "entrypoint": "python run_pipeline.py",
+            "required_output_path": "artifacts/summary.json",
+            "target_files": sorted(touched_files),
+            "hints": [
+                "The config file and the code need to agree on both input and output paths.",
+                "Cancelled jobs should not count toward the final summary.",
+                "The final artifact must be JSON and sorted by team.",
+            ],
+        }
+        write_text(visible_root / "README.md", self._build_readme(task_descriptor))
+        write_json(visible_root / "task.json", task_descriptor)
+
+        reference_solution = {
+            "files": {path: correct_files[path] for path in sorted(touched_files)},
+            "bug_labels": bug_labels,
+        }
+        write_json(hidden_root / "expected_output.json", expected_output)
+        write_json(
+            hidden_root / "evaluator_config.json",
+            {
+                "entrypoint": "run_pipeline.py",
+                "required_output_path": "artifacts/summary.json",
+            },
+        )
+        write_json(hidden_root / "solution_files.json", reference_solution)
+
+        metadata = {
+            "task_descriptor": task_descriptor,
+            "complexity_profile": spec.complexity_profile.to_dict() if spec.complexity_profile else {},
+            "bug_labels": bug_labels,
+            "job_count": len(jobs),
+        }
+        return GeneratedPayload(
+            instruction="Repair the mini-project so running the pipeline produces the required final artifact.",
+            metadata=metadata,
+            reference_solution=reference_solution,
+            evaluator_entrypoint="synthetic_workspace_gym.evaluators.pipeline:PipelineEvaluator",
+        )
+
+    def _build_jobs(self, rng: random.Random, *, count: int) -> list[dict[str, object]]:
+        teams = ["platform", "research", "ops"]
+        states = ["ready", "complete", "cancelled"]
+        jobs = []
+        for index in range(count):
+            jobs.append(
+                {
+                    "job_id": f"J{index + 1:03d}",
+                    "team": rng.choice(teams).upper() if index % 2 == 0 else rng.choice(teams).title(),
+                    "state": rng.choices(states, weights=(0.2, 0.6, 0.2), k=1)[0],
+                    "hours": round(rng.uniform(1.5, 8.0), 1),
+                }
+            )
+        return jobs
+
+    def _build_expected_output(self, jobs: list[dict[str, object]]) -> list[dict[str, object]]:
+        summary: dict[str, dict[str, object]] = {}
+        for row in jobs:
+            team = str(row["team"]).lower()
+            state = str(row["state"]).lower()
+            if state == "cancelled":
+                continue
+            if team not in summary:
+                summary[team] = {"team": team, "job_count": 0, "total_hours": 0.0}
+            summary[team]["job_count"] = int(summary[team]["job_count"]) + 1
+            summary[team]["total_hours"] = round(float(summary[team]["total_hours"]) + float(row["hours"]), 1)
+        return sorted(summary.values(), key=lambda item: str(item["team"]))
+
+    def _correct_files(self, jobs: list[dict[str, object]]) -> dict[str, str]:
+        config = {
+            "input_path": "data/jobs.json",
+            "output_path": "artifacts/summary.json",
+            "exclude_states": ["cancelled"],
+        }
+        io_utils = """from __future__ import annotations
+
+import json
+from pathlib import Path
+
+
+def load_rows(path: Path) -> list[dict[str, object]]:
+    return json.loads(Path(path).read_text(encoding="utf-8"))
+
+
+def write_json(path: Path, payload: object) -> None:
+    Path(path).parent.mkdir(parents=True, exist_ok=True)
+    Path(path).write_text(json.dumps(payload, indent=2, sort_keys=True) + "\\n", encoding="utf-8")
+"""
+        steps = """from __future__ import annotations
+
+
+def normalize_rows(rows: list[dict[str, object]]) -> list[dict[str, object]]:
+    normalized = []
+    for row in rows:
+        normalized.append(
+            {
+                "team": str(row["team"]).lower(),
+                "state": str(row["state"]).lower(),
+                "hours": float(row["hours"]),
+            }
+        )
+    return normalized
+
+
+def build_summary(rows: list[dict[str, object]], *, exclude_states: list[str]) -> list[dict[str, object]]:
+    summary: dict[str, dict[str, object]] = {}
+    for row in rows:
+        if row["state"] in exclude_states:
+            continue
+        team = str(row["team"])
+        if team not in summary:
+            summary[team] = {"team": team, "job_count": 0, "total_hours": 0.0}
+        summary[team]["job_count"] = int(summary[team]["job_count"]) + 1
+        summary[team]["total_hours"] = round(float(summary[team]["total_hours"]) + float(row["hours"]), 1)
+    return sorted(summary.values(), key=lambda item: str(item["team"]))
+"""
+        runner = """from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+
+workspace = Path(__file__).resolve().parent
+sys.path.insert(0, str(workspace / "src"))
+
+from pipeline_app.io_utils import load_rows, write_json
+from pipeline_app.steps import build_summary, normalize_rows
+
+
+def main() -> None:
+    config = json.loads((workspace / "config" / "pipeline_config.json").read_text(encoding="utf-8"))
+    rows = load_rows(workspace / config["input_path"])
+    normalized = normalize_rows(rows)
+    summary = build_summary(normalized, exclude_states=config["exclude_states"])
+    write_json(workspace / config["output_path"], summary)
+
+
+if __name__ == "__main__":
+    main()
+"""
+        return {
+            "src/pipeline_app/__init__.py": "",
+            "src/pipeline_app/io_utils.py": io_utils,
+            "src/pipeline_app/steps.py": steps,
+            "run_pipeline.py": runner,
+            "config/pipeline_config.json": json.dumps(config, indent=2, sort_keys=True) + "\n",
+            "data/jobs.json": json.dumps(jobs, indent=2, sort_keys=True) + "\n",
+        }
+
+    def _bug_candidates(self) -> list[dict[str, object]]:
+        return [
+            {
+                "label": "wrong_input_path",
+                "target_path": "config/pipeline_config.json",
+                "apply": lambda content: content.replace("data/jobs.json", "data/job.json"),
+            },
+            {
+                "label": "wrong_output_path",
+                "target_path": "config/pipeline_config.json",
+                "apply": lambda content: content.replace("artifacts/summary.json", "artifacts/result.json"),
+            },
+            {
+                "label": "missing_normalization_step",
+                "target_path": "run_pipeline.py",
+                "apply": lambda content: content.replace(
+                    "normalized = normalize_rows(rows)",
+                    "normalized = rows",
+                ),
+            },
+            {
+                "label": "aggregation_bug",
+                "target_path": "src/pipeline_app/steps.py",
+                "apply": lambda content: content.replace(
+                    'summary[team]["total_hours"] = round(float(summary[team]["total_hours"]) + float(row["hours"]), 1)',
+                    'summary[team]["total_hours"] = round(float(summary[team]["total_hours"]) + 1, 1)',
+                ),
+            },
+            {
+                "label": "output_format_bug",
+                "target_path": "src/pipeline_app/io_utils.py",
+                "apply": lambda content: content.replace(
+                    'Path(path).write_text(json.dumps(payload, indent=2, sort_keys=True) + "\\n", encoding="utf-8")',
+                    'Path(path).write_text(str(payload), encoding="utf-8")',
+                ),
+            },
+        ]
+
+    def _build_readme(self, task_descriptor: dict[str, object]) -> str:
+        hints = "\n".join(f"- {hint}" for hint in task_descriptor["hints"])
+        targets = "\n".join(f"- `{item}`" for item in task_descriptor["target_files"])
+        return (
+            "# Team Hours Pipeline\n\n"
+            "This mini-project is almost complete, but one or more files are inconsistent or incomplete.\n"
+            "Repair the pipeline so the final artifact is produced correctly.\n\n"
+            "## Smoke test\n"
+            f"- `{task_descriptor['entrypoint']}`\n\n"
+            "## Output contract\n"
+            f"- The final artifact must be written to `{task_descriptor['required_output_path']}`.\n"
+            "- The artifact must be valid JSON.\n"
+            "- Rows must be sorted by `team`.\n"
+            "- Cancelled jobs must be excluded.\n\n"
+            "## Likely target files\n"
+            f"{targets}\n\n"
+            "## Hints\n"
+            f"{hints}\n"
+        )

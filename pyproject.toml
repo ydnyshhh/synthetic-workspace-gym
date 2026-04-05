@@ -1,0 +1,21 @@
+[build-system]
+requires = ["hatchling>=1.27.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "synthetic-workspace-gym"
+version = "0.1.0"
+description = "Synthetic environment generation and evaluation infrastructure for workspace-style agent research."
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [{ name = "OpenAI Codex" }]
+dependencies = []
+
+[project.scripts]
+swg = "synthetic_workspace_gym.cli:main"
+
+[tool.uv]
+package = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/synthetic_workspace_gym"]

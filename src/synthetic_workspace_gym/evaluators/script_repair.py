@@ -1,0 +1,69 @@
+from __future__ import annotations
+
+import json
+import os
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+from synthetic_workspace_gym.evaluators.base import BaseEvaluator
+from synthetic_workspace_gym.schemas import EnvironmentManifest, EvaluatorResult
+from synthetic_workspace_gym.utils.io import read_json
+
+
+class ScriptRepairEvaluator(BaseEvaluator):
+    def evaluate(self, workspace_path: Path, manifest: EnvironmentManifest, hidden_root: Path) -> EvaluatorResult:
+        started = time.perf_counter()
+        config = read_json(hidden_root / "evaluator_config.json")
+        runner_path = hidden_root / config["runner"]
+        completed = subprocess.run(
+            [sys.executable, str(runner_path), str(workspace_path)],
+            cwd=str(hidden_root),
+            capture_output=True,
+            text=True,
+            timeout=manifest.time_limit_seconds,
+            env={**dict(os.environ), "PYTHONDONTWRITEBYTECODE": "1"},
+        )
+        payload = self._extract_payload(completed.stdout)
+        if payload is None:
+            return EvaluatorResult(
+                success=False,
+                score=0.0,
+                subscores={"tests_passed_ratio": 0.0},
+                failure_labels=["hidden_tests_failed"],
+                diagnostics={
+                    "stdout": completed.stdout,
+                    "stderr": completed.stderr,
+                    "returncode": completed.returncode,
+                },
+                runtime_seconds=time.perf_counter() - started,
+            )
+
+        return EvaluatorResult(
+            success=bool(payload["success"]),
+            score=float(payload["score"]),
+            subscores={
+                "tests_passed_ratio": (
+                    float(payload["subscores"]["tests_passed"]) / float(payload["subscores"]["tests_total"])
+                    if payload["subscores"]["tests_total"]
+                    else 0.0
+                )
+            },
+            failure_labels=list(payload.get("failure_labels", [])),
+            diagnostics={
+                **payload.get("diagnostics", {}),
+                "stdout": completed.stdout,
+                "stderr": completed.stderr,
+                "returncode": completed.returncode,
+            },
+            runtime_seconds=time.perf_counter() - started,
+        )
+
+    def _extract_payload(self, stdout: str) -> dict[str, object] | None:
+        for line in reversed([item.strip() for item in stdout.splitlines() if item.strip()]):
+            try:
+                return json.loads(line)
+            except json.JSONDecodeError:
+                continue
+        return None

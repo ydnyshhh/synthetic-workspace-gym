@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+.uv-cache/
+.tmp-tests/
+generated/
+episodes/
+benchmarks/
+smoke-generated/
+smoke-episodes/
+scratch-check/

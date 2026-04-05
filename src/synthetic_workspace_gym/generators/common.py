@@ -1,0 +1,48 @@
+from __future__ import annotations
+
+import hashlib
+from typing import Any
+
+from synthetic_workspace_gym.schemas import ComplexityProfile, EnvironmentFamily
+
+
+def normalize_difficulty(value: int | str) -> int:
+    if isinstance(value, int):
+        difficulty = value
+    else:
+        mapping = {"easy": 1, "medium": 3, "hard": 5}
+        key = value.strip().lower()
+        if key.isdigit():
+            difficulty = int(key)
+        elif key in mapping:
+            difficulty = mapping[key]
+        else:
+            raise ValueError(f"Unsupported difficulty value: {value}")
+    if not 1 <= difficulty <= 5:
+        raise ValueError("difficulty must be between 1 and 5")
+    return difficulty
+
+
+def make_env_id(family: EnvironmentFamily, difficulty: int, seed: int, task_params: dict[str, Any]) -> str:
+    fingerprint = hashlib.sha1(
+        f"{family.value}:{difficulty}:{seed}:{sorted(task_params.items())}".encode("utf-8")
+    ).hexdigest()[:8]
+    return f"{family.value}-d{difficulty}-s{seed}-{fingerprint}"
+
+
+def build_complexity_profile(family: EnvironmentFamily, difficulty: int) -> ComplexityProfile:
+    base = {
+        1: dict(file_count=3, distractor_count=0, dependency_depth=1, reasoning_hops=1, transformation_count=1, bug_subtlety=1, execution_required=False, output_constraint_strength=2),
+        2: dict(file_count=4, distractor_count=1, dependency_depth=1, reasoning_hops=2, transformation_count=2, bug_subtlety=1, execution_required=True, output_constraint_strength=2),
+        3: dict(file_count=5, distractor_count=1, dependency_depth=2, reasoning_hops=3, transformation_count=3, bug_subtlety=2, execution_required=True, output_constraint_strength=3),
+        4: dict(file_count=6, distractor_count=2, dependency_depth=2, reasoning_hops=4, transformation_count=4, bug_subtlety=3, execution_required=True, output_constraint_strength=4),
+        5: dict(file_count=8, distractor_count=3, dependency_depth=3, reasoning_hops=5, transformation_count=5, bug_subtlety=4, execution_required=True, output_constraint_strength=5),
+    }[difficulty]
+    if family == EnvironmentFamily.TABULAR:
+        base["bug_subtlety"] = 0
+    elif family == EnvironmentFamily.SCRIPT_REPAIR:
+        base["transformation_count"] = max(1, difficulty - 1)
+    elif family == EnvironmentFamily.PIPELINE:
+        base["dependency_depth"] += 1
+        base["execution_required"] = True
+    return ComplexityProfile(**base)
