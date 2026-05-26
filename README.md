@@ -14,6 +14,12 @@ I think one of the bottlenecks in agent research is that environments are still 
 | Packaging | Python package with `uv` workflow and `swg` CLI |
 | Status | v1 research infrastructure |
 
+## System Design
+
+![Synthetic Workspace Gym system design diagram](docs/system-design.png)
+
+*Figure: Internal flow from `swg` CLI requests through environment generation, manifest packaging, scratch runtime execution, hidden evaluation, artifact export, benchmarking, and extension points.*
+
 ## What This Is
 
 | This project is | This project is not |
