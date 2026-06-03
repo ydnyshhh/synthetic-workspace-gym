@@ -120,6 +120,36 @@ For the retrieval family, seeds now vary both distractor layout and the underlyi
 | `run_python(command_or_script)` | Run Python code or script in workspace |
 | `submit(path_or_answer)` | Signal completion |
 
+## Prime / Verifiers Integration
+
+The `synthetic_workspace_gym.prime` package provides a thin compatibility layer for Prime Intellect / verifiers-style runners. It exposes SWG as a multi-turn tool-use environment with `reset()`, `step()`, and `evaluate()`, while still using the existing generators, runtime tool executor, manifests, and hidden evaluators.
+
+Minimal usage:
+
+```python
+from synthetic_workspace_gym.prime import make_env
+
+env = make_env(
+    family="script_repair",
+    scenario="csv_schema_drift",
+    difficulty=3,
+    seed=42,
+)
+
+obs = env.reset()
+print(obs["instruction"])
+print(obs["tool_schemas"])
+
+result = env.step({
+    "tool": "submit",
+    "args": {"path_or_answer": "done"}
+})
+
+print(result)
+```
+
+The adapter also includes `SyntheticWorkspacePrimeDataset` for task sampling, `get_tool_schemas()` for JSON-schema-like tool definitions, and `verify_workspace()` for normalizing SWG evaluator results into reward payloads.
+
 ### Runtime guarantees
 
 | Guarantee | v1 behavior |
