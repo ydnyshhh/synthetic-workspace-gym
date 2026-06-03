@@ -11,6 +11,7 @@ from synthetic_workspace_gym.generators.registry import get_generator
 from synthetic_workspace_gym.runtime.environment import LoadedEnvironment, load_environment
 from synthetic_workspace_gym.runtime.tools import WorkspaceToolExecutor
 from synthetic_workspace_gym.schemas import Action, ActionType, ToolObservation
+from synthetic_workspace_gym.utils.io import write_json
 
 from .tools import get_tool_schemas
 from .verifier import evaluator_result_to_prime_reward
@@ -105,11 +106,20 @@ class SyntheticWorkspacePrimeEnv:
         try:
             observation = executor.execute(swg_action, remaining_time_seconds=self._remaining_time_seconds())
         except Exception as exc:
+            message = f"Tool execution failed: {type(exc).__name__}"
+            if isinstance(exc, KeyError):
+                message = f"Tool execution failed: missing required argument {exc!s}"
             observation = ToolObservation(
                 success=False,
-                message=f"Tool execution failed: {type(exc).__name__}",
-                error=str(exc),
+                message=message,
+                error="tool_execution_error",
             )
+            exception_info: dict[str, object] = {
+                "exception_type": type(exc).__name__,
+                "exception_message": str(exc),
+            }
+        else:
+            exception_info = {}
         self._step_count += 1
 
         self._done = (
@@ -135,6 +145,7 @@ class SyntheticWorkspacePrimeEnv:
         )
         if reward_payload is not None:
             info["reward_payload"] = reward_payload
+        info.update(exception_info)
 
         return {
             "observation": self._observation_text(observation),
@@ -167,6 +178,51 @@ class SyntheticWorkspacePrimeEnv:
         if self._temp_dir is not None:
             self._temp_dir.cleanup()
             self._temp_dir = None
+
+    @property
+    def environment(self) -> LoadedEnvironment:
+        if self._environment is None:
+            raise RuntimeError("Environment is not active. Call reset() first.")
+        return self._environment
+
+    @property
+    def active_workspace(self) -> Path:
+        if self._active_workspace is None:
+            raise RuntimeError("Environment has no active workspace. Call reset() first.")
+        return self._active_workspace
+
+    @property
+    def initial_visible_root(self) -> Path:
+        return self.environment.visible_root
+
+    @property
+    def manifest(self):
+        return self.environment.manifest
+
+    @property
+    def env_id(self) -> str:
+        return self.manifest.env_id
+
+    def get_environment(self) -> LoadedEnvironment:
+        return self.environment
+
+    def get_active_workspace(self) -> Path:
+        return self.active_workspace
+
+    def get_manifest(self):
+        return self.manifest
+
+    def copy_final_workspace(self, target_dir: str | Path) -> Path:
+        target = Path(target_dir)
+        if target.exists():
+            shutil.rmtree(target)
+        shutil.copytree(self.active_workspace, target)
+        return target
+
+    def write_manifest_snapshot(self, target_path: str | Path) -> Path:
+        target = Path(target_path)
+        write_json(target, self.manifest.to_dict())
+        return target
 
     def _load_or_generate_environment(self) -> LoadedEnvironment:
         if self.workspace_root is not None and (self.workspace_root / "manifest.json").exists():

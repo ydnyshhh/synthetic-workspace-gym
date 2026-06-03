@@ -1,0 +1,155 @@
+from __future__ import annotations
+
+import json
+import unittest
+from pathlib import Path
+
+from test_support import workspace_tempdir
+
+from synthetic_workspace_gym.prime.agents import PrimeReActAgent
+from synthetic_workspace_gym.prime.clients import HeuristicReferenceClient, JSONActionClient, ScriptedPrimeClient
+from synthetic_workspace_gym.prime.env import SyntheticWorkspacePrimeEnv
+from synthetic_workspace_gym.prime.rollout import build_batch_summary, run_prime_rollout
+from synthetic_workspace_gym.prime.transcript import make_event, read_transcript_jsonl, write_transcript_jsonl
+
+
+class PrimeRolloutTests(unittest.TestCase):
+    def test_scripted_prime_client_emits_planned_actions(self) -> None:
+        client = ScriptedPrimeClient(
+            [
+                {"tool": "list_directory", "args": {"path": "."}},
+                {"tool": "submit", "args": {"path_or_answer": "done"}},
+            ]
+        )
+
+        first = client.complete([], [])
+        second = client.complete([], [])
+
+        self.assertEqual(first["type"], "tool_call")
+        self.assertEqual(first["tool"], "list_directory")
+        self.assertEqual(second["tool"], "submit")
+
+    def test_json_action_client_parses_json_strings(self) -> None:
+        client = JSONActionClient(lambda messages, tools, metadata: '{"tool":"read_file","args":{"path":"README.md"}}')
+
+        response = client.complete([], [])
+
+        self.assertEqual(response["type"], "tool_call")
+        self.assertEqual(response["tool"], "read_file")
+        self.assertEqual(response["args"], {"path": "README.md"})
+
+    def test_transcript_jsonl_write_read_round_trip(self) -> None:
+        with workspace_tempdir() as tmp_dir:
+            path = Path(tmp_dir) / "transcript.jsonl"
+            events = [make_event("system", {"content": "hello"}), make_event("tool_call", {"tool": "submit"}, 0)]
+
+            write_transcript_jsonl(path, events)
+            restored = read_transcript_jsonl(path)
+
+        self.assertEqual([event["event_type"] for event in restored], ["system", "tool_call"])
+        self.assertEqual(restored[1]["step_index"], 0)
+
+    def test_prime_react_agent_runs_scripted_rollout_to_completion(self) -> None:
+        with workspace_tempdir() as tmp_dir:
+            env = SyntheticWorkspacePrimeEnv(
+                family="script_repair",
+                scenario="csv_schema_drift",
+                difficulty=1,
+                seed=7,
+                output_dir=Path(tmp_dir),
+            )
+            try:
+                agent = PrimeReActAgent(
+                    ScriptedPrimeClient(
+                        [
+                            {"tool": "list_directory", "args": {"path": "."}},
+                            {"tool": "submit", "args": {"path_or_answer": "done"}},
+                        ]
+                    )
+                )
+                rollout = agent.run(env)
+            finally:
+                env.close()
+
+        self.assertEqual(rollout["turn_count"], 2)
+        self.assertIn("reward", rollout["reward_payload"])
+        self.assertEqual(rollout["tool_calls"][-1]["tool"], "submit")
+        self.assertTrue(any(event["event_type"] == "evaluation" for event in rollout["transcript_events"]))
+
+    def test_run_prime_rollout_creates_artifacts(self) -> None:
+        with workspace_tempdir() as tmp_dir:
+            root = Path(tmp_dir)
+            result = run_prime_rollout(
+                family="script_repair",
+                scenario="csv_schema_drift",
+                difficulty=1,
+                seed=7,
+                client=ScriptedPrimeClient(
+                    [
+                        {"tool": "list_directory", "args": {"path": "."}},
+                        {"tool": "submit", "args": {"path_or_answer": "done"}},
+                    ]
+                ),
+                output_dir=root / "prime_rollouts",
+                rollout_id="rollout-test",
+            )
+            artifact_dir = Path(result["artifact_dir"])
+            payload = json.loads((artifact_dir / "prime_rollout.json").read_text(encoding="utf-8"))
+
+        self.assertTrue((artifact_dir / "prime_rollout.json").exists())
+        self.assertTrue((artifact_dir / "transcript.jsonl").exists())
+        self.assertTrue((artifact_dir / "final_reward.json").exists())
+        self.assertTrue((artifact_dir / "final_workspace").is_dir())
+        self.assertTrue((artifact_dir / "manifest.json").exists())
+        self.assertTrue((artifact_dir / "final_diff.txt").exists())
+        self.assertFalse((artifact_dir / "hidden").exists())
+        self.assertEqual(payload["rollout_id"], "rollout-test")
+        self.assertEqual(payload["tool_counts"]["submit"], 1)
+
+    def test_malformed_tool_action_does_not_crash_env_step(self) -> None:
+        with workspace_tempdir() as tmp_dir:
+            env = SyntheticWorkspacePrimeEnv(
+                family="script_repair",
+                scenario="csv_schema_drift",
+                difficulty=1,
+                seed=7,
+                output_dir=Path(tmp_dir),
+            )
+            try:
+                env.reset()
+                result = env.step({"tool": "read_file", "args": {}})
+            finally:
+                env.close()
+
+        self.assertFalse(result["done"])
+        self.assertEqual(result["info"]["error"], "tool_execution_error")
+        self.assertEqual(result["info"]["exception_type"], "KeyError")
+
+    def test_batch_summary_aggregation(self) -> None:
+        summary = build_batch_summary(
+            [
+                {"reward": 1.0, "success": True, "rollout_id": "a"},
+                {"reward": 0.0, "success": False, "rollout_id": "b"},
+            ]
+        )
+
+        self.assertEqual(summary["count"], 2)
+        self.assertEqual(summary["success_rate"], 0.5)
+        self.assertEqual(summary["mean_reward"], 0.5)
+
+    def test_heuristic_reference_client_emits_solution_writes_then_submit(self) -> None:
+        client = HeuristicReferenceClient()
+        metadata = {"reference_solution": {"files": {"b.txt": "two", "a.txt": "one"}}}
+
+        first = client.complete([], [], metadata)
+        second = client.complete([], [], metadata)
+        third = client.complete([], [], metadata)
+
+        self.assertEqual(first["tool"], "write_file")
+        self.assertEqual(first["args"]["path"], "a.txt")
+        self.assertEqual(second["args"]["path"], "b.txt")
+        self.assertEqual(third["tool"], "submit")
+
+
+if __name__ == "__main__":
+    unittest.main()

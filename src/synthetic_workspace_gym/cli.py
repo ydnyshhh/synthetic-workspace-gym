@@ -11,11 +11,13 @@ from synthetic_workspace_gym.evaluators.registry import get_evaluator
 from synthetic_workspace_gym.generators.common import normalize_difficulty
 from synthetic_workspace_gym.generators.registry import get_generator, list_generators
 from synthetic_workspace_gym.prime import get_tool_schemas, verify_workspace
+from synthetic_workspace_gym.prime.clients import HeuristicReferenceClient, ScriptedPrimeClient
 from synthetic_workspace_gym.prime.export import (
     build_manifest_row,
     export_prime_pack,
     write_manifest_jsonl,
 )
+from synthetic_workspace_gym.prime.rollout import run_prime_rollout, run_prime_rollout_batch
 from synthetic_workspace_gym.runtime.environment import load_environment
 from synthetic_workspace_gym.runtime.runner import EpisodeRunner
 from synthetic_workspace_gym.utils.io import write_json
@@ -80,6 +82,26 @@ def build_parser() -> argparse.ArgumentParser:
 
     prime_smoke = prime_subparsers.add_parser("smoke-test", help="Smoke-test an exported Prime environment")
     prime_smoke.add_argument("--environment", type=Path, required=True)
+
+    prime_rollout = prime_subparsers.add_parser("rollout", help="Run one Prime-compatible model/tool rollout")
+    prime_rollout.add_argument("--family")
+    prime_rollout.add_argument("--scenario")
+    prime_rollout.add_argument("--difficulty", type=int, default=3)
+    prime_rollout.add_argument("--seed", type=int, default=0)
+    prime_rollout.add_argument("--environment", type=Path)
+    prime_rollout.add_argument("--client", choices=["scripted", "heuristic-reference"], default="scripted")
+    prime_rollout.add_argument("--action-json", action="append", default=[])
+    prime_rollout.add_argument("--output-dir", type=Path, default=Path("prime_rollouts"))
+    prime_rollout.add_argument("--max-turns", type=int)
+    prime_rollout.add_argument("--rollout-id")
+
+    prime_rollout_batch = prime_subparsers.add_parser("rollout-batch", help="Run Prime rollouts from manifest.jsonl")
+    prime_rollout_batch.add_argument("--manifest", type=Path, required=True)
+    prime_rollout_batch.add_argument("--client", choices=["scripted", "heuristic-reference"], default="scripted")
+    prime_rollout_batch.add_argument("--action-json", action="append", default=[])
+    prime_rollout_batch.add_argument("--limit", type=int)
+    prime_rollout_batch.add_argument("--output-dir", type=Path, default=Path("prime_rollouts"))
+    prime_rollout_batch.add_argument("--max-turns", type=int)
 
     return parser
 
@@ -235,6 +257,60 @@ def command_prime_smoke_test(args: argparse.Namespace) -> int:
     return 0 if payload["pass"] else 1
 
 
+def parse_action_json_rows(values: list[str]) -> list[dict[str, object]]:
+    return [json.loads(value) for value in values]
+
+
+def build_prime_client(name: str, action_json: list[str] | None = None):
+    if name == "heuristic-reference":
+        return HeuristicReferenceClient()
+    if name == "scripted":
+        actions = parse_action_json_rows(action_json or [])
+        if not actions:
+            actions = [
+                {"tool": "list_directory", "args": {"path": "."}},
+                {"tool": "submit", "args": {"path_or_answer": "done"}},
+            ]
+        return ScriptedPrimeClient(actions)
+    raise ValueError(f"Unsupported Prime client: {name}")
+
+
+def command_prime_rollout(args: argparse.Namespace) -> int:
+    result = run_prime_rollout(
+        family=args.family,
+        scenario=args.scenario,
+        difficulty=args.difficulty,
+        seed=args.seed,
+        environment_path=args.environment,
+        client=build_prime_client(args.client, args.action_json),
+        output_dir=args.output_dir,
+        max_turns=args.max_turns,
+        rollout_id=args.rollout_id,
+    )
+    payload = {
+        "rollout_id": result["rollout_id"],
+        "env_id": result["env_id"],
+        "success": result["success"],
+        "final_reward": result["final_reward"],
+        "artifact_dir": result["artifact_dir"],
+        "prime_rollout_path": result["prime_rollout_path"],
+    }
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0
+
+
+def command_prime_rollout_batch(args: argparse.Namespace) -> int:
+    summary = run_prime_rollout_batch(
+        args.manifest,
+        client_factory=lambda: build_prime_client(args.client, args.action_json),
+        output_dir=args.output_dir,
+        limit=args.limit,
+        max_turns=args.max_turns,
+    )
+    print(json.dumps(summary, indent=2, sort_keys=True))
+    return 0
+
+
 def main() -> int:
     parser = build_parser()
     args = parser.parse_args()
@@ -255,6 +331,10 @@ def main() -> int:
             return command_prime_verify(args)
         if args.prime_command == "smoke-test":
             return command_prime_smoke_test(args)
+        if args.prime_command == "rollout":
+            return command_prime_rollout(args)
+        if args.prime_command == "rollout-batch":
+            return command_prime_rollout_batch(args)
     raise SystemExit(f"Unsupported command: {args.command}")
 
 

@@ -205,6 +205,63 @@ uv run swg prime manifest \
 
 Each `manifest.jsonl` row includes the task id, instruction, family, scenario, difficulty, seed, relative paths to `visible/` and `hidden/`, evaluator entrypoint, tool permissions, max steps, tags, and normalized reward configuration. The `hidden/` directory is copied because these packs are intended for trusted verifier infrastructure; it should not be exposed to model-facing agents.
 
+## Prime Rollouts
+
+Prime rollouts run a non-privileged multi-turn tool-use loop over the Prime environment adapter and write normalized trace artifacts:
+
+```text
+prime_rollouts/<rollout_id>/
+  prime_rollout.json
+  transcript.jsonl
+  final_workspace/
+  final_reward.json
+  manifest.json
+  final_diff.txt
+```
+
+Run a scripted rollout:
+
+```bash
+uv run swg prime rollout \
+  --family script_repair \
+  --scenario csv_schema_drift \
+  --difficulty 3 \
+  --seed 42 \
+  --client scripted \
+  --output-dir prime_rollouts
+```
+
+Run a rollout on an exported environment:
+
+```bash
+uv run swg prime rollout \
+  --environment prime_exports/swg_smoke/environments/<env_id> \
+  --client scripted \
+  --action-json '{"tool":"list_directory","args":{"path":"."}}' \
+  --action-json '{"tool":"submit","args":{"path_or_answer":"done"}}'
+```
+
+Run a privileged reference rollout:
+
+```bash
+uv run swg prime rollout \
+  --environment generated/<env_id> \
+  --client heuristic-reference \
+  --output-dir prime_rollouts
+```
+
+Batch from an export manifest:
+
+```bash
+uv run swg prime rollout-batch \
+  --manifest prime_exports/swg_smoke/manifest.jsonl \
+  --client scripted \
+  --limit 10 \
+  --output-dir prime_rollouts
+```
+
+The `scripted` client is a deterministic smoke-test client. The `heuristic-reference` client is privileged because it replays `manifest.reference_solution`; use it only for infrastructure validation, not benchmark claims. Phase 3 intentionally adds no external model API dependency. Future OpenAI, Anthropic, vLLM, or Prime clients can plug in through the lightweight `PrimeModelClient` protocol.
+
 ### Runtime guarantees
 
 | Guarantee | v1 behavior |

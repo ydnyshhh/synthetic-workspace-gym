@@ -131,8 +131,10 @@ class PrimeAdapterTests(unittest.TestCase):
         self.assertFalse(result["done"])
         self.assertEqual(result["reward"], 0.0)
         self.assertFalse(result["info"]["success"])
-        self.assertIn("Tool execution failed: KeyError", result["observation"])
-        self.assertIn("path", result["info"]["error"])
+        self.assertIn("Tool execution failed: missing required argument", result["observation"])
+        self.assertEqual(result["info"]["error"], "tool_execution_error")
+        self.assertEqual(result["info"]["exception_type"], "KeyError")
+        self.assertIn("path", result["info"]["exception_message"])
 
     def test_submit_action_finishes_and_includes_reward_payload(self) -> None:
         with workspace_tempdir() as tmp_dir:

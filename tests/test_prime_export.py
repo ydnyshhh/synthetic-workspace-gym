@@ -244,12 +244,34 @@ class PrimeExportTests(unittest.TestCase):
                 "pack/environments/env",
             ]
         )
+        rollout_args = parser.parse_args(
+            [
+                "prime",
+                "rollout",
+                "--family",
+                "script_repair",
+                "--client",
+                "scripted",
+            ]
+        )
+        rollout_batch_args = parser.parse_args(
+            [
+                "prime",
+                "rollout-batch",
+                "--manifest",
+                "pack/manifest.jsonl",
+                "--client",
+                "scripted",
+            ]
+        )
 
         self.assertEqual(export_args.command, "prime")
         self.assertEqual(export_args.prime_command, "export")
         self.assertEqual(verify_args.prime_command, "verify")
         self.assertEqual(manifest_args.prime_command, "manifest")
         self.assertEqual(smoke_args.prime_command, "smoke-test")
+        self.assertEqual(rollout_args.prime_command, "rollout")
+        self.assertEqual(rollout_batch_args.prime_command, "rollout-batch")
 
     def test_verify_command_uses_prime_verifier_adapter(self) -> None:
         with patch(
