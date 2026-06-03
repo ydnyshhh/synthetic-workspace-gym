@@ -97,6 +97,7 @@ def write_prime_rollout_artifacts(
         "env_id": payload["env_id"],
         "success": payload["success"],
         "final_reward": payload["final_reward"],
+        "stopped_reason": payload["stopped_reason"],
         "artifact_dir": str(artifact_root),
         "prime_rollout_path": str(artifact_root / "prime_rollout.json"),
         "reward_payload": payload["reward_payload"],
@@ -116,6 +117,7 @@ def build_prime_rollout_payload(
     client = rollout.get("client")
     client_type = str(getattr(client, "client_type", "external"))
     model_name = str(getattr(client, "name", client_type))
+    privileged = bool(getattr(client, "privileged", False))
     scenario = manifest.metadata.get("scenario_id")
     task_id = f"swg.{manifest.family.value}.{scenario or 'default'}.d{manifest.difficulty}.s{manifest.seed}"
     return {
@@ -126,10 +128,11 @@ def build_prime_rollout_payload(
         "scenario": scenario,
         "difficulty": manifest.difficulty,
         "seed": manifest.seed,
-        "model": {"name": model_name, "client_type": client_type},
+        "model": {"name": model_name, "client_type": client_type, "privileged": privileged},
         "started_at": rollout.get("started_at"),
         "ended_at": rollout.get("ended_at"),
         "duration_seconds": round(float(rollout.get("duration_seconds", 0.0)), 6),
+        "stopped_reason": rollout.get("stopped_reason", "unknown"),
         "success": bool(reward_payload.get("success", False)),
         "final_reward": float(reward_payload.get("reward", 0.0)),
         "reward_payload": reward_payload,
@@ -138,9 +141,10 @@ def build_prime_rollout_payload(
         "tool_counts": dict(sorted(tool_counts.items())),
         "failure_labels": list(reward_payload.get("failure_labels", []) or []),
         "subscores": dict(reward_payload.get("subscores", {}) or {}),
-        "messages": list(rollout.get("messages", [])),
+        "messages_path": "transcript.jsonl",
+        "messages": _preview_messages(list(rollout.get("messages", []))),
         "tool_calls": tool_calls,
-        "observations": observations,
+        "observations": _preview_observations(observations),
         "transcript_path": None,
         "final_workspace_path": None,
         "final_reward_path": None,
@@ -175,21 +179,34 @@ def run_prime_rollout_batch(
     manifest_root = manifest_path.parent
     for row in rows:
         environment_path = manifest_root / str(row["environment_path"])
-        result = run_prime_rollout(
-            environment_path=environment_path,
-            client=client_factory(),
-            output_dir=output_dir,
-            max_turns=max_turns,
-        )
-        rollouts.append(
-            {
-                "rollout_id": result["rollout_id"],
-                "env_id": result["env_id"],
-                "reward": result["final_reward"],
-                "success": result["success"],
-                "path": result["artifact_dir"],
-            }
-        )
+        try:
+            result = run_prime_rollout(
+                environment_path=environment_path,
+                client=client_factory(),
+                output_dir=output_dir,
+                max_turns=max_turns,
+            )
+            rollouts.append(
+                {
+                    "rollout_id": result["rollout_id"],
+                    "env_id": result["env_id"],
+                    "reward": result["final_reward"],
+                    "success": result["success"],
+                    "path": result["artifact_dir"],
+                }
+            )
+        except Exception as exc:
+            rollouts.append(
+                {
+                    "rollout_id": None,
+                    "env_id": row.get("env_id"),
+                    "reward": 0.0,
+                    "success": False,
+                    "path": None,
+                    "error": str(exc),
+                    "exception_type": type(exc).__name__,
+                }
+            )
 
     summary = build_batch_summary(rollouts)
     write_json(Path(output_dir) / "batch_summary.json", summary)
@@ -214,6 +231,31 @@ def _build_final_diff(env: SyntheticWorkspacePrimeEnv) -> str:
 
 def _make_rollout_id(env_id: str) -> str:
     return f"{env_id}-prime-{uuid4().hex[:10]}"
+
+
+def _preview_messages(messages: Sequence[dict[str, Any]], limit: int = 500) -> list[dict[str, Any]]:
+    return [
+        {
+            **message,
+            "content": _truncate(str(message.get("content", "")), limit),
+        }
+        for message in messages
+    ]
+
+
+def _preview_observations(observations: Sequence[dict[str, Any]], limit: int = 500) -> list[dict[str, Any]]:
+    previews: list[dict[str, Any]] = []
+    for observation in observations:
+        row = dict(observation)
+        row["observation"] = _truncate(str(row.get("observation", "")), limit)
+        previews.append(row)
+    return previews
+
+
+def _truncate(value: str, limit: int) -> str:
+    if len(value) <= limit:
+        return value
+    return value[:limit] + f"... <truncated {len(value) - limit} chars>"
 
 
 def _default_scripted_actions() -> list[dict[str, Any]]:

@@ -18,6 +18,7 @@ class PrimeModelClient(Protocol):
 class ScriptedPrimeClient:
     name = "scripted"
     client_type = "scripted"
+    privileged = False
 
     def __init__(self, actions: Sequence[dict[str, Any]] | None = None) -> None:
         self.actions = list(actions or [])
@@ -40,6 +41,7 @@ class ScriptedPrimeClient:
 class HeuristicReferenceClient:
     name = "heuristic-reference"
     client_type = "heuristic_reference"
+    privileged = True
 
     def __init__(self) -> None:
         self.actions: list[dict[str, Any]] | None = None
@@ -71,6 +73,7 @@ class HeuristicReferenceClient:
 class JSONActionClient:
     name = "json-action"
     client_type = "json_action"
+    privileged = False
 
     def __init__(
         self,

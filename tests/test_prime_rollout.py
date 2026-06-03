@@ -9,7 +9,7 @@ from test_support import workspace_tempdir
 from synthetic_workspace_gym.prime.agents import PrimeReActAgent
 from synthetic_workspace_gym.prime.clients import HeuristicReferenceClient, JSONActionClient, ScriptedPrimeClient
 from synthetic_workspace_gym.prime.env import SyntheticWorkspacePrimeEnv
-from synthetic_workspace_gym.prime.rollout import build_batch_summary, run_prime_rollout
+from synthetic_workspace_gym.prime.rollout import build_batch_summary, run_prime_rollout, run_prime_rollout_batch
 from synthetic_workspace_gym.prime.transcript import make_event, read_transcript_jsonl, write_transcript_jsonl
 
 
@@ -72,6 +72,7 @@ class PrimeRolloutTests(unittest.TestCase):
                 env.close()
 
         self.assertEqual(rollout["turn_count"], 2)
+        self.assertEqual(rollout["stopped_reason"], "submit")
         self.assertIn("reward", rollout["reward_payload"])
         self.assertEqual(rollout["tool_calls"][-1]["tool"], "submit")
         self.assertTrue(any(event["event_type"] == "evaluation" for event in rollout["transcript_events"]))
@@ -105,6 +106,80 @@ class PrimeRolloutTests(unittest.TestCase):
         self.assertFalse((artifact_dir / "hidden").exists())
         self.assertEqual(payload["rollout_id"], "rollout-test")
         self.assertEqual(payload["tool_counts"]["submit"], 1)
+        self.assertEqual(payload["stopped_reason"], "submit")
+        self.assertEqual(payload["model"]["privileged"], False)
+        self.assertEqual(payload["messages_path"], "transcript.jsonl")
+        self.assertLessEqual(max(len(message["content"]) for message in payload["messages"]), 550)
+
+    def test_heuristic_reference_rollout_marks_model_privileged(self) -> None:
+        with workspace_tempdir() as tmp_dir:
+            root = Path(tmp_dir)
+            result = run_prime_rollout(
+                family="script_repair",
+                scenario="csv_schema_drift",
+                difficulty=1,
+                seed=7,
+                client=HeuristicReferenceClient(),
+                output_dir=root / "prime_rollouts",
+                rollout_id="reference-rollout",
+            )
+            payload = json.loads(Path(result["prime_rollout_path"]).read_text(encoding="utf-8"))
+
+        self.assertTrue(payload["model"]["privileged"])
+        self.assertEqual(payload["model"]["client_type"], "heuristic_reference")
+        self.assertTrue(payload["success"])
+
+    def test_rollout_records_max_turns_stop_reason(self) -> None:
+        with workspace_tempdir() as tmp_dir:
+            root = Path(tmp_dir)
+            result = run_prime_rollout(
+                family="script_repair",
+                scenario="csv_schema_drift",
+                difficulty=1,
+                seed=7,
+                client=ScriptedPrimeClient([{"tool": "list_directory", "args": {"path": "."}}]),
+                output_dir=root / "prime_rollouts",
+                max_turns=1,
+                rollout_id="max-turns-rollout",
+            )
+            payload = json.loads(Path(result["prime_rollout_path"]).read_text(encoding="utf-8"))
+
+        self.assertEqual(payload["stopped_reason"], "max_turns")
+
+    def test_rollout_records_client_error_stop_reason(self) -> None:
+        def raise_error(messages, tools, metadata):
+            raise RuntimeError("client broke")
+
+        with workspace_tempdir() as tmp_dir:
+            root = Path(tmp_dir)
+            result = run_prime_rollout(
+                family="script_repair",
+                scenario="csv_schema_drift",
+                difficulty=1,
+                seed=7,
+                client=JSONActionClient(raise_error),
+                output_dir=root / "prime_rollouts",
+                rollout_id="client-error-rollout",
+            )
+            payload = json.loads(Path(result["prime_rollout_path"]).read_text(encoding="utf-8"))
+
+        self.assertEqual(payload["stopped_reason"], "client_error")
+
+    def test_rollout_records_tool_error_stop_reason(self) -> None:
+        with workspace_tempdir() as tmp_dir:
+            root = Path(tmp_dir)
+            result = run_prime_rollout(
+                family="script_repair",
+                scenario="csv_schema_drift",
+                difficulty=1,
+                seed=7,
+                client=ScriptedPrimeClient([{"tool": "read_file", "args": {}}]),
+                output_dir=root / "prime_rollouts",
+                rollout_id="tool-error-rollout",
+            )
+            payload = json.loads(Path(result["prime_rollout_path"]).read_text(encoding="utf-8"))
+
+        self.assertEqual(payload["stopped_reason"], "tool_error")
 
     def test_malformed_tool_action_does_not_crash_env_step(self) -> None:
         with workspace_tempdir() as tmp_dir:
@@ -136,6 +211,26 @@ class PrimeRolloutTests(unittest.TestCase):
         self.assertEqual(summary["count"], 2)
         self.assertEqual(summary["success_rate"], 0.5)
         self.assertEqual(summary["mean_reward"], 0.5)
+
+    def test_rollout_batch_catches_per_environment_failures(self) -> None:
+        with workspace_tempdir() as tmp_dir:
+            root = Path(tmp_dir)
+            manifest_path = root / "manifest.jsonl"
+            manifest_path.write_text(
+                json.dumps({"env_id": "missing-env", "environment_path": "environments/missing-env"}) + "\n",
+                encoding="utf-8",
+            )
+
+            summary = run_prime_rollout_batch(
+                manifest_path,
+                client_factory=lambda: ScriptedPrimeClient(),
+                output_dir=root / "rollouts",
+            )
+
+        self.assertEqual(summary["count"], 1)
+        self.assertFalse(summary["rollouts"][0]["success"])
+        self.assertEqual(summary["rollouts"][0]["env_id"], "missing-env")
+        self.assertIn("exception_type", summary["rollouts"][0])
 
     def test_heuristic_reference_client_emits_solution_writes_then_submit(self) -> None:
         client = HeuristicReferenceClient()

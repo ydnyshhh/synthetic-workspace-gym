@@ -13,6 +13,8 @@ from test_support import workspace_tempdir
 from synthetic_workspace_gym.cli import (
     build_parser,
     command_prime_manifest,
+    command_prime_rollout,
+    command_prime_rollout_batch,
     command_prime_verify,
     parse_comma_separated,
     parse_difficulty_spec,
@@ -289,6 +291,60 @@ class PrimeExportTests(unittest.TestCase):
         self.assertEqual(exit_code, 0)
         verifier.assert_called_once_with(Path("environment"), Path("workspace"))
         self.assertEqual(json.loads(stdout.getvalue()), {"reward": 1.0, "success": True})
+
+    def test_rollout_command_writes_artifact(self) -> None:
+        with workspace_tempdir() as tmp_dir:
+            root = Path(tmp_dir)
+            with redirect_stdout(io.StringIO()) as stdout:
+                exit_code = command_prime_rollout(
+                    argparse.Namespace(
+                        family="script_repair",
+                        scenario="csv_schema_drift",
+                        difficulty=1,
+                        seed=7,
+                        environment=None,
+                        client="scripted",
+                        action_json=[
+                            '{"tool":"list_directory","args":{"path":"."}}',
+                            '{"tool":"submit","args":{"path_or_answer":"done"}}',
+                        ],
+                        output_dir=root / "rollouts",
+                        max_turns=None,
+                        rollout_id="cli-rollout",
+                    )
+                )
+            payload = json.loads(stdout.getvalue())
+
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(payload["rollout_id"], "cli-rollout")
+        self.assertTrue(Path(payload["prime_rollout_path"]).exists())
+
+    def test_rollout_batch_command_writes_summary(self) -> None:
+        with workspace_tempdir() as tmp_dir:
+            root = Path(tmp_dir)
+            manifest_path = root / "manifest.jsonl"
+            manifest_path.write_text(
+                json.dumps({"env_id": "missing-env", "environment_path": "environments/missing-env"}) + "\n",
+                encoding="utf-8",
+            )
+
+            with redirect_stdout(io.StringIO()) as stdout:
+                exit_code = command_prime_rollout_batch(
+                    argparse.Namespace(
+                        manifest=manifest_path,
+                        client="scripted",
+                        action_json=[],
+                        limit=1,
+                        output_dir=root / "rollouts",
+                        max_turns=None,
+                    )
+                )
+            payload = json.loads(stdout.getvalue())
+
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(payload["count"], 1)
+        self.assertTrue((root / "rollouts" / "batch_summary.json").exists())
+        self.assertFalse(payload["rollouts"][0]["success"])
 
     def _generate_environment(self, output_dir: Path) -> Path:
         generator = get_generator("script_repair")

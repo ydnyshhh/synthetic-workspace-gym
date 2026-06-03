@@ -156,6 +156,23 @@ class PrimeAdapterTests(unittest.TestCase):
         self.assertIn("reward", result["info"]["reward_payload"])
         self.assertIsInstance(result["reward"], float)
 
+    def test_runtime_home_is_not_visible_in_prime_workspace(self) -> None:
+        with workspace_tempdir() as tmp_dir:
+            env = make_env(
+                family="script_repair",
+                scenario="csv_schema_drift",
+                difficulty=3,
+                seed=42,
+                output_dir=Path(tmp_dir),
+            )
+            try:
+                env.reset()
+                result = env.step({"tool": "list_directory", "args": {"path": "."}})
+            finally:
+                env.close()
+
+        self.assertNotIn(".runtime-home", result["observation"])
+
 
 if __name__ == "__main__":
     unittest.main()

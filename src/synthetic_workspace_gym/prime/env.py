@@ -57,7 +57,12 @@ class SyntheticWorkspacePrimeEnv:
 
         self._environment = environment
         self._active_workspace = active_workspace
-        self._executor = WorkspaceToolExecutor(active_workspace, environment.manifest.tool_permissions)
+        runtime_home = self._runtime_root() / "runtime-home" / environment.manifest.env_id
+        self._executor = WorkspaceToolExecutor(
+            active_workspace,
+            environment.manifest.tool_permissions,
+            runtime_home=runtime_home,
+        )
         self._done = False
         self._step_count = 0
         self._started_at = time.perf_counter()
@@ -225,7 +230,9 @@ class SyntheticWorkspacePrimeEnv:
         return target
 
     def _load_or_generate_environment(self) -> LoadedEnvironment:
-        if self.workspace_root is not None and (self.workspace_root / "manifest.json").exists():
+        if self.workspace_root is not None:
+            if not (self.workspace_root / "manifest.json").exists():
+                raise FileNotFoundError(f"Missing manifest.json under {self.workspace_root}")
             return load_environment(self.workspace_root)
 
         generator = get_generator(self.family)

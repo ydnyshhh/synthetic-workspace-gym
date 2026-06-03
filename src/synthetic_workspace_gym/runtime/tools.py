@@ -12,10 +12,10 @@ from synthetic_workspace_gym.utils.paths import ensure_within_root, file_sha256
 
 
 class WorkspaceToolExecutor:
-    def __init__(self, workspace_root: Path, permissions: ToolPermissions) -> None:
+    def __init__(self, workspace_root: Path, permissions: ToolPermissions, runtime_home: Path | None = None) -> None:
         self.workspace_root = workspace_root.resolve()
         self.permissions = permissions
-        self.runtime_home = self.workspace_root / ".runtime-home"
+        self.runtime_home = (runtime_home.resolve() if runtime_home is not None else self.workspace_root / ".runtime-home")
         self.runtime_home.mkdir(parents=True, exist_ok=True)
         self.current_hashes = snapshot_hashes(self.workspace_root)
 

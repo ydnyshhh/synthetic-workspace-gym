@@ -292,6 +292,7 @@ def command_prime_rollout(args: argparse.Namespace) -> int:
         "env_id": result["env_id"],
         "success": result["success"],
         "final_reward": result["final_reward"],
+        "stopped_reason": result["stopped_reason"],
         "artifact_dir": result["artifact_dir"],
         "prime_rollout_path": result["prime_rollout_path"],
     }

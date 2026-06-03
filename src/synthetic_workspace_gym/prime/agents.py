@@ -52,11 +52,13 @@ class PrimeReActAgent:
         final_reward_payload: dict[str, Any] | None = None
         tool_calls: list[dict[str, Any]] = []
         observations: list[dict[str, Any]] = []
+        stopped_reason = "max_turns"
 
         for step_index in range(limit):
             try:
                 response = self.client.complete(messages, tools, metadata=model_metadata)
             except Exception as exc:
+                stopped_reason = "client_error"
                 events.append(
                     make_event(
                         "error",
@@ -90,7 +92,11 @@ class PrimeReActAgent:
             events.append(make_event("tool_observation", step_result, step_index=step_index))
             messages.append({"role": "tool", "content": str(step_result["observation"])})
             final_step = step_result
+            if step_result.get("info", {}).get("error") == "tool_execution_error":
+                stopped_reason = "tool_error"
+                break
             if step_result.get("done"):
+                stopped_reason = "submit" if action.get("tool") == "submit" else "max_turns"
                 reward_payload = dict(step_result.get("info", {}).get("reward_payload", {}) or {})
                 final_reward_payload = reward_payload
                 events.append(make_event("evaluation", reward_payload, step_index=step_index))
@@ -101,6 +107,7 @@ class PrimeReActAgent:
                 final_reward_payload = env.evaluate()
                 events.append(make_event("evaluation", final_reward_payload, step_index=len(tool_calls)))
             except Exception as exc:
+                stopped_reason = "evaluation_error"
                 final_reward_payload = {
                     "reward": 0.0,
                     "success": False,
@@ -121,6 +128,7 @@ class PrimeReActAgent:
             "final_step": final_step,
             "reward_payload": final_reward_payload,
             "turn_count": len(tool_calls),
+            "stopped_reason": stopped_reason,
         }
 
     def _model_metadata(self, initial_observation: dict[str, Any], env: SyntheticWorkspacePrimeEnv) -> dict[str, Any]:
