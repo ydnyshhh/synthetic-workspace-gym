@@ -72,6 +72,7 @@ def _normalize_row(row: dict[str, Any], split: str | None = None) -> dict[str, A
         "seed": seed,
         "split": row.get("split", split or "default"),
         "instruction": row.get("instruction"),
+        "question": row.get("question") or row.get("instruction") or task_id,
         "environment_path": row.get("environment_path"),
         "metadata": dict(row.get("metadata", {}) or {}),
     }

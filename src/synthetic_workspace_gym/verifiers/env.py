@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib
 from pathlib import Path
 from typing import Any
 
@@ -153,37 +154,107 @@ def adapt_to_verifiers(base_env: SyntheticWorkspaceVerifiersEnv, vf_module: Any 
     if module is None:
         return base_env
 
-    for attr in ("ToolEnv", "Environment", "Env"):
-        env_cls = getattr(module, attr, None)
-        if env_cls is None:
-            continue
+    for env_cls in _native_environment_classes(module):
         adapter = _try_construct_native(env_cls, base_env)
         if adapter is not None:
-            return adapter
+            return _NativeVerifiersAdapter(base_env, adapter)
     return base_env
 
 
 def _try_construct_native(env_cls: Any, base_env: SyntheticWorkspaceVerifiersEnv) -> object | None:
+    dataset = _native_dataset(base_env)
     kwargs_candidates = [
         {
-            "dataset": [base_env.task],
-            "tools": base_env.tools,
+            "dataset": dataset,
+            "tool_defs": base_env.tools,
             "system_prompt": base_env.system_prompt,
             "env_id": base_env.task["task_id"],
         },
-        {"env": base_env},
+        {
+            "dataset": dataset,
+            "tools": [],
+            "system_prompt": base_env.system_prompt,
+            "env_id": base_env.task["task_id"],
+        },
         {},
     ]
     for kwargs in kwargs_candidates:
         try:
             native = env_cls(**kwargs)
-        except TypeError:
+        except Exception:
             continue
-        for name in ("reset", "step", "evaluate", "close"):
-            if not hasattr(native, name):
-                try:
-                    setattr(native, name, getattr(base_env, name))
-                except (AttributeError, TypeError):
-                    pass
         return native
     return None
+
+
+def _native_environment_classes(module: Any) -> list[Any]:
+    classes: list[Any] = []
+    for attr in ("SingleTurnEnv", "ToolEnv", "Environment", "Env"):
+        try:
+            env_cls = getattr(module, attr, None)
+        except Exception:
+            continue
+        if env_cls is not None:
+            classes.append(env_cls)
+    for module_name, attr in (
+        ("verifiers.envs.singleturn_env", "SingleTurnEnv"),
+        ("verifiers.envs.tool_env", "ToolEnv"),
+        ("verifiers.envs.environment", "Environment"),
+    ):
+        try:
+            env_cls = getattr(importlib.import_module(module_name), attr)
+        except (ImportError, AttributeError):
+            continue
+        if env_cls not in classes:
+            classes.append(env_cls)
+    return classes
+
+
+def _native_dataset(base_env: SyntheticWorkspaceVerifiersEnv) -> object:
+    row = dict(base_env.task)
+    row["question"] = row.get("instruction") or row.get("task_id") or "Solve the SWG workspace task."
+    try:
+        from datasets import Dataset  # type: ignore[import-not-found]
+
+        return Dataset.from_list([row])
+    except Exception:
+        return [row]
+
+
+class _NativeVerifiersAdapter:
+    def __init__(self, base_env: SyntheticWorkspaceVerifiersEnv, native_env: object) -> None:
+        self.base_env = base_env
+        self.native_env = native_env
+
+    def reset(self) -> dict[str, Any]:
+        return self.base_env.reset()
+
+    def step(self, action_or_completion: object) -> dict[str, Any]:
+        return self.base_env.step(action_or_completion)
+
+    def evaluate(self) -> dict[str, Any]:
+        return self.base_env.evaluate()
+
+    def close(self) -> None:
+        cleanup = getattr(self.native_env, "cleanup", None)
+        if callable(cleanup):
+            try:
+                cleanup()
+            except TypeError:
+                pass
+        self.base_env.close()
+
+    @property
+    def tools(self) -> list[object]:
+        return self.base_env.tools
+
+    @property
+    def system_prompt(self) -> str:
+        return self.base_env.system_prompt
+
+    @property
+    def task(self) -> dict[str, Any]:
+        return self.base_env.task
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self.native_env, name)

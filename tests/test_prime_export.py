@@ -112,12 +112,15 @@ class PrimeExportTests(unittest.TestCase):
             )
 
             exported_env = Path(summary["export_root"]) / "environments" / env_path.name
+            manifest_exists = (exported_env / "manifest.json").exists()
+            visible_exists = (exported_env / "visible").is_dir()
+            hidden_exists = (exported_env / "hidden").is_dir()
 
         self.assertEqual(summary["environment_count"], 1)
         self.assertEqual(summary["errors"], [])
-        self.assertTrue((exported_env / "manifest.json").exists())
-        self.assertTrue((exported_env / "visible").is_dir())
-        self.assertTrue((exported_env / "hidden").is_dir())
+        self.assertTrue(manifest_exists)
+        self.assertTrue(visible_exists)
+        self.assertTrue(hidden_exists)
 
     def test_export_existing_environments_rejects_source_inside_output_when_overwriting(self) -> None:
         with workspace_tempdir() as tmp_dir:
@@ -394,12 +397,13 @@ class PrimeExportTests(unittest.TestCase):
                         max_turns=None,
                         rollout_id="cli-rollout",
                     )
-                )
+            )
             payload = json.loads(stdout.getvalue())
+            artifact_exists = Path(payload["prime_rollout_path"]).exists()
 
         self.assertEqual(exit_code, 0)
         self.assertEqual(payload["rollout_id"], "cli-rollout")
-        self.assertTrue(Path(payload["prime_rollout_path"]).exists())
+        self.assertTrue(artifact_exists)
 
     def test_rollout_batch_command_writes_summary(self) -> None:
         with workspace_tempdir() as tmp_dir:
@@ -422,10 +426,11 @@ class PrimeExportTests(unittest.TestCase):
                     )
                 )
             payload = json.loads(stdout.getvalue())
+            summary_exists = (root / "rollouts" / "batch_summary.json").exists()
 
         self.assertEqual(exit_code, 0)
         self.assertEqual(payload["count"], 1)
-        self.assertTrue((root / "rollouts" / "batch_summary.json").exists())
+        self.assertTrue(summary_exists)
         self.assertFalse(payload["rollouts"][0]["success"])
 
     def _generate_environment(self, output_dir: Path) -> Path:

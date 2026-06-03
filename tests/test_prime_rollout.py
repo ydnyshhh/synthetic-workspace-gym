@@ -96,14 +96,23 @@ class PrimeRolloutTests(unittest.TestCase):
             )
             artifact_dir = Path(result["artifact_dir"])
             payload = json.loads((artifact_dir / "prime_rollout.json").read_text(encoding="utf-8"))
+            artifact_checks = {
+                "prime_rollout": (artifact_dir / "prime_rollout.json").exists(),
+                "transcript": (artifact_dir / "transcript.jsonl").exists(),
+                "final_reward": (artifact_dir / "final_reward.json").exists(),
+                "final_workspace": (artifact_dir / "final_workspace").is_dir(),
+                "manifest": (artifact_dir / "manifest.json").exists(),
+                "final_diff": (artifact_dir / "final_diff.txt").exists(),
+                "hidden": (artifact_dir / "hidden").exists(),
+            }
 
-        self.assertTrue((artifact_dir / "prime_rollout.json").exists())
-        self.assertTrue((artifact_dir / "transcript.jsonl").exists())
-        self.assertTrue((artifact_dir / "final_reward.json").exists())
-        self.assertTrue((artifact_dir / "final_workspace").is_dir())
-        self.assertTrue((artifact_dir / "manifest.json").exists())
-        self.assertTrue((artifact_dir / "final_diff.txt").exists())
-        self.assertFalse((artifact_dir / "hidden").exists())
+        self.assertTrue(artifact_checks["prime_rollout"])
+        self.assertTrue(artifact_checks["transcript"])
+        self.assertTrue(artifact_checks["final_reward"])
+        self.assertTrue(artifact_checks["final_workspace"])
+        self.assertTrue(artifact_checks["manifest"])
+        self.assertTrue(artifact_checks["final_diff"])
+        self.assertFalse(artifact_checks["hidden"])
         self.assertEqual(payload["rollout_id"], "rollout-test")
         self.assertEqual(payload["tool_counts"]["submit"], 1)
         self.assertEqual(payload["stopped_reason"], "submit")

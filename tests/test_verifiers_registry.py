@@ -34,7 +34,11 @@ class VerifiersRegistryTests(unittest.TestCase):
     @unittest.skipUnless(is_verifiers_available(), "verifiers is unavailable")
     def test_make_verifiers_env_requires_native_package(self) -> None:
         env = make_verifiers_env(family="script_repair", scenario="csv_schema_drift", difficulty=1, seed=7)
-        self.assertIsNotNone(env)
+        try:
+            self.assertTrue(hasattr(env, "native_env"))
+            self.assertGreater(len(getattr(env.native_env, "tool_defs", []) or []), 0)
+        finally:
+            env.close()
 
     @unittest.skipUnless(is_verifiers_available(), "verifiers is unavailable")
     def test_adapt_to_verifiers_returns_object(self) -> None:
