@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import os
 import subprocess
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from test_support import workspace_tempdir
 
@@ -45,6 +47,20 @@ class DockerSandboxTests(unittest.TestCase):
 
         self.assertTrue(result.success)
         self.assertIn("Python", result.stdout + result.stderr)
+
+    def test_docker_sandbox_does_not_inherit_host_secrets(self) -> None:
+        with workspace_tempdir() as tmp_dir:
+            backend = DockerSandboxBackend(SandboxConfig(backend="docker", image=IMAGE, timeout_seconds=10))
+            with mock.patch.dict(os.environ, {"OPENAI_API_KEY": "secret-test-value"}):
+                result = backend.run(
+                    SandboxCommand(
+                        argv=["python", "-c", "import os; print(os.environ.get('OPENAI_API_KEY'))"]
+                    ),
+                    Path(tmp_dir),
+                )
+
+        self.assertTrue(result.success)
+        self.assertNotIn("secret-test-value", result.stdout)
 
     def test_docker_sandbox_mounts_workspace_read_write(self) -> None:
         with workspace_tempdir() as tmp_dir:
