@@ -28,6 +28,13 @@ from synthetic_workspace_gym.sandbox.evaluator import verify_workspace_in_sandbo
 from synthetic_workspace_gym.sandbox.runner import build_sandbox_backend, docker_available
 from synthetic_workspace_gym.sandbox.schemas import SandboxCommand, SandboxConfig
 from synthetic_workspace_gym.utils.io import write_json
+from synthetic_workspace_gym.verifiers.compat import is_verifiers_available
+from synthetic_workspace_gym.verifiers.registry import (
+    SWG_VERIFIERS_ENV_IDS,
+    list_environments as list_verifiers_environments,
+    make_environment as make_verifiers_environment,
+    register_with_verifiers,
+)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -129,6 +136,21 @@ def build_parser() -> argparse.ArgumentParser:
     sandbox_run.add_argument("--image", default="synthetic-workspace-gym-runtime:latest")
     sandbox_run.add_argument("--sandbox-user")
     sandbox_run.add_argument("--command", dest="sandbox_command_text", required=True)
+
+    verifiers = subparsers.add_parser("verifiers", help="Native verifiers integration commands")
+    verifiers_subparsers = verifiers.add_subparsers(dest="verifiers_command", required=True)
+
+    verifiers_subparsers.add_parser("list", help="List built-in SWG verifiers environment ids")
+    verifiers_subparsers.add_parser("check", help="Check optional verifiers integration availability")
+
+    verifiers_smoke = verifiers_subparsers.add_parser("smoke-test", help="Smoke-test a SWG verifiers environment")
+    verifiers_smoke.add_argument("--env-id", default="swg.script_repair.csv_schema_drift")
+    verifiers_smoke.add_argument("--difficulty", type=int, default=1)
+    verifiers_smoke.add_argument("--seed", type=int, default=7)
+    add_sandbox_args(verifiers_smoke)
+
+    verifiers_export = verifiers_subparsers.add_parser("export-registry", help="Write SWG verifiers registry metadata")
+    verifiers_export.add_argument("--output", type=Path, required=True)
 
     return parser
 
@@ -454,6 +476,74 @@ def command_sandbox_run(args: argparse.Namespace) -> int:
     return 0 if result.success else 1
 
 
+def command_verifiers_list(args: argparse.Namespace) -> int:
+    print(json.dumps({"environments": list_verifiers_environments()}, indent=2, sort_keys=True))
+    return 0
+
+
+def command_verifiers_check(args: argparse.Namespace) -> int:
+    payload = {
+        "verifiers_available": is_verifiers_available(),
+        "native_adapter_available": True,
+        "registered_env_count": len(list_verifiers_environments()),
+        "registered_with_verifiers": register_with_verifiers(),
+    }
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0
+
+
+def command_verifiers_export_registry(args: argparse.Namespace) -> int:
+    rows = [
+        {
+            "env_id": env_id,
+            **config,
+        }
+        for env_id, config in sorted(SWG_VERIFIERS_ENV_IDS.items())
+    ]
+    write_json(args.output, {"environments": rows})
+    print(json.dumps({"environment_count": len(rows), "output": str(args.output)}, indent=2, sort_keys=True))
+    return 0
+
+
+def command_verifiers_smoke_test(args: argparse.Namespace) -> int:
+    config = sandbox_config_from_args(args)
+    env = make_verifiers_environment(
+        args.env_id,
+        difficulty=args.difficulty,
+        seed=args.seed,
+        sandbox_backend=config.backend,
+        sandbox_config=config,
+        docker_image=config.image,
+    )
+    try:
+        reset = env.reset()
+        first = env.step({"tool": "list_directory", "args": {"path": "."}})
+        second = env.step({"tool": "submit", "args": {"path_or_answer": "done"}})
+        reward_payload = env.evaluate()
+    finally:
+        env.close()
+    payload = {
+        "env_id": args.env_id,
+        "reset": {
+            "env_id": reset.get("env_id"),
+            "instruction_present": bool(reset.get("instruction")),
+            "tool_count": len(reset.get("tools", [])),
+        },
+        "first_step": {
+            "done": first.get("done"),
+            "reward": first.get("reward"),
+            "success": (first.get("info") or {}).get("success") if isinstance(first.get("info"), dict) else None,
+        },
+        "submit_step": {
+            "done": second.get("done"),
+            "reward": second.get("reward"),
+        },
+        "reward_payload": reward_payload,
+    }
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0
+
+
 def main() -> int:
     parser = build_parser()
     args = parser.parse_args()
@@ -485,6 +575,15 @@ def main() -> int:
             return command_sandbox_check(args)
         if args.sandbox_command == "run":
             return command_sandbox_run(args)
+    if args.command == "verifiers":
+        if args.verifiers_command == "list":
+            return command_verifiers_list(args)
+        if args.verifiers_command == "check":
+            return command_verifiers_check(args)
+        if args.verifiers_command == "smoke-test":
+            return command_verifiers_smoke_test(args)
+        if args.verifiers_command == "export-registry":
+            return command_verifiers_export_registry(args)
     raise SystemExit(f"Unsupported command: {args.command}")
 
 

@@ -18,6 +18,9 @@ from synthetic_workspace_gym.cli import (
     command_prime_rollout_batch,
     command_prime_verify,
     command_sandbox_check,
+    command_verifiers_check,
+    command_verifiers_export_registry,
+    command_verifiers_list,
     parse_comma_separated,
     parse_difficulty_spec,
     parse_int_list_or_range,
@@ -284,6 +287,19 @@ class PrimeExportTests(unittest.TestCase):
         sandbox_run_args = parser.parse_args(
             ["sandbox", "run", "--command", "python --version", "--sandbox-user", "123:456"]
         )
+        verifiers_list_args = parser.parse_args(["verifiers", "list"])
+        verifiers_smoke_args = parser.parse_args(
+            [
+                "verifiers",
+                "smoke-test",
+                "--env-id",
+                "swg.script_repair.csv_schema_drift",
+                "--difficulty",
+                "1",
+                "--seed",
+                "7",
+            ]
+        )
 
         self.assertEqual(export_args.command, "prime")
         self.assertEqual(export_args.prime_command, "export")
@@ -300,6 +316,10 @@ class PrimeExportTests(unittest.TestCase):
         self.assertEqual(sandbox_run_args.sandbox_command, "run")
         self.assertEqual(sandbox_run_args.sandbox_command_text, "python --version")
         self.assertEqual(sandbox_run_args.sandbox_user, "123:456")
+        self.assertEqual(verifiers_list_args.command, "verifiers")
+        self.assertEqual(verifiers_list_args.verifiers_command, "list")
+        self.assertEqual(verifiers_smoke_args.verifiers_command, "smoke-test")
+        self.assertEqual(verifiers_smoke_args.env_id, "swg.script_repair.csv_schema_drift")
 
     def test_verify_command_uses_prime_verifier_adapter(self) -> None:
         with patch(
@@ -332,6 +352,27 @@ class PrimeExportTests(unittest.TestCase):
         self.assertTrue(payload["docker_available"])
         self.assertFalse(payload["image_available"])
         self.assertFalse(payload["sandbox_smoke_test"])
+
+    def test_verifiers_list_and_check_commands_do_not_require_verifiers(self) -> None:
+        with redirect_stdout(io.StringIO()) as list_stdout:
+            list_exit = command_verifiers_list(argparse.Namespace())
+        with redirect_stdout(io.StringIO()) as check_stdout:
+            check_exit = command_verifiers_check(argparse.Namespace())
+
+        self.assertEqual(list_exit, 0)
+        self.assertEqual(check_exit, 0)
+        self.assertIn("swg.script_repair.csv_schema_drift", json.loads(list_stdout.getvalue())["environments"])
+        self.assertIn("verifiers_available", json.loads(check_stdout.getvalue()))
+
+    def test_verifiers_export_registry_writes_metadata(self) -> None:
+        with workspace_tempdir() as tmp_dir:
+            output = Path(tmp_dir) / "registry.json"
+            with redirect_stdout(io.StringIO()):
+                exit_code = command_verifiers_export_registry(argparse.Namespace(output=output))
+            payload = json.loads(output.read_text(encoding="utf-8"))
+
+        self.assertEqual(exit_code, 0)
+        self.assertGreaterEqual(len(payload["environments"]), 4)
 
     def test_rollout_command_writes_artifact(self) -> None:
         with workspace_tempdir() as tmp_dir:

@@ -11,6 +11,11 @@ requires-python = ">=3.11"
 authors = [{ name = "Yadnyesh Chakane" }]
 dependencies = []
 
+[project.optional-dependencies]
+verifiers = [
+    "verifiers",
+]
+
 [project.scripts]
 swg = "synthetic_workspace_gym.cli:main"
 

@@ -262,6 +262,65 @@ uv run swg prime rollout-batch \
 
 The `scripted` client is a deterministic smoke-test client. The `heuristic-reference` client is privileged because it replays `manifest.reference_solution`; use it only for infrastructure validation, not benchmark claims. Phase 3 intentionally adds no external model API dependency. Future OpenAI, Anthropic, vLLM, or Prime clients can plug in through the lightweight `PrimeModelClient` protocol.
 
+## Native Verifiers Integration
+
+SWG has two integration layers:
+
+1. A Prime-compatible adapter/export/rollout layer that does not require the `verifiers` package.
+2. A native optional `verifiers` adapter that lets SWG environments be loaded through Prime Intellect's real `verifiers` API when installed.
+
+Install the optional dependency with:
+
+```bash
+uv sync --extra verifiers
+```
+
+or install the official package manually:
+
+```bash
+pip install verifiers
+```
+
+Use the native adapter:
+
+```python
+from synthetic_workspace_gym.verifiers import make_verifiers_env
+
+env = make_verifiers_env(
+    family="script_repair",
+    scenario="csv_schema_drift",
+    difficulty=3,
+    seed=42,
+    sandbox_backend="docker",
+)
+
+obs = env.reset()
+print(obs["instruction"])
+print(env.tools)
+
+result = env.step({
+    "tool": "list_directory",
+    "args": {"path": "."},
+})
+
+print(result)
+```
+
+The import path `synthetic_workspace_gym.verifiers` is safe even when the optional package is missing. Constructing a native adapted object through `make_verifiers_env(...)` requires the dependency; the fallback `SyntheticWorkspaceVerifiersEnv` wrapper remains usable without it.
+
+CLI helpers:
+
+```bash
+uv run swg verifiers check
+uv run swg verifiers list
+uv run swg verifiers smoke-test \
+  --env-id swg.script_repair.csv_schema_drift \
+  --difficulty 1 \
+  --seed 7
+uv run swg verifiers export-registry \
+  --output verifiers_registry.json
+```
+
 ## Sandbox / Docker Runtime
 
 Local sandbox mode is the default and fastest path for development. Docker sandbox mode runs model-facing shell and Python tools inside a container with the visible workspace mounted read-write, network disabled by default, hidden evaluator assets omitted, and a minimal environment that does not inherit host variables. During trusted evaluation only, hidden assets are mounted read-only for the verifier.
