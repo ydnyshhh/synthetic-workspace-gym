@@ -5,7 +5,7 @@ from typing import Any
 
 from synthetic_workspace_gym.generators.registry import list_generators
 
-from .policy import scenario_pool_for_family
+from .policy import heldout_scenarios_for_family, scenario_pool_for_family
 from .schemas import VALID_SPLITS, SplitManifest
 
 
@@ -46,6 +46,10 @@ def validate_split_manifest(manifest: SplitManifest) -> dict[str, Any]:
 
     for family in known_families:
         heldout = scenarios_by_split.get((family, "heldout"), set())
+        if not heldout_scenarios_for_family(family):
+            warnings.append(f"Family has no configured heldout scenarios: {family}")
+        if not heldout:
+            continue
         in_distribution = set()
         for split in ("train", "validation", "test"):
             in_distribution.update(scenarios_by_split.get((family, split), set()))

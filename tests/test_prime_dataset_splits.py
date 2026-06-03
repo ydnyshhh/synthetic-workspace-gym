@@ -30,7 +30,19 @@ class PrimeDatasetSplitTests(unittest.TestCase):
             ).to_list()
 
         self.assertEqual({row["split"] for row in rows}, {"train", "test"})
-        self.assertTrue(all("task_id" in row for row in rows))
+        self.assertTrue(all(row["task_id"] and row["split"] for row in rows))
+
+    def test_exclude_splits_filters_split_manifest(self) -> None:
+        specs = default_split_policy(families=("script_repair",))
+        manifest = build_split_manifest("smoke", specs, max_per_split={split: 1 for split in specs})
+        with workspace_tempdir() as tmp_dir:
+            path = write_split_manifest(Path(tmp_dir) / "split_manifest.json", manifest)
+            rows = SyntheticWorkspacePrimeDataset(
+                split_manifest_path=path,
+                exclude_splits=("heldout", "validation"),
+            ).to_list()
+
+        self.assertEqual({row["split"] for row in rows}, {"train", "test"})
 
 
 if __name__ == "__main__":

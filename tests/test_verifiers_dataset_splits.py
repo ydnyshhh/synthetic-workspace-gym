@@ -22,6 +22,17 @@ class VerifiersDatasetSplitTests(unittest.TestCase):
         self.assertEqual(rows[0]["split"], "heldout")
         self.assertTrue(rows[0]["question"])
 
+    def test_verifiers_dataset_include_and_exclude_splits(self) -> None:
+        specs = default_split_policy(families=("script_repair",))
+        manifest = build_split_manifest("smoke", specs, max_per_split={split: 1 for split in specs})
+        with workspace_tempdir() as tmp_dir:
+            path = write_split_manifest(Path(tmp_dir) / "split_manifest.json", manifest)
+            included = SWGVerifiersDataset(split_manifest_path=path, include_splits=("train", "heldout")).to_list()
+            excluded = SWGVerifiersDataset(split_manifest_path=path, exclude_splits=("validation", "test")).to_list()
+
+        self.assertEqual({row["split"] for row in included}, {"train", "heldout"})
+        self.assertEqual({row["split"] for row in excluded}, {"train", "heldout"})
+
     def test_load_from_prime_manifest_preserves_split_and_task_id(self) -> None:
         with workspace_tempdir() as tmp_dir:
             root = Path(tmp_dir)

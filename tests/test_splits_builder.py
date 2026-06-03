@@ -16,9 +16,27 @@ class SplitBuilderTests(unittest.TestCase):
         assignments = build_split_assignments(specs, max_per_split={"train": 2, "validation": 1})
 
         self.assertEqual([item.split for item in assignments[:2]], ["train", "train"])
-        self.assertTrue(assignments[0].task_id.startswith("swg.train.script_repair."))
+        self.assertRegex(assignments[0].task_id, r"^swg\.train\.script_repair\.[^.]+\.d[1-5]\.s\d+$")
         self.assertEqual(sum(1 for item in assignments if item.split == "train"), 2)
         self.assertEqual(sum(1 for item in assignments if item.split == "validation"), 1)
+
+    def test_build_assignments_are_deterministic(self) -> None:
+        specs = default_split_policy(families=("script_repair",))
+
+        first = [item.to_dict() for item in build_split_assignments(specs, max_per_split={"train": 5})]
+        second = [item.to_dict() for item in build_split_assignments(specs, max_per_split={"train": 5})]
+
+        self.assertEqual(first, second)
+
+    def test_shuffle_is_deterministic(self) -> None:
+        specs = default_split_policy(families=("script_repair",))
+
+        first = [item.task_id for item in build_split_assignments(specs, max_per_split={"train": 10}, shuffle=True, shuffle_seed=42)]
+        second = [item.task_id for item in build_split_assignments(specs, max_per_split={"train": 10}, shuffle=True, shuffle_seed=42)]
+        unshuffled = [item.task_id for item in build_split_assignments(specs, max_per_split={"train": 10})]
+
+        self.assertEqual(first, second)
+        self.assertNotEqual(first, unshuffled)
 
     def test_build_manifest_validates_and_round_trips(self) -> None:
         specs = default_split_policy(families=("script_repair",))
