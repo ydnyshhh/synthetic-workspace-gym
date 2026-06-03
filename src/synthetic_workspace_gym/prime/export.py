@@ -20,7 +20,7 @@ EXPORT_NAME = "synthetic-workspace-gym-prime-export"
 
 def export_prime_pack(
     output_dir: str | Path,
-    dataset: SyntheticWorkspacePrimeDataset | None = None,
+    dataset: Any = None,
     existing_environments_dir: str | Path | None = None,
     families: Sequence[str] | None = None,
     scenarios: dict[str, Sequence[str]] | None = None,
@@ -34,24 +34,10 @@ def export_prime_pack(
         return export_existing_environments(existing_environments_dir, export_root, overwrite=overwrite)
 
     if dataset is not None:
-        task_rows = dataset.to_list()
-        task_families = sorted({str(row["family"]) for row in task_rows})
-        task_difficulties = sorted({int(row["difficulty"]) for row in task_rows})
-        task_seeds = sorted({int(row["seed"]) for row in task_rows})
-        task_scenarios: dict[str, list[str | None]] = {}
-        for row in task_rows:
-            task_scenarios.setdefault(str(row["family"]), []).append(
-                str(row["scenario"]) if row.get("scenario") is not None else None
-            )
-        return generate_and_export_prime_pack(
+        task_rows = dataset.to_list() if hasattr(dataset, "to_list") else list(dataset)
+        return generate_and_export_task_rows(
             export_root,
-            families=task_families,
-            scenarios={
-                family: tuple(dict.fromkeys(values))
-                for family, values in task_scenarios.items()
-            },
-            difficulties=task_difficulties,
-            seeds=task_seeds,
+            task_rows=task_rows,
             overwrite=overwrite,
         )
 
@@ -71,13 +57,17 @@ def export_existing_environments(
     overwrite: bool = False,
 ) -> dict[str, object]:
     export_root = Path(output_dir).resolve()
+    source_root = Path(existing_environments_dir).resolve()
+    if overwrite and (source_root == export_root or export_root in source_root.parents):
+        raise ValueError("existing_environments_dir cannot be inside output_dir when overwrite=True")
+
     errors: list[dict[str, str]] = []
     _prepare_export_root(export_root, overwrite=overwrite)
     environments_root = export_root / "environments"
     environments_root.mkdir(parents=True, exist_ok=True)
 
     copied_paths: list[Path] = []
-    for source in _find_environment_roots(Path(existing_environments_dir)):
+    for source in _find_environment_roots(source_root):
         try:
             manifest = read_json(source / "manifest.json")
             env_id = str(manifest.get("env_id") or source.name)
@@ -93,6 +83,57 @@ def export_existing_environments(
             errors.append({"environment_path": str(source), "error": str(exc)})
 
     rows = [build_manifest_row(path, export_root) for path in sorted(copied_paths, key=lambda item: item.name)]
+    manifest_path = write_manifest_jsonl(export_root / "manifest.jsonl", rows)
+    metadata_path = write_metadata_json(export_root / "metadata.json", rows)
+    return _summary(export_root, manifest_path, metadata_path, rows, errors)
+
+
+def generate_and_export_task_rows(
+    output_dir: str | Path,
+    task_rows: Sequence[dict[str, object]],
+    overwrite: bool = False,
+) -> dict[str, object]:
+    export_root = Path(output_dir).resolve()
+    errors: list[dict[str, str]] = []
+    _prepare_export_root(export_root, overwrite=overwrite)
+    generated_root = export_root / ".generated"
+    environments_root = export_root / "environments"
+    generated_root.mkdir(parents=True, exist_ok=True)
+    environments_root.mkdir(parents=True, exist_ok=True)
+
+    exported_paths: list[Path] = []
+    for task in task_rows:
+        family = str(task["family"])
+        scenario = str(task["scenario"]) if task.get("scenario") is not None else None
+        difficulty = int(task["difficulty"])
+        seed = int(task["seed"])
+        try:
+            exported_paths.append(
+                _generate_and_copy_one(
+                    family=family,
+                    scenario=scenario,
+                    difficulty=difficulty,
+                    seed=seed,
+                    generated_root=generated_root,
+                    environments_root=environments_root,
+                    overwrite=overwrite,
+                )
+            )
+        except Exception as exc:
+            errors.append(
+                {
+                    "family": family,
+                    "scenario": scenario or "",
+                    "difficulty": str(difficulty),
+                    "seed": str(seed),
+                    "error": str(exc),
+                }
+            )
+
+    if generated_root.exists():
+        shutil.rmtree(generated_root, ignore_errors=True)
+
+    rows = [build_manifest_row(path, export_root) for path in sorted(exported_paths, key=lambda item: item.name)]
     manifest_path = write_manifest_jsonl(export_root / "manifest.jsonl", rows)
     metadata_path = write_metadata_json(export_root / "metadata.json", rows)
     return _summary(export_root, manifest_path, metadata_path, rows, errors)
@@ -128,21 +169,17 @@ def generate_and_export_prime_pack(
         difficulty = int(task["difficulty"])
         seed = int(task["seed"])
         try:
-            generator = get_generator(family)
-            spec = generator.sample_spec(
-                difficulty=difficulty,
-                seed=seed,
-                scenario_id=scenario,
+            exported_paths.append(
+                _generate_and_copy_one(
+                    family=family,
+                    scenario=scenario,
+                    difficulty=difficulty,
+                    seed=seed,
+                    generated_root=generated_root,
+                    environments_root=environments_root,
+                    overwrite=overwrite,
+                )
             )
-            bundle = generator.generate_instance(spec, generated_root)
-            target = environments_root / bundle.manifest.env_id
-            if target.exists():
-                if overwrite:
-                    shutil.rmtree(target)
-                else:
-                    raise FileExistsError(f"Environment already exists in export: {target}")
-            shutil.copytree(bundle.root, target)
-            exported_paths.append(target)
         except Exception as exc:
             errors.append(
                 {
@@ -161,6 +198,33 @@ def generate_and_export_prime_pack(
     manifest_path = write_manifest_jsonl(export_root / "manifest.jsonl", rows)
     metadata_path = write_metadata_json(export_root / "metadata.json", rows)
     return _summary(export_root, manifest_path, metadata_path, rows, errors)
+
+
+def _generate_and_copy_one(
+    *,
+    family: str,
+    scenario: str | None,
+    difficulty: int,
+    seed: int,
+    generated_root: Path,
+    environments_root: Path,
+    overwrite: bool,
+) -> Path:
+    generator = get_generator(family)
+    spec = generator.sample_spec(
+        difficulty=difficulty,
+        seed=seed,
+        scenario_id=scenario,
+    )
+    bundle = generator.generate_instance(spec, generated_root)
+    target = environments_root / bundle.manifest.env_id
+    if target.exists():
+        if overwrite:
+            shutil.rmtree(target)
+        else:
+            raise FileExistsError(f"Environment already exists in export: {target}")
+    shutil.copytree(bundle.root, target)
+    return target
 
 
 def write_manifest_jsonl(path: str | Path, rows: Sequence[dict[str, object]]) -> Path:

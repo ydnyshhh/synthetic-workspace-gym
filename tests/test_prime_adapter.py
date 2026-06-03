@@ -108,8 +108,31 @@ class PrimeAdapterTests(unittest.TestCase):
         self.assertIn("instruction", observation)
         self.assertEqual(observation["family"], "script_repair")
         self.assertEqual(observation["scenario"], "csv_schema_drift")
+        self.assertEqual(observation["max_steps"], 12)
+        self.assertEqual(observation["time_limit_seconds"], 60)
         self.assertIn("metadata", observation)
         self.assertIn("tool_schemas", observation)
+
+    def test_malformed_tool_action_returns_failed_observation(self) -> None:
+        with workspace_tempdir() as tmp_dir:
+            env = make_env(
+                family="script_repair",
+                scenario="csv_schema_drift",
+                difficulty=3,
+                seed=42,
+                output_dir=Path(tmp_dir),
+            )
+            try:
+                env.reset()
+                result = env.step({"tool": "read_file", "args": {}})
+            finally:
+                env.close()
+
+        self.assertFalse(result["done"])
+        self.assertEqual(result["reward"], 0.0)
+        self.assertFalse(result["info"]["success"])
+        self.assertIn("Tool execution failed: KeyError", result["observation"])
+        self.assertIn("path", result["info"]["error"])
 
     def test_submit_action_finishes_and_includes_reward_payload(self) -> None:
         with workspace_tempdir() as tmp_dir:

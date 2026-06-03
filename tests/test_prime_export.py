@@ -12,6 +12,7 @@ from test_support import workspace_tempdir
 
 from synthetic_workspace_gym.cli import (
     build_parser,
+    command_prime_manifest,
     command_prime_verify,
     parse_comma_separated,
     parse_difficulty_spec,
@@ -107,6 +108,17 @@ class PrimeExportTests(unittest.TestCase):
         self.assertTrue((exported_env / "visible").is_dir())
         self.assertTrue((exported_env / "hidden").is_dir())
 
+    def test_export_existing_environments_rejects_source_inside_output_when_overwriting(self) -> None:
+        with workspace_tempdir() as tmp_dir:
+            root = Path(tmp_dir)
+
+            with self.assertRaisesRegex(ValueError, "existing_environments_dir cannot be inside output_dir"):
+                export_existing_environments(
+                    existing_environments_dir=root / "pack" / "environments",
+                    output_dir=root / "pack",
+                    overwrite=True,
+                )
+
     def test_export_prime_pack_returns_summary_and_rows(self) -> None:
         with workspace_tempdir() as tmp_dir:
             root = Path(tmp_dir)
@@ -127,6 +139,65 @@ class PrimeExportTests(unittest.TestCase):
         self.assertEqual(rows[0]["scenario"], "csv_schema_drift")
         self.assertEqual(rows[0]["reward_type"], "hidden_evaluator")
         self.assertEqual(rows[0]["interaction_type"], "multi_turn_tool_use")
+
+    def test_export_prime_pack_uses_exact_custom_dataset_rows(self) -> None:
+        class CustomDataset:
+            def to_list(self) -> list[dict[str, object]]:
+                return [
+                    {
+                        "family": "script_repair",
+                        "scenario": "csv_schema_drift",
+                        "difficulty": 1,
+                        "seed": 7,
+                    },
+                    {
+                        "family": "script_repair",
+                        "scenario": "csv_schema_drift",
+                        "difficulty": 2,
+                        "seed": 8,
+                    },
+                ]
+
+        with workspace_tempdir() as tmp_dir:
+            root = Path(tmp_dir)
+            summary = export_prime_pack(
+                output_dir=root / "pack",
+                dataset=CustomDataset(),
+                overwrite=True,
+            )
+            manifest_path = Path(summary["manifest_path"])
+            rows = [json.loads(line) for line in manifest_path.read_text(encoding="utf-8").splitlines()]
+
+        self.assertEqual(summary["environment_count"], 2)
+        self.assertEqual(
+            {row["task_id"] for row in rows},
+            {
+                "swg.script_repair.csv_schema_drift.d1.s7",
+                "swg.script_repair.csv_schema_drift.d2.s8",
+            },
+        )
+
+    def test_prime_manifest_uses_environment_pack_root_for_relative_paths(self) -> None:
+        with workspace_tempdir() as tmp_dir:
+            root = Path(tmp_dir)
+            env_path = self._generate_environment(root / "generated")
+            pack_root = root / "pack"
+            target = pack_root / "environments" / env_path.name
+            self._copytree(env_path, target)
+            output_path = root / "outside" / "manifest.jsonl"
+
+            with redirect_stdout(io.StringIO()):
+                exit_code = command_prime_manifest(
+                    argparse.Namespace(
+                        environments=pack_root / "environments",
+                        output=output_path,
+                    )
+                )
+            row = json.loads(output_path.read_text(encoding="utf-8").splitlines()[0])
+
+        self.assertEqual(exit_code, 0)
+        self.assertTrue(row["environment_path"].startswith("environments/"))
+        self.assertFalse(Path(row["environment_path"]).is_absolute())
 
     def test_prime_cli_subcommands_are_registered(self) -> None:
         parser = build_parser()

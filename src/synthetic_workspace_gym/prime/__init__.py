@@ -7,6 +7,7 @@ from .export import (
     export_existing_environments,
     export_prime_pack,
     generate_and_export_prime_pack,
+    generate_and_export_task_rows,
     write_manifest_jsonl,
     write_metadata_json,
 )
@@ -27,6 +28,7 @@ __all__ = [
     "export_existing_environments",
     "export_prime_pack",
     "generate_and_export_prime_pack",
+    "generate_and_export_task_rows",
     "get_tool_schemas",
     "make_env",
     "verify_workspace",

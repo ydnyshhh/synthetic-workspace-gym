@@ -70,6 +70,8 @@ class SyntheticWorkspacePrimeEnv:
             "scenario": manifest.metadata.get("scenario_id", self.scenario),
             "difficulty": manifest.difficulty,
             "seed": manifest.seed,
+            "max_steps": manifest.max_steps,
+            "time_limit_seconds": manifest.time_limit_seconds,
             "tool_schemas": get_tool_schemas(manifest.tool_permissions.enabled_tools()),
             "metadata": {
                 **manifest.metadata,
@@ -100,7 +102,14 @@ class SyntheticWorkspacePrimeEnv:
                 "info": {"success": False, "error": "unknown_tool"},
             }
 
-        observation = executor.execute(swg_action, remaining_time_seconds=self._remaining_time_seconds())
+        try:
+            observation = executor.execute(swg_action, remaining_time_seconds=self._remaining_time_seconds())
+        except Exception as exc:
+            observation = ToolObservation(
+                success=False,
+                message=f"Tool execution failed: {type(exc).__name__}",
+                error=str(exc),
+            )
         self._step_count += 1
 
         self._done = (

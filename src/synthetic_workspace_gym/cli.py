@@ -194,7 +194,7 @@ def command_prime_export(args: argparse.Namespace) -> int:
 
 def command_prime_manifest(args: argparse.Namespace) -> int:
     environments_root = args.environments.resolve()
-    export_root = args.output.resolve().parent
+    export_root = environments_root.parent
     environment_paths = sorted(path.parent for path in environments_root.rglob("manifest.json"))
     rows = [build_manifest_row(path, export_root) for path in environment_paths]
     write_manifest_jsonl(args.output, rows)
