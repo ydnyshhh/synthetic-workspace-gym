@@ -205,6 +205,48 @@ uv run swg prime manifest \
 
 Each `manifest.jsonl` row includes the task id, instruction, family, scenario, difficulty, seed, relative paths to `visible/` and `hidden/`, evaluator entrypoint, tool permissions, max steps, tags, and normalized reward configuration. The `hidden/` directory is copied because these packs are intended for trusted verifier infrastructure; it should not be exposed to model-facing agents.
 
+## Dataset Splits
+
+SWG supports first-class `train`, `validation`, `test`, and `heldout` split manifests for leakage-resistant training and evaluation. Splits are deterministic over family, scenario, difficulty, and seed. The default policy uses disjoint seed ranges for train/validation/test, and uses scenario-heldout tasks where possible for the `heldout` split.
+
+| Split | Purpose | Default difficulties | Default seeds |
+| --- | --- | --- | --- |
+| `train` | Training and RL rollouts | 1, 2, 3 | 0-79 |
+| `validation` | Prompt/harness/reward tuning | 2, 3, 4 | 80-89 |
+| `test` | Final reported benchmark | 3, 4, 5 | 90-99 |
+| `heldout` | Scenario-level generalization | 3, 4, 5 | 100-119 |
+
+Build a split manifest:
+
+```bash
+uv run swg splits build \
+  --output splits/swg_v1_split_manifest.json \
+  --assignments-output splits/swg_v1_split_assignments.jsonl \
+  --shuffle \
+  --shuffle-seed 42
+```
+
+Validate and inspect split counts:
+
+```bash
+uv run swg splits validate \
+  --manifest splits/swg_v1_split_manifest.json
+
+uv run swg splits stats \
+  --manifest splits/swg_v1_split_manifest.json
+```
+
+Export a Prime-compatible split pack:
+
+```bash
+uv run swg prime export-splits \
+  --split-manifest splits/swg_v1_split_manifest.json \
+  --output-dir prime_exports/swg_splits_v1 \
+  --overwrite
+```
+
+Split exports preserve `split` and `task_id` in `manifest.jsonl`, `metadata.json`, generated environment manifest metadata, and the exported `split_manifest.json` / `split_assignments.jsonl` files.
+
 ## Prime Rollouts
 
 Prime rollouts run a non-privileged multi-turn tool-use loop over the Prime environment adapter and write normalized trace artifacts:

@@ -45,6 +45,12 @@ class BaseGenerator(ABC):
         family = self.require_family()
         generation_params = dict(overrides.pop("generation_params", {}))
         scenario_id = overrides.pop("scenario_id", generation_params.pop("scenario_id", None))
+        split = overrides.pop("split", generation_params.get("split", None))
+        task_id = overrides.pop("task_id", generation_params.get("task_id", None))
+        if split is not None:
+            generation_params["split"] = str(split)
+        if task_id is not None:
+            generation_params["task_id"] = str(task_id)
         spec = EnvironmentSpec(
             env_family=family,
             difficulty=difficulty,
@@ -79,6 +85,21 @@ class BaseGenerator(ABC):
         hidden_root.mkdir(parents=True, exist_ok=True)
 
         payload = self.build_environment(spec, root=root, visible_root=visible_root, hidden_root=hidden_root)
+        metadata = dict(payload.metadata)
+        split = spec.generation_params.get("split")
+        task_id = spec.generation_params.get("task_id")
+        if split is not None:
+            metadata.update(
+                {
+                    "split": str(split),
+                    "split_family": spec.env_family.value,
+                    "split_scenario": spec.scenario_id,
+                    "split_difficulty": spec.difficulty,
+                    "split_seed": spec.seed,
+                }
+            )
+        if task_id is not None:
+            metadata["task_id"] = str(task_id)
         manifest = EnvironmentManifest(
             env_id=env_id,
             family=spec.env_family,
@@ -92,7 +113,7 @@ class BaseGenerator(ABC):
             tool_permissions=spec.tool_permissions,
             max_steps=spec.max_steps,
             time_limit_seconds=spec.time_limit_seconds,
-            metadata=payload.metadata,
+            metadata=metadata,
             evaluator_entrypoint=payload.evaluator_entrypoint,
             reference_solution=payload.reference_solution,
         )

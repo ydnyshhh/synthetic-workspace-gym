@@ -10,6 +10,12 @@ from typing import Any
 
 from synthetic_workspace_gym.generators.registry import get_generator, list_generators
 from synthetic_workspace_gym.prime.dataset import SyntheticWorkspacePrimeDataset
+from synthetic_workspace_gym.splits.manifest import (
+    read_split_manifest,
+    write_split_jsonl,
+    write_split_manifest,
+)
+from synthetic_workspace_gym.splits.schemas import SplitAssignment, SplitManifest
 from synthetic_workspace_gym.utils.io import read_json, write_json
 
 TOOL_SCHEMA_VERSION = "swg-prime-tools-v1"
@@ -107,6 +113,8 @@ def generate_and_export_task_rows(
         scenario = str(task["scenario"]) if task.get("scenario") is not None else None
         difficulty = int(task["difficulty"])
         seed = int(task["seed"])
+        split = str(task["split"]) if task.get("split") is not None else None
+        task_id = str(task["task_id"]) if task.get("task_id") is not None else None
         try:
             exported_paths.append(
                 _generate_and_copy_one(
@@ -114,6 +122,8 @@ def generate_and_export_task_rows(
                     scenario=scenario,
                     difficulty=difficulty,
                     seed=seed,
+                    split=split,
+                    task_id=task_id,
                     generated_root=generated_root,
                     environments_root=environments_root,
                     overwrite=overwrite,
@@ -168,6 +178,8 @@ def generate_and_export_prime_pack(
         scenario = str(task["scenario"]) if task.get("scenario") is not None else None
         difficulty = int(task["difficulty"])
         seed = int(task["seed"])
+        split = str(task["split"]) if task.get("split") is not None else None
+        task_id = str(task["task_id"]) if task.get("task_id") is not None else None
         try:
             exported_paths.append(
                 _generate_and_copy_one(
@@ -175,6 +187,8 @@ def generate_and_export_prime_pack(
                     scenario=scenario,
                     difficulty=difficulty,
                     seed=seed,
+                    split=split,
+                    task_id=task_id,
                     generated_root=generated_root,
                     environments_root=environments_root,
                     overwrite=overwrite,
@@ -200,12 +214,108 @@ def generate_and_export_prime_pack(
     return _summary(export_root, manifest_path, metadata_path, rows, errors)
 
 
+def export_split_pack(
+    output_dir: str | Path,
+    split_manifest_path: str | Path | None = None,
+    split_manifest: SplitManifest | None = None,
+    export_name: str | None = None,
+    overwrite: bool = False,
+    sandbox_recommended: bool = True,
+) -> dict[str, Any]:
+    export_root = _resolve_export_root(output_dir, export_name)
+    if split_manifest is None and split_manifest_path is None:
+        raise ValueError("split_manifest or split_manifest_path is required")
+    manifest = split_manifest or read_split_manifest(split_manifest_path)  # type: ignore[arg-type]
+    errors: list[dict[str, str]] = []
+    _prepare_export_root(export_root, overwrite=overwrite)
+    generated_root = export_root / ".generated"
+    environments_root = export_root / "environments"
+    generated_root.mkdir(parents=True, exist_ok=True)
+    environments_root.mkdir(parents=True, exist_ok=True)
+
+    exported_paths: list[Path] = []
+    exported_assignments: list[SplitAssignment] = []
+    for assignment in manifest.assignments:
+        try:
+            target = _generate_and_copy_one(
+                family=assignment.family,
+                scenario=assignment.scenario,
+                difficulty=assignment.difficulty,
+                seed=assignment.seed,
+                split=assignment.split,
+                task_id=assignment.task_id,
+                generated_root=generated_root,
+                environments_root=environments_root / assignment.split,
+                overwrite=overwrite,
+            )
+            exported_paths.append(target)
+            exported_assignments.append(
+                SplitAssignment(
+                    split=assignment.split,
+                    family=assignment.family,
+                    scenario=assignment.scenario,
+                    difficulty=assignment.difficulty,
+                    seed=assignment.seed,
+                    task_id=assignment.task_id,
+                    env_id=target.name,
+                    metadata=assignment.metadata,
+                )
+            )
+        except Exception as exc:
+            errors.append(
+                {
+                    "split": assignment.split,
+                    "task_id": assignment.task_id,
+                    "family": assignment.family,
+                    "scenario": assignment.scenario or "",
+                    "difficulty": str(assignment.difficulty),
+                    "seed": str(assignment.seed),
+                    "error": str(exc),
+                }
+            )
+
+    if generated_root.exists():
+        shutil.rmtree(generated_root, ignore_errors=True)
+
+    split_manifest_path_out = write_split_manifest(
+        export_root / "split_manifest.json",
+        SplitManifest(
+            name=manifest.name,
+            version=manifest.version,
+            created_at=manifest.created_at,
+            split_specs=manifest.split_specs,
+            assignments=exported_assignments,
+            metadata=manifest.metadata,
+        ),
+    )
+    assignments_path = write_split_jsonl(export_root / "split_assignments.jsonl", exported_assignments)
+    rows = [build_manifest_row(path, export_root) for path in sorted(exported_paths, key=lambda item: item.as_posix())]
+    manifest_path = write_manifest_jsonl(export_root / "manifest.jsonl", rows)
+    metadata_path = write_metadata_json(
+        export_root / "metadata.json",
+        rows,
+        split_manifest=manifest,
+        sandbox_recommended=sandbox_recommended,
+    )
+    summary = _summary(export_root, manifest_path, metadata_path, rows, errors)
+    summary.update(
+        {
+            "split_manifest_path": str(split_manifest_path_out),
+            "split_assignments_path": str(assignments_path),
+            "splits": _split_counts(rows),
+        }
+    )
+    return summary
+
+
 def _generate_and_copy_one(
     *,
     family: str,
     scenario: str | None,
     difficulty: int,
     seed: int,
+    split: str | None = None,
+    task_id: str | None = None,
     generated_root: Path,
     environments_root: Path,
     overwrite: bool,
@@ -215,6 +325,8 @@ def _generate_and_copy_one(
         difficulty=difficulty,
         seed=seed,
         scenario_id=scenario,
+        split=split,
+        task_id=task_id,
     )
     bundle = generator.generate_instance(spec, generated_root)
     target = environments_root / bundle.manifest.env_id
@@ -237,7 +349,12 @@ def write_manifest_jsonl(path: str | Path, rows: Sequence[dict[str, object]]) ->
     return manifest_path
 
 
-def write_metadata_json(path: str | Path, rows: Sequence[dict[str, object]]) -> Path:
+def write_metadata_json(
+    path: str | Path,
+    rows: Sequence[dict[str, object]],
+    split_manifest: SplitManifest | None = None,
+    sandbox_recommended: bool = True,
+) -> Path:
     payload = {
         "name": EXPORT_NAME,
         "version": "v1",
@@ -251,13 +368,21 @@ def write_metadata_json(path: str | Path, rows: Sequence[dict[str, object]]) -> 
         "reward_type": REWARD_TYPE,
         "source": "synthetic-workspace-gym",
         "notes": "Portable export generated for Prime/verifiers-style infrastructure.",
-        "recommended_sandbox": {
+        "splits": _split_counts(rows),
+    }
+    if split_manifest is not None:
+        payload["split_policy"] = {
+            "name": split_manifest.name,
+            "version": split_manifest.version,
+            "metadata": split_manifest.metadata,
+        }
+    if sandbox_recommended:
+        payload["recommended_sandbox"] = {
             "backend": "docker",
             "image": "synthetic-workspace-gym-runtime:latest",
             "network_enabled": False,
             "hidden_mount_policy": "evaluator_only_read_only",
-        },
-    }
+        }
     metadata_path = Path(path)
     write_json(metadata_path, payload)
     return metadata_path
@@ -280,13 +405,18 @@ def build_manifest_row(
     scenario = _string_or_none(metadata.get("scenario_id") or metadata.get("scenario") or _parse_env_id(env_id).get("scenario"))
     difficulty = _int_or_none(manifest.get("difficulty") or metadata.get("difficulty") or _parse_env_id(env_id).get("difficulty"))
     seed = _int_or_none(manifest.get("seed") or metadata.get("seed") or _parse_env_id(env_id).get("seed"))
+    split = _string_or_none(metadata.get("split"))
 
     environment_rel = _relative_posix(environment_root, export_root)
     manifest_rel = _relative_posix(manifest_path, export_root)
     visible_root = environment_root / str(manifest.get("workspace_root") or "visible")
     hidden_root = environment_root / str(manifest.get("hidden_root") or "hidden")
     task_scenario = scenario or "default"
-    task_id = f"swg.{family or 'unknown'}.{task_scenario}.d{difficulty if difficulty is not None else 'unknown'}.s{seed if seed is not None else 'unknown'}"
+    task_id = _string_or_none(metadata.get("task_id")) or (
+        f"swg.{split}.{family or 'unknown'}.{task_scenario}.d{difficulty if difficulty is not None else 'unknown'}.s{seed if seed is not None else 'unknown'}"
+        if split
+        else f"swg.{family or 'unknown'}.{task_scenario}.d{difficulty if difficulty is not None else 'unknown'}.s{seed if seed is not None else 'unknown'}"
+    )
     tool_permissions = _enabled_tools(manifest.get("tool_permissions", {}))
     tags = ["synthetic-workspace-gym", "tool-use", "hidden-verifier"]
     if family:
@@ -294,6 +424,7 @@ def build_manifest_row(
 
     return {
         "task_id": task_id,
+        "split": split,
         "env_id": env_id,
         "family": family,
         "scenario": scenario,
@@ -317,6 +448,15 @@ def build_manifest_row(
         "tags": tags,
         "metadata": metadata,
     }
+
+
+def _split_counts(rows: Sequence[dict[str, object]]) -> dict[str, int]:
+    counts = {split: 0 for split in ("train", "validation", "test", "heldout")}
+    for row in rows:
+        split = row.get("split")
+        if split in counts:
+            counts[str(split)] += 1
+    return counts
 
 
 def _summary(

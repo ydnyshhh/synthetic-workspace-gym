@@ -250,6 +250,16 @@ class PrimeExportTests(unittest.TestCase):
                 "pack/manifest.jsonl",
             ]
         )
+        export_splits_args = parser.parse_args(
+            [
+                "prime",
+                "export-splits",
+                "--split-manifest",
+                "splits/manifest.json",
+                "--output-dir",
+                "prime_exports/splits",
+            ]
+        )
         smoke_args = parser.parse_args(
             [
                 "prime",
@@ -303,11 +313,27 @@ class PrimeExportTests(unittest.TestCase):
                 "7",
             ]
         )
+        splits_build_args = parser.parse_args(
+            [
+                "splits",
+                "build",
+                "--output",
+                "splits/default_split_manifest.json",
+                "--assignments-output",
+                "splits/default_split_assignments.jsonl",
+                "--max-train",
+                "10",
+                "--shuffle",
+            ]
+        )
+        splits_validate_args = parser.parse_args(["splits", "validate", "--manifest", "splits/default_split_manifest.json"])
+        splits_stats_args = parser.parse_args(["splits", "stats", "--manifest", "splits/default_split_manifest.json"])
 
         self.assertEqual(export_args.command, "prime")
         self.assertEqual(export_args.prime_command, "export")
         self.assertEqual(verify_args.prime_command, "verify")
         self.assertEqual(manifest_args.prime_command, "manifest")
+        self.assertEqual(export_splits_args.prime_command, "export-splits")
         self.assertEqual(smoke_args.prime_command, "smoke-test")
         self.assertEqual(rollout_args.prime_command, "rollout")
         self.assertEqual(rollout_args.sandbox_user, "123:456")
@@ -323,6 +349,12 @@ class PrimeExportTests(unittest.TestCase):
         self.assertEqual(verifiers_list_args.verifiers_command, "list")
         self.assertEqual(verifiers_smoke_args.verifiers_command, "smoke-test")
         self.assertEqual(verifiers_smoke_args.env_id, "swg.script_repair.csv_schema_drift")
+        self.assertEqual(splits_build_args.command, "splits")
+        self.assertEqual(splits_build_args.splits_command, "build")
+        self.assertEqual(splits_build_args.max_train, 10)
+        self.assertTrue(splits_build_args.shuffle)
+        self.assertEqual(splits_validate_args.splits_command, "validate")
+        self.assertEqual(splits_stats_args.splits_command, "stats")
 
     def test_verify_command_uses_prime_verifier_adapter(self) -> None:
         with patch(

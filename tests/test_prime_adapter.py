@@ -81,6 +81,8 @@ class PrimeAdapterTests(unittest.TestCase):
                 "seed": 42,
                 "split": "smoke",
                 "task_id": "swg.script_repair.csv_schema_drift.d3.s42",
+                "environment_path": None,
+                "metadata": {},
             },
         )
 

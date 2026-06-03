@@ -18,6 +18,7 @@ from synthetic_workspace_gym.prime import get_tool_schemas, verify_workspace
 from synthetic_workspace_gym.prime.clients import HeuristicReferenceClient, ScriptedPrimeClient
 from synthetic_workspace_gym.prime.export import (
     build_manifest_row,
+    export_split_pack,
     export_prime_pack,
     write_manifest_jsonl,
 )
@@ -27,6 +28,14 @@ from synthetic_workspace_gym.runtime.runner import EpisodeRunner
 from synthetic_workspace_gym.sandbox.evaluator import verify_workspace_in_sandbox
 from synthetic_workspace_gym.sandbox.runner import build_sandbox_backend, docker_available
 from synthetic_workspace_gym.sandbox.schemas import SandboxCommand, SandboxConfig
+from synthetic_workspace_gym.splits import (
+    build_split_manifest,
+    default_split_policy,
+    read_split_manifest,
+    validate_split_manifest,
+    write_split_jsonl,
+    write_split_manifest,
+)
 from synthetic_workspace_gym.utils.io import write_json
 from synthetic_workspace_gym.verifiers.compat import is_verifiers_available
 from synthetic_workspace_gym.verifiers.registry import (
@@ -47,6 +56,8 @@ def build_parser() -> argparse.ArgumentParser:
     generate.add_argument("--difficulty", default="3")
     generate.add_argument("--seed", type=int, default=1)
     generate.add_argument("--scenario")
+    generate.add_argument("--split")
+    generate.add_argument("--task-id")
     generate.add_argument("--output-dir", type=Path, default=Path("generated"))
     generate.add_argument("--skip-validate", action="store_true")
 
@@ -85,6 +96,12 @@ def build_parser() -> argparse.ArgumentParser:
     prime_export.add_argument("--seeds", default="0:10")
     prime_export.add_argument("--export-name")
     prime_export.add_argument("--overwrite", action="store_true")
+
+    prime_export_splits = prime_subparsers.add_parser("export-splits", help="Export a Prime-compatible split pack")
+    prime_export_splits.add_argument("--split-manifest", type=Path, required=True)
+    prime_export_splits.add_argument("--output-dir", type=Path, required=True)
+    prime_export_splits.add_argument("--export-name")
+    prime_export_splits.add_argument("--overwrite", action="store_true")
 
     prime_manifest = prime_subparsers.add_parser("manifest", help="Rebuild manifest.jsonl from exported environments")
     prime_manifest.add_argument("--environments", type=Path, required=True)
@@ -136,6 +153,26 @@ def build_parser() -> argparse.ArgumentParser:
     sandbox_run.add_argument("--image", default="synthetic-workspace-gym-runtime:latest")
     sandbox_run.add_argument("--sandbox-user")
     sandbox_run.add_argument("--command", dest="sandbox_command_text", required=True)
+
+    splits = subparsers.add_parser("splits", help="Dataset split manifest commands")
+    splits_subparsers = splits.add_subparsers(dest="splits_command", required=True)
+
+    splits_build = splits_subparsers.add_parser("build", help="Build a default split manifest")
+    splits_build.add_argument("--output", type=Path, required=True)
+    splits_build.add_argument("--assignments-output", type=Path)
+    splits_build.add_argument("--families", default=",".join(list_generators()))
+    splits_build.add_argument("--max-train", type=int)
+    splits_build.add_argument("--max-validation", type=int)
+    splits_build.add_argument("--max-test", type=int)
+    splits_build.add_argument("--max-heldout", type=int)
+    splits_build.add_argument("--shuffle", action="store_true")
+    splits_build.add_argument("--shuffle-seed", type=int, default=0)
+
+    splits_validate = splits_subparsers.add_parser("validate", help="Validate a split manifest")
+    splits_validate.add_argument("--manifest", type=Path, required=True)
+
+    splits_stats = splits_subparsers.add_parser("stats", help="Print split manifest counts")
+    splits_stats.add_argument("--manifest", type=Path, required=True)
 
     verifiers = subparsers.add_parser("verifiers", help="Native verifiers integration commands")
     verifiers_subparsers = verifiers.add_subparsers(dest="verifiers_command", required=True)
@@ -191,6 +228,8 @@ def command_generate(args: argparse.Namespace) -> int:
             difficulty=difficulty,
             seed=seed,
             scenario_id=getattr(args, "scenario", None),
+            split=getattr(args, "split", None),
+            task_id=getattr(args, "task_id", None),
         )
         bundle = generator.generate_instance(spec, args.output_dir, validate=not args.skip_validate)
         manifests.append(bundle.manifest.to_dict())
@@ -273,6 +312,17 @@ def command_prime_export(args: argparse.Namespace) -> int:
         families=parse_comma_separated(args.families),
         difficulties=parse_difficulty_spec(args.difficulties),
         seeds=parse_int_list_or_range(args.seeds),
+        export_name=args.export_name,
+        overwrite=args.overwrite,
+    )
+    print(json.dumps(summary, indent=2, sort_keys=True))
+    return 0 if not summary.get("errors") else 1
+
+
+def command_prime_export_splits(args: argparse.Namespace) -> int:
+    summary = export_split_pack(
+        output_dir=args.output_dir,
+        split_manifest_path=args.split_manifest,
         export_name=args.export_name,
         overwrite=args.overwrite,
     )
@@ -476,6 +526,66 @@ def command_sandbox_run(args: argparse.Namespace) -> int:
     return 0 if result.success else 1
 
 
+def command_splits_build(args: argparse.Namespace) -> int:
+    families = parse_comma_separated(args.families)
+    max_per_split = {
+        "train": args.max_train,
+        "validation": args.max_validation,
+        "test": args.max_test,
+        "heldout": args.max_heldout,
+    }
+    max_per_split = {key: value for key, value in max_per_split.items() if value is not None}
+    manifest = build_split_manifest(
+        "synthetic-workspace-gym-default-splits",
+        default_split_policy(families=families),
+        max_per_split=max_per_split,
+        shuffle=args.shuffle,
+        shuffle_seed=args.shuffle_seed,
+        metadata={"families": families, "policy": "default"},
+    )
+    manifest_path = write_split_manifest(args.output, manifest)
+    assignments_path = (
+        write_split_jsonl(args.assignments_output, manifest.assignments)
+        if args.assignments_output is not None
+        else None
+    )
+    validation = validate_split_manifest(manifest)
+    payload = {
+        "manifest_path": str(manifest_path),
+        "assignments_path": str(assignments_path) if assignments_path is not None else None,
+        "assignment_count": len(manifest.assignments),
+        "validation": validation,
+    }
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0 if validation["valid"] else 1
+
+
+def command_splits_validate(args: argparse.Namespace) -> int:
+    payload = validate_split_manifest(read_split_manifest(args.manifest))
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0 if payload["valid"] else 1
+
+
+def command_splits_stats(args: argparse.Namespace) -> int:
+    manifest = read_split_manifest(args.manifest)
+    counts: dict[str, Any] = {
+        "by_split": {},
+        "by_family": {},
+        "by_scenario": {},
+        "by_difficulty": {},
+    }
+    for assignment in manifest.assignments:
+        counts["by_split"][assignment.split] = counts["by_split"].get(assignment.split, 0) + 1
+        family_key = f"{assignment.split}:{assignment.family}"
+        scenario_key = f"{assignment.split}:{assignment.family}:{assignment.scenario or 'default'}"
+        difficulty_key = f"{assignment.split}:d{assignment.difficulty}"
+        counts["by_family"][family_key] = counts["by_family"].get(family_key, 0) + 1
+        counts["by_scenario"][scenario_key] = counts["by_scenario"].get(scenario_key, 0) + 1
+        counts["by_difficulty"][difficulty_key] = counts["by_difficulty"].get(difficulty_key, 0) + 1
+    print(json.dumps(counts, indent=2, sort_keys=True))
+    return 0
+
+
 def command_verifiers_list(args: argparse.Namespace) -> int:
     print(json.dumps({"environments": list_verifiers_environments()}, indent=2, sort_keys=True))
     return 0
@@ -558,6 +668,8 @@ def main() -> int:
     if args.command == "prime":
         if args.prime_command == "export":
             return command_prime_export(args)
+        if args.prime_command == "export-splits":
+            return command_prime_export_splits(args)
         if args.prime_command == "manifest":
             return command_prime_manifest(args)
         if args.prime_command == "verify":
@@ -575,6 +687,13 @@ def main() -> int:
             return command_sandbox_check(args)
         if args.sandbox_command == "run":
             return command_sandbox_run(args)
+    if args.command == "splits":
+        if args.splits_command == "build":
+            return command_splits_build(args)
+        if args.splits_command == "validate":
+            return command_splits_validate(args)
+        if args.splits_command == "stats":
+            return command_splits_stats(args)
     if args.command == "verifiers":
         if args.verifiers_command == "list":
             return command_verifiers_list(args)
