@@ -56,7 +56,7 @@ def verify_workspace_in_sandbox(
             "score": 0.0,
             "subscores": {},
             "failure_labels": ["sandbox_evaluator_failed"],
-            "diagnostics": result.to_dict(),
+            "diagnostics": result.to_public_dict(),
             "runtime_seconds": result.duration_seconds,
         }
     try:

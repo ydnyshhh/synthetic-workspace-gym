@@ -264,7 +264,7 @@ The `scripted` client is a deterministic smoke-test client. The `heuristic-refer
 
 ## Sandbox / Docker Runtime
 
-Local sandbox mode is the default and fastest path for development. Docker sandbox mode runs model-facing shell and Python tools inside a container with the visible workspace mounted read-write, network disabled by default, and hidden evaluator assets omitted. During trusted evaluation only, hidden assets are mounted read-only for the verifier.
+Local sandbox mode is the default and fastest path for development. Docker sandbox mode runs model-facing shell and Python tools inside a container with the visible workspace mounted read-write, network disabled by default, hidden evaluator assets omitted, and a minimal environment that does not inherit host variables. During trusted evaluation only, hidden assets are mounted read-only for the verifier.
 
 Docker mode is stronger isolation than local subprocess execution, but it is not a perfect hostile-code sandbox.
 
@@ -281,6 +281,8 @@ Check Docker sandbox availability:
 uv run swg sandbox check \
   --image synthetic-workspace-gym-runtime:latest
 ```
+
+This command exits nonzero unless Docker is reachable, the image exists, and the smoke command succeeds.
 
 Run a Prime rollout in Docker:
 
@@ -316,6 +318,8 @@ uv run swg prime rollout-batch \
 ```
 
 The rollout artifacts include a `sandbox` block with backend, image, network, memory, CPU, and pid-limit settings. Model-facing Docker tool containers never receive the hidden evaluator directory.
+
+On POSIX hosts, Docker runs default to the current uid/gid so bind-mounted workspaces remain writable. Override with `--sandbox-user UID:GID` if your Docker host needs a different mapping; Windows keeps the image fallback of `1000:1000`.
 
 ### Runtime guarantees
 

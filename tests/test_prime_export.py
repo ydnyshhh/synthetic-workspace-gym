@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import io
 import json
+import subprocess
 import unittest
 from contextlib import redirect_stdout
 from pathlib import Path
@@ -16,6 +17,7 @@ from synthetic_workspace_gym.cli import (
     command_prime_rollout,
     command_prime_rollout_batch,
     command_prime_verify,
+    command_sandbox_check,
     parse_comma_separated,
     parse_difficulty_spec,
     parse_int_list_or_range,
@@ -260,6 +262,8 @@ class PrimeExportTests(unittest.TestCase):
                 "scripted",
                 "--sandbox",
                 "local",
+                "--sandbox-user",
+                "123:456",
             ]
         )
         rollout_batch_args = parser.parse_args(
@@ -274,8 +278,12 @@ class PrimeExportTests(unittest.TestCase):
                 "local",
             ]
         )
-        sandbox_check_args = parser.parse_args(["sandbox", "check", "--image", "swg:test"])
-        sandbox_run_args = parser.parse_args(["sandbox", "run", "--command", "python --version"])
+        sandbox_check_args = parser.parse_args(
+            ["sandbox", "check", "--image", "swg:test", "--sandbox-user", "123:456"]
+        )
+        sandbox_run_args = parser.parse_args(
+            ["sandbox", "run", "--command", "python --version", "--sandbox-user", "123:456"]
+        )
 
         self.assertEqual(export_args.command, "prime")
         self.assertEqual(export_args.prime_command, "export")
@@ -283,12 +291,15 @@ class PrimeExportTests(unittest.TestCase):
         self.assertEqual(manifest_args.prime_command, "manifest")
         self.assertEqual(smoke_args.prime_command, "smoke-test")
         self.assertEqual(rollout_args.prime_command, "rollout")
+        self.assertEqual(rollout_args.sandbox_user, "123:456")
         self.assertEqual(rollout_batch_args.prime_command, "rollout-batch")
         self.assertEqual(sandbox_check_args.command, "sandbox")
         self.assertEqual(sandbox_check_args.sandbox_command, "check")
+        self.assertEqual(sandbox_check_args.sandbox_user, "123:456")
         self.assertEqual(sandbox_run_args.command, "sandbox")
         self.assertEqual(sandbox_run_args.sandbox_command, "run")
         self.assertEqual(sandbox_run_args.sandbox_command_text, "python --version")
+        self.assertEqual(sandbox_run_args.sandbox_user, "123:456")
 
     def test_verify_command_uses_prime_verifier_adapter(self) -> None:
         with patch(
@@ -306,6 +317,21 @@ class PrimeExportTests(unittest.TestCase):
         self.assertEqual(exit_code, 0)
         verifier.assert_called_once_with(Path("environment"), Path("workspace"))
         self.assertEqual(json.loads(stdout.getvalue()), {"reward": 1.0, "success": True})
+
+    def test_sandbox_check_fails_when_image_is_missing(self) -> None:
+        with patch("synthetic_workspace_gym.cli.docker_available", return_value=True):
+            with patch(
+                "synthetic_workspace_gym.cli.subprocess.run",
+                return_value=subprocess.CompletedProcess(args=["docker"], returncode=1, stdout="", stderr="missing"),
+            ):
+                with redirect_stdout(io.StringIO()) as stdout:
+                    exit_code = command_sandbox_check(argparse.Namespace(image="missing:image", sandbox_user=None))
+
+        payload = json.loads(stdout.getvalue())
+        self.assertEqual(exit_code, 1)
+        self.assertTrue(payload["docker_available"])
+        self.assertFalse(payload["image_available"])
+        self.assertFalse(payload["sandbox_smoke_test"])
 
     def test_rollout_command_writes_artifact(self) -> None:
         with workspace_tempdir() as tmp_dir:

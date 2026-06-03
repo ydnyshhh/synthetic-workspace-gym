@@ -23,6 +23,18 @@ class DockerAvailabilityTests(unittest.TestCase):
     def test_docker_available_returns_bool(self) -> None:
         self.assertIsInstance(docker_available(), bool)
 
+    def test_docker_command_disables_network_by_default(self) -> None:
+        with workspace_tempdir() as tmp_dir:
+            backend = DockerSandboxBackend(SandboxConfig(backend="docker", image=IMAGE))
+            command = backend._docker_command(
+                SandboxCommand(argv=["python", "--version"]),
+                Path(tmp_dir),
+                None,
+            )
+
+        self.assertIn("--network", command)
+        self.assertEqual(command[command.index("--network") + 1], "none")
+
 
 @unittest.skipUnless(docker_image_available(), "Docker or SWG runtime image is unavailable")
 class DockerSandboxTests(unittest.TestCase):

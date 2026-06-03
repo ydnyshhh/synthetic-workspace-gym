@@ -84,3 +84,33 @@ class SandboxResult:
             "duration_seconds": self.duration_seconds,
             "command": list(self.command),
         }
+
+    def to_public_dict(self, redact_mounts: bool = True) -> dict[str, Any]:
+        payload = self.to_dict()
+        if redact_mounts:
+            payload["command"] = [_redact_docker_arg(arg) for arg in self.command]
+        return payload
+
+
+def _redact_docker_arg(arg: str) -> str:
+    if not arg.startswith("type=bind,"):
+        return arg
+
+    parts = arg.split(",")
+    redacted: list[str] = []
+    dst = next((part.removeprefix("dst=") for part in parts if part.startswith("dst=")), "")
+    if dst == "/workspace":
+        src_token = "<workspace_mount>"
+    elif dst == "/hidden":
+        src_token = "<hidden_mount>"
+    elif dst == "/environment":
+        src_token = "<environment_mount>"
+    else:
+        src_token = "<bind_mount>"
+
+    for part in parts:
+        if part.startswith("src="):
+            redacted.append(f"src={src_token}")
+        else:
+            redacted.append(part)
+    return ",".join(redacted)

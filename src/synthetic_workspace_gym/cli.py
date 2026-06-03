@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import shlex
 import subprocess
 import tempfile
@@ -121,10 +122,12 @@ def build_parser() -> argparse.ArgumentParser:
 
     sandbox_check = sandbox_subparsers.add_parser("check", help="Check Docker sandbox availability")
     sandbox_check.add_argument("--image", default="synthetic-workspace-gym-runtime:latest")
+    sandbox_check.add_argument("--sandbox-user")
 
     sandbox_run = sandbox_subparsers.add_parser("run", help="Run a simple command in a sandbox")
     sandbox_run.add_argument("--backend", choices=["local", "docker"], default="local")
     sandbox_run.add_argument("--image", default="synthetic-workspace-gym-runtime:latest")
+    sandbox_run.add_argument("--sandbox-user")
     sandbox_run.add_argument("--command", dest="sandbox_command_text", required=True)
 
     return parser
@@ -138,6 +141,13 @@ def add_sandbox_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--sandbox-pids-limit", type=int, default=256)
     parser.add_argument("--sandbox-timeout", type=int, default=30)
     parser.add_argument("--sandbox-network", action="store_true")
+    parser.add_argument("--sandbox-user")
+
+
+def default_sandbox_user() -> str:
+    if hasattr(os, "getuid") and hasattr(os, "getgid"):
+        return f"{os.getuid()}:{os.getgid()}"
+    return "1000:1000"
 
 
 def get_agent(name: str):
@@ -339,6 +349,7 @@ def sandbox_config_from_args(args: argparse.Namespace) -> SandboxConfig:
         cpus=float(getattr(args, "sandbox_cpus", 1.0)),
         pids_limit=int(getattr(args, "sandbox_pids_limit", 256)),
         timeout_seconds=int(getattr(args, "sandbox_timeout", 30)),
+        run_as_user=getattr(args, "sandbox_user", None) or default_sandbox_user(),
     )
 
 
@@ -410,7 +421,11 @@ def command_sandbox_check(args: argparse.Namespace) -> int:
         image_available = image_check.returncode == 0
         if image_available:
             with tempfile.TemporaryDirectory(prefix="swg-sandbox-check-") as tmp_dir:
-                config = SandboxConfig(backend="docker", image=args.image)
+                config = SandboxConfig(
+                    backend="docker",
+                    image=args.image,
+                    run_as_user=args.sandbox_user or default_sandbox_user(),
+                )
                 result = build_sandbox_backend(config).run(
                     SandboxCommand(argv=["python", "-c", "print('swg sandbox ok')"]),
                     Path(tmp_dir),
@@ -423,15 +438,19 @@ def command_sandbox_check(args: argparse.Namespace) -> int:
         "sandbox_smoke_test": sandbox_smoke_test,
     }
     print(json.dumps(payload, indent=2, sort_keys=True))
-    return 0 if available else 1
+    return 0 if available and image_available and sandbox_smoke_test else 1
 
 
 def command_sandbox_run(args: argparse.Namespace) -> int:
-    config = SandboxConfig(backend=args.backend, image=args.image)
+    config = SandboxConfig(
+        backend=args.backend,
+        image=args.image,
+        run_as_user=args.sandbox_user or default_sandbox_user(),
+    )
     backend = build_sandbox_backend(config)
     with tempfile.TemporaryDirectory(prefix="swg-sandbox-run-") as tmp_dir:
         result = backend.run(SandboxCommand(argv=shlex.split(args.sandbox_command_text)), Path(tmp_dir))
-    print(json.dumps(result.to_dict(), indent=2, sort_keys=True))
+    print(json.dumps(result.to_public_dict(), indent=2, sort_keys=True))
     return 0 if result.success else 1
 
 

@@ -324,14 +324,17 @@ class WorkspaceToolExecutor:
         return python_args
 
     def sandbox_env(self) -> dict[str, str]:
-        env = self.subprocess_env()
         if self.sandbox_config.backend == "docker":
-            env["HOME"] = "/home/swg"
-            env["USERPROFILE"] = "/home/swg"
-            env["TMP"] = "/tmp"
-            env["TEMP"] = "/tmp"
-            env["TMPDIR"] = "/tmp"
-        return env
+            return {
+                "PYTHONDONTWRITEBYTECODE": "1",
+                "HOME": "/home/swg",
+                "USERPROFILE": "/home/swg",
+                "TMP": "/tmp",
+                "TEMP": "/tmp",
+                "TMPDIR": "/tmp",
+                "PATH": "/usr/local/bin:/usr/bin:/bin",
+            }
+        return self.subprocess_env()
 
     def subprocess_env(self) -> dict[str, str]:
         env = dict(os.environ)
