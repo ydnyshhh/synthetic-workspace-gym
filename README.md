@@ -150,6 +150,61 @@ print(result)
 
 The adapter also includes `SyntheticWorkspacePrimeDataset` for task sampling, `get_tool_schemas()` for JSON-schema-like tool definitions, and `verify_workspace()` for normalizing SWG evaluator results into reward payloads.
 
+## Prime Export
+
+SWG can export generated or existing environments into a portable Prime/verifiers-compatible pack:
+
+```text
+prime_exports/<export_name>/
+  metadata.json
+  manifest.jsonl
+  environments/
+    <env_id>/
+      manifest.json
+      visible/
+      hidden/
+```
+
+Generate and export a small pack:
+
+```bash
+uv run swg prime export \
+  --output-dir prime_exports/swg_smoke \
+  --families tabular,script_repair \
+  --difficulties 1,2 \
+  --seeds 0:5 \
+  --overwrite
+```
+
+Seed ranges are Python-style exclusive (`0:5` means `0,1,2,3,4`); difficulty ranges are inclusive for CLI ergonomics (`1:5` means `1,2,3,4,5`).
+
+Export existing generated environments:
+
+```bash
+uv run swg prime export \
+  --existing-environments generated \
+  --output-dir prime_exports/from_generated \
+  --overwrite
+```
+
+Verify an exported workspace:
+
+```bash
+uv run swg prime verify \
+  --environment prime_exports/swg_smoke/environments/<env_id> \
+  --workspace prime_exports/swg_smoke/environments/<env_id>/visible
+```
+
+Rebuild a manifest from an exported `environments/` directory:
+
+```bash
+uv run swg prime manifest \
+  --environments prime_exports/swg_smoke/environments \
+  --output prime_exports/swg_smoke/manifest.jsonl
+```
+
+Each `manifest.jsonl` row includes the task id, instruction, family, scenario, difficulty, seed, relative paths to `visible/` and `hidden/`, evaluator entrypoint, tool permissions, max steps, tags, and normalized reward configuration. The `hidden/` directory is copied because these packs are intended for trusted verifier infrastructure; it should not be exposed to model-facing agents.
+
 ### Runtime guarantees
 
 | Guarantee | v1 behavior |

@@ -10,6 +10,12 @@ from synthetic_workspace_gym.analysis.benchmarking import build_benchmark_report
 from synthetic_workspace_gym.evaluators.registry import get_evaluator
 from synthetic_workspace_gym.generators.common import normalize_difficulty
 from synthetic_workspace_gym.generators.registry import get_generator, list_generators
+from synthetic_workspace_gym.prime import get_tool_schemas, verify_workspace
+from synthetic_workspace_gym.prime.export import (
+    build_manifest_row,
+    export_prime_pack,
+    write_manifest_jsonl,
+)
 from synthetic_workspace_gym.runtime.environment import load_environment
 from synthetic_workspace_gym.runtime.runner import EpisodeRunner
 from synthetic_workspace_gym.utils.io import write_json
@@ -51,6 +57,29 @@ def build_parser() -> argparse.ArgumentParser:
         help="Baseline agent to run: 'scripted' is a weak smoke test, 'heuristic' is the privileged validation baseline.",
     )
     benchmark.add_argument("--output-dir", type=Path, default=Path("benchmarks"))
+
+    prime = subparsers.add_parser("prime", help="Prime/verifiers integration commands")
+    prime_subparsers = prime.add_subparsers(dest="prime_command", required=True)
+
+    prime_export = prime_subparsers.add_parser("export", help="Export a Prime-compatible environment pack")
+    prime_export.add_argument("--output-dir", type=Path, required=True)
+    prime_export.add_argument("--existing-environments", type=Path)
+    prime_export.add_argument("--families", default=",".join(list_generators()))
+    prime_export.add_argument("--difficulties", default="1,2,3")
+    prime_export.add_argument("--seeds", default="0:10")
+    prime_export.add_argument("--export-name")
+    prime_export.add_argument("--overwrite", action="store_true")
+
+    prime_manifest = prime_subparsers.add_parser("manifest", help="Rebuild manifest.jsonl from exported environments")
+    prime_manifest.add_argument("--environments", type=Path, required=True)
+    prime_manifest.add_argument("--output", type=Path, required=True)
+
+    prime_verify = prime_subparsers.add_parser("verify", help="Verify a workspace with an exported SWG environment")
+    prime_verify.add_argument("--environment", type=Path, required=True)
+    prime_verify.add_argument("--workspace", type=Path, required=True)
+
+    prime_smoke = prime_subparsers.add_parser("smoke-test", help="Smoke-test an exported Prime environment")
+    prime_smoke.add_argument("--environment", type=Path, required=True)
 
     return parser
 
@@ -118,6 +147,94 @@ def command_benchmark(args: argparse.Namespace) -> int:
     return 0
 
 
+def parse_comma_separated(value: str) -> list[str]:
+    return [item.strip() for item in value.split(",") if item.strip()]
+
+
+def parse_int_list_or_range(value: str) -> list[int]:
+    value = value.strip()
+    if ":" in value:
+        start_text, end_text = value.split(":", 1)
+        start = int(start_text)
+        end = int(end_text)
+        step = 1 if end >= start else -1
+        return list(range(start, end, step))
+    return [int(item) for item in parse_comma_separated(value)]
+
+
+def parse_difficulty_spec(value: str) -> list[int]:
+    value = value.strip()
+    if ":" in value:
+        start_text, end_text = value.split(":", 1)
+        start = int(start_text)
+        end = int(end_text)
+        step = 1 if end >= start else -1
+        difficulties = list(range(start, end + step, step))
+    else:
+        difficulties = parse_int_list_or_range(value)
+    for difficulty in difficulties:
+        if not 1 <= difficulty <= 5:
+            raise ValueError("difficulty values must be between 1 and 5")
+    return difficulties
+
+
+def command_prime_export(args: argparse.Namespace) -> int:
+    summary = export_prime_pack(
+        output_dir=args.output_dir,
+        existing_environments_dir=args.existing_environments,
+        families=parse_comma_separated(args.families),
+        difficulties=parse_difficulty_spec(args.difficulties),
+        seeds=parse_int_list_or_range(args.seeds),
+        export_name=args.export_name,
+        overwrite=args.overwrite,
+    )
+    print(json.dumps(summary, indent=2, sort_keys=True))
+    return 0 if not summary.get("errors") else 1
+
+
+def command_prime_manifest(args: argparse.Namespace) -> int:
+    environments_root = args.environments.resolve()
+    export_root = args.output.resolve().parent
+    environment_paths = sorted(path.parent for path in environments_root.rglob("manifest.json"))
+    rows = [build_manifest_row(path, export_root) for path in environment_paths]
+    write_manifest_jsonl(args.output, rows)
+    print(
+        json.dumps(
+            {
+                "environment_count": len(rows),
+                "manifest_path": str(args.output),
+            },
+            indent=2,
+            sort_keys=True,
+        )
+    )
+    return 0
+
+
+def command_prime_verify(args: argparse.Namespace) -> int:
+    payload = verify_workspace(args.environment, args.workspace)
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0 if payload.get("success") else 1
+
+
+def command_prime_smoke_test(args: argparse.Namespace) -> int:
+    environment = load_environment(args.environment)
+    visible_exists = environment.visible_root.exists() and environment.visible_root.is_dir()
+    hidden_exists = environment.hidden_root.exists() and environment.hidden_root.is_dir()
+    tool_schemas = get_tool_schemas(environment.manifest.tool_permissions.enabled_tools())
+    payload = {
+        "environment": str(args.environment),
+        "env_id": environment.manifest.env_id,
+        "manifest_loads": True,
+        "visible_exists": visible_exists,
+        "hidden_exists": hidden_exists,
+        "tool_schema_count": len(tool_schemas),
+        "pass": bool(visible_exists and hidden_exists and tool_schemas),
+    }
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0 if payload["pass"] else 1
+
+
 def main() -> int:
     parser = build_parser()
     args = parser.parse_args()
@@ -129,6 +246,15 @@ def main() -> int:
         return command_evaluate(args)
     if args.command == "benchmark":
         return command_benchmark(args)
+    if args.command == "prime":
+        if args.prime_command == "export":
+            return command_prime_export(args)
+        if args.prime_command == "manifest":
+            return command_prime_manifest(args)
+        if args.prime_command == "verify":
+            return command_prime_verify(args)
+        if args.prime_command == "smoke-test":
+            return command_prime_smoke_test(args)
     raise SystemExit(f"Unsupported command: {args.command}")
 
 
