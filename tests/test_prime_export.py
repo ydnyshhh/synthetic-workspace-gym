@@ -57,6 +57,8 @@ class PrimeExportTests(unittest.TestCase):
         self.assertEqual(row["tool_schema_version"], TOOL_SCHEMA_VERSION)
         self.assertIn("read_file", row["tool_permissions"])
         self.assertIn("hidden-verifier", row["tags"])
+        self.assertTrue(row["sandbox_compatible"])
+        self.assertEqual(row["recommended_sandbox_backend"], "docker")
         self.assertIn("visible_files", row)
         self.assertIn("hidden_files", row)
 
@@ -91,6 +93,8 @@ class PrimeExportTests(unittest.TestCase):
         self.assertEqual(payload["difficulties"], [2])
         self.assertEqual(payload["seeds"], [3])
         self.assertEqual(payload["tool_schema_version"], TOOL_SCHEMA_VERSION)
+        self.assertEqual(payload["recommended_sandbox"]["backend"], "docker")
+        self.assertEqual(payload["recommended_sandbox"]["hidden_mount_policy"], "evaluator_only_read_only")
 
     def test_export_existing_environments_copies_env_dirs(self) -> None:
         with workspace_tempdir() as tmp_dir:
@@ -254,6 +258,8 @@ class PrimeExportTests(unittest.TestCase):
                 "script_repair",
                 "--client",
                 "scripted",
+                "--sandbox",
+                "local",
             ]
         )
         rollout_batch_args = parser.parse_args(
@@ -264,8 +270,12 @@ class PrimeExportTests(unittest.TestCase):
                 "pack/manifest.jsonl",
                 "--client",
                 "scripted",
+                "--sandbox",
+                "local",
             ]
         )
+        sandbox_check_args = parser.parse_args(["sandbox", "check", "--image", "swg:test"])
+        sandbox_run_args = parser.parse_args(["sandbox", "run", "--command", "python --version"])
 
         self.assertEqual(export_args.command, "prime")
         self.assertEqual(export_args.prime_command, "export")
@@ -274,6 +284,11 @@ class PrimeExportTests(unittest.TestCase):
         self.assertEqual(smoke_args.prime_command, "smoke-test")
         self.assertEqual(rollout_args.prime_command, "rollout")
         self.assertEqual(rollout_batch_args.prime_command, "rollout-batch")
+        self.assertEqual(sandbox_check_args.command, "sandbox")
+        self.assertEqual(sandbox_check_args.sandbox_command, "check")
+        self.assertEqual(sandbox_run_args.command, "sandbox")
+        self.assertEqual(sandbox_run_args.sandbox_command, "run")
+        self.assertEqual(sandbox_run_args.sandbox_command_text, "python --version")
 
     def test_verify_command_uses_prime_verifier_adapter(self) -> None:
         with patch(

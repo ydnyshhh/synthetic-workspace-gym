@@ -251,6 +251,12 @@ def write_metadata_json(path: str | Path, rows: Sequence[dict[str, object]]) -> 
         "reward_type": REWARD_TYPE,
         "source": "synthetic-workspace-gym",
         "notes": "Portable export generated for Prime/verifiers-style infrastructure.",
+        "recommended_sandbox": {
+            "backend": "docker",
+            "image": "synthetic-workspace-gym-runtime:latest",
+            "network_enabled": False,
+            "hidden_mount_policy": "evaluator_only_read_only",
+        },
     }
     metadata_path = Path(path)
     write_json(metadata_path, payload)
@@ -305,6 +311,8 @@ def build_manifest_row(
         "tool_schema_version": TOOL_SCHEMA_VERSION,
         "reward_type": REWARD_TYPE,
         "interaction_type": INTERACTION_TYPE,
+        "sandbox_compatible": True,
+        "recommended_sandbox_backend": "docker",
         "max_steps": manifest.get("max_steps"),
         "tags": tags,
         "metadata": metadata,

@@ -10,6 +10,9 @@ from synthetic_workspace_gym.evaluators.registry import get_evaluator
 from synthetic_workspace_gym.generators.registry import get_generator
 from synthetic_workspace_gym.runtime.environment import LoadedEnvironment, load_environment
 from synthetic_workspace_gym.runtime.tools import WorkspaceToolExecutor
+from synthetic_workspace_gym.sandbox.evaluator import verify_workspace_in_sandbox
+from synthetic_workspace_gym.sandbox.runner import build_sandbox_backend
+from synthetic_workspace_gym.sandbox.schemas import SandboxConfig
 from synthetic_workspace_gym.schemas import Action, ActionType, ToolObservation
 from synthetic_workspace_gym.utils.io import write_json
 
@@ -27,6 +30,9 @@ class SyntheticWorkspacePrimeEnv:
         max_steps: int | None = None,
         workspace_root: str | Path | None = None,
         output_dir: str | Path | None = None,
+        sandbox_backend: str = "local",
+        sandbox_config: SandboxConfig | None = None,
+        docker_image: str | None = None,
     ) -> None:
         self.family = family
         self.scenario = scenario
@@ -35,6 +41,10 @@ class SyntheticWorkspacePrimeEnv:
         self.max_steps = max_steps
         self.workspace_root = Path(workspace_root).resolve() if workspace_root is not None else None
         self.output_dir = Path(output_dir).resolve() if output_dir is not None else None
+        self.sandbox_config = sandbox_config or SandboxConfig(backend=sandbox_backend)
+        self.sandbox_config.backend = sandbox_backend  # type: ignore[assignment]
+        if docker_image is not None:
+            self.sandbox_config.image = docker_image
 
         self._temp_dir: tempfile.TemporaryDirectory[str] | None = None
         self._environment: LoadedEnvironment | None = None
@@ -58,10 +68,17 @@ class SyntheticWorkspacePrimeEnv:
         self._environment = environment
         self._active_workspace = active_workspace
         runtime_home = self._runtime_root() / "runtime-home" / environment.manifest.env_id
+        sandbox_tool_backend = (
+            build_sandbox_backend(self.sandbox_config)
+            if self.sandbox_config.backend == "docker"
+            else None
+        )
         self._executor = WorkspaceToolExecutor(
             active_workspace,
             environment.manifest.tool_permissions,
             runtime_home=runtime_home,
+            sandbox_backend=sandbox_tool_backend,
+            sandbox_config=self.sandbox_config,
         )
         self._done = False
         self._step_count = 0
@@ -79,6 +96,11 @@ class SyntheticWorkspacePrimeEnv:
             "max_steps": manifest.max_steps,
             "time_limit_seconds": manifest.time_limit_seconds,
             "tool_schemas": get_tool_schemas(manifest.tool_permissions.enabled_tools()),
+            "sandbox": {
+                "backend": self.sandbox_config.backend,
+                "image": self.sandbox_config.image,
+                "network_enabled": self.sandbox_config.network_enabled,
+            },
             "metadata": {
                 **manifest.metadata,
                 "environment_path": str(environment.root),
@@ -163,6 +185,10 @@ class SyntheticWorkspacePrimeEnv:
         environment, _ = self._require_active()
         if self._active_workspace is None:
             raise RuntimeError("Environment has no active workspace. Call reset() first.")
+        if self.sandbox_config.backend == "docker":
+            payload = verify_workspace_in_sandbox(environment.root, self._active_workspace, self.sandbox_config)
+            payload["env_id"] = environment.manifest.env_id
+            return payload
         evaluator = get_evaluator(
             environment.manifest.family,
             evaluator_entrypoint=environment.manifest.evaluator_entrypoint,

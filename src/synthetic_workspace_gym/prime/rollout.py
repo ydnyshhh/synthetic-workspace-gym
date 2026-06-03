@@ -13,6 +13,7 @@ from synthetic_workspace_gym.prime.agents import PrimeReActAgent
 from synthetic_workspace_gym.prime.clients import PrimeModelClient, ScriptedPrimeClient
 from synthetic_workspace_gym.prime.env import SyntheticWorkspacePrimeEnv
 from synthetic_workspace_gym.prime.transcript import write_transcript_jsonl
+from synthetic_workspace_gym.sandbox.schemas import SandboxConfig
 from synthetic_workspace_gym.schemas import utc_timestamp
 from synthetic_workspace_gym.utils.io import write_json, write_text
 
@@ -27,6 +28,9 @@ def run_prime_rollout(
     output_dir: str | Path = "prime_rollouts",
     max_turns: int | None = None,
     rollout_id: str | None = None,
+    sandbox_backend: str = "local",
+    sandbox_config: SandboxConfig | None = None,
+    docker_image: str | None = None,
 ) -> dict[str, Any]:
     runtime_root = Path(output_dir) / ".tmp" / f"runtime-{uuid4().hex[:10]}"
     env = SyntheticWorkspacePrimeEnv(
@@ -36,6 +40,9 @@ def run_prime_rollout(
         seed=seed,
         workspace_root=environment_path,
         output_dir=runtime_root,
+        sandbox_backend=sandbox_backend,
+        sandbox_config=sandbox_config,
+        docker_image=docker_image,
     )
     started_at = utc_timestamp()
     started = time.perf_counter()
@@ -155,6 +162,14 @@ def build_prime_rollout_payload(
             "time_limit_seconds": manifest.time_limit_seconds,
             "environment_path": str(env.environment.root),
         },
+        "sandbox": {
+            "backend": env.sandbox_config.backend,
+            "image": env.sandbox_config.image,
+            "network_enabled": env.sandbox_config.network_enabled,
+            "memory_limit": env.sandbox_config.memory_limit,
+            "cpus": env.sandbox_config.cpus,
+            "pids_limit": env.sandbox_config.pids_limit,
+        },
     }
 
 
@@ -165,6 +180,9 @@ def run_prime_rollout_batch(
     output_dir: str | Path = "prime_rollouts",
     limit: int | None = None,
     max_turns: int | None = None,
+    sandbox_backend: str = "local",
+    sandbox_config: SandboxConfig | None = None,
+    docker_image: str | None = None,
 ) -> dict[str, Any]:
     manifest_path = Path(manifest_path)
     rows = [
@@ -185,6 +203,9 @@ def run_prime_rollout_batch(
                 client=client_factory(),
                 output_dir=output_dir,
                 max_turns=max_turns,
+                sandbox_backend=sandbox_backend,
+                sandbox_config=sandbox_config,
+                docker_image=docker_image,
             )
             rollouts.append(
                 {

@@ -262,6 +262,61 @@ uv run swg prime rollout-batch \
 
 The `scripted` client is a deterministic smoke-test client. The `heuristic-reference` client is privileged because it replays `manifest.reference_solution`; use it only for infrastructure validation, not benchmark claims. Phase 3 intentionally adds no external model API dependency. Future OpenAI, Anthropic, vLLM, or Prime clients can plug in through the lightweight `PrimeModelClient` protocol.
 
+## Sandbox / Docker Runtime
+
+Local sandbox mode is the default and fastest path for development. Docker sandbox mode runs model-facing shell and Python tools inside a container with the visible workspace mounted read-write, network disabled by default, and hidden evaluator assets omitted. During trusted evaluation only, hidden assets are mounted read-only for the verifier.
+
+Docker mode is stronger isolation than local subprocess execution, but it is not a perfect hostile-code sandbox.
+
+Build the runtime image:
+
+```bash
+uv run swg sandbox build-image \
+  --tag synthetic-workspace-gym-runtime:latest
+```
+
+Check Docker sandbox availability:
+
+```bash
+uv run swg sandbox check \
+  --image synthetic-workspace-gym-runtime:latest
+```
+
+Run a Prime rollout in Docker:
+
+```bash
+uv run swg prime rollout \
+  --environment generated/<env_id> \
+  --client scripted \
+  --sandbox docker \
+  --docker-image synthetic-workspace-gym-runtime:latest \
+  --output-dir prime_rollouts
+```
+
+Verify in Docker:
+
+```bash
+uv run swg prime verify \
+  --environment generated/<env_id> \
+  --workspace generated/<env_id>/visible \
+  --sandbox docker \
+  --docker-image synthetic-workspace-gym-runtime:latest
+```
+
+Batch Docker rollouts:
+
+```bash
+uv run swg prime rollout-batch \
+  --manifest prime_exports/swg_smoke/manifest.jsonl \
+  --client scripted \
+  --sandbox docker \
+  --docker-image synthetic-workspace-gym-runtime:latest \
+  --limit 10 \
+  --output-dir prime_rollouts
+```
+
+The rollout artifacts include a `sandbox` block with backend, image, network, memory, CPU, and pid-limit settings. Model-facing Docker tool containers never receive the hidden evaluator directory.
+
 ### Runtime guarantees
 
 | Guarantee | v1 behavior |

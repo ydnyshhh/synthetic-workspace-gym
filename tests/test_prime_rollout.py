@@ -109,7 +109,25 @@ class PrimeRolloutTests(unittest.TestCase):
         self.assertEqual(payload["stopped_reason"], "submit")
         self.assertEqual(payload["model"]["privileged"], False)
         self.assertEqual(payload["messages_path"], "transcript.jsonl")
+        self.assertEqual(payload["sandbox"]["backend"], "local")
         self.assertLessEqual(max(len(message["content"]) for message in payload["messages"]), 550)
+
+    def test_run_prime_rollout_accepts_explicit_local_sandbox(self) -> None:
+        with workspace_tempdir() as tmp_dir:
+            root = Path(tmp_dir)
+            result = run_prime_rollout(
+                family="script_repair",
+                scenario="csv_schema_drift",
+                difficulty=1,
+                seed=7,
+                client=ScriptedPrimeClient([{"tool": "submit", "args": {"path_or_answer": "done"}}]),
+                output_dir=root / "prime_rollouts",
+                rollout_id="local-sandbox-rollout",
+                sandbox_backend="local",
+            )
+            payload = json.loads(Path(result["prime_rollout_path"]).read_text(encoding="utf-8"))
+
+        self.assertEqual(payload["sandbox"]["backend"], "local")
 
     def test_heuristic_reference_rollout_marks_model_privileged(self) -> None:
         with workspace_tempdir() as tmp_dir:

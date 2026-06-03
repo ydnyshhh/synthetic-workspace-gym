@@ -2,6 +2,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import shlex
+import subprocess
+import tempfile
 import time
 from pathlib import Path
 
@@ -20,6 +23,9 @@ from synthetic_workspace_gym.prime.export import (
 from synthetic_workspace_gym.prime.rollout import run_prime_rollout, run_prime_rollout_batch
 from synthetic_workspace_gym.runtime.environment import load_environment
 from synthetic_workspace_gym.runtime.runner import EpisodeRunner
+from synthetic_workspace_gym.sandbox.evaluator import verify_workspace_in_sandbox
+from synthetic_workspace_gym.sandbox.runner import build_sandbox_backend, docker_available
+from synthetic_workspace_gym.sandbox.schemas import SandboxCommand, SandboxConfig
 from synthetic_workspace_gym.utils.io import write_json
 
 
@@ -79,9 +85,11 @@ def build_parser() -> argparse.ArgumentParser:
     prime_verify = prime_subparsers.add_parser("verify", help="Verify a workspace with an exported SWG environment")
     prime_verify.add_argument("--environment", type=Path, required=True)
     prime_verify.add_argument("--workspace", type=Path, required=True)
+    add_sandbox_args(prime_verify)
 
     prime_smoke = prime_subparsers.add_parser("smoke-test", help="Smoke-test an exported Prime environment")
     prime_smoke.add_argument("--environment", type=Path, required=True)
+    add_sandbox_args(prime_smoke)
 
     prime_rollout = prime_subparsers.add_parser("rollout", help="Run one Prime-compatible model/tool rollout")
     prime_rollout.add_argument("--family")
@@ -94,6 +102,7 @@ def build_parser() -> argparse.ArgumentParser:
     prime_rollout.add_argument("--output-dir", type=Path, default=Path("prime_rollouts"))
     prime_rollout.add_argument("--max-turns", type=int)
     prime_rollout.add_argument("--rollout-id")
+    add_sandbox_args(prime_rollout)
 
     prime_rollout_batch = prime_subparsers.add_parser("rollout-batch", help="Run Prime rollouts from manifest.jsonl")
     prime_rollout_batch.add_argument("--manifest", type=Path, required=True)
@@ -102,8 +111,33 @@ def build_parser() -> argparse.ArgumentParser:
     prime_rollout_batch.add_argument("--limit", type=int)
     prime_rollout_batch.add_argument("--output-dir", type=Path, default=Path("prime_rollouts"))
     prime_rollout_batch.add_argument("--max-turns", type=int)
+    add_sandbox_args(prime_rollout_batch)
+
+    sandbox = subparsers.add_parser("sandbox", help="Sandbox runtime commands")
+    sandbox_subparsers = sandbox.add_subparsers(dest="sandbox_command", required=True)
+
+    sandbox_build = sandbox_subparsers.add_parser("build-image", help="Build the SWG Docker runtime image")
+    sandbox_build.add_argument("--tag", default="synthetic-workspace-gym-runtime:latest")
+
+    sandbox_check = sandbox_subparsers.add_parser("check", help="Check Docker sandbox availability")
+    sandbox_check.add_argument("--image", default="synthetic-workspace-gym-runtime:latest")
+
+    sandbox_run = sandbox_subparsers.add_parser("run", help="Run a simple command in a sandbox")
+    sandbox_run.add_argument("--backend", choices=["local", "docker"], default="local")
+    sandbox_run.add_argument("--image", default="synthetic-workspace-gym-runtime:latest")
+    sandbox_run.add_argument("--command", dest="sandbox_command_text", required=True)
 
     return parser
+
+
+def add_sandbox_args(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--sandbox", choices=["local", "docker"], default="local")
+    parser.add_argument("--docker-image")
+    parser.add_argument("--sandbox-memory", default="1g")
+    parser.add_argument("--sandbox-cpus", type=float, default=1.0)
+    parser.add_argument("--sandbox-pids-limit", type=int, default=256)
+    parser.add_argument("--sandbox-timeout", type=int, default=30)
+    parser.add_argument("--sandbox-network", action="store_true")
 
 
 def get_agent(name: str):
@@ -234,16 +268,31 @@ def command_prime_manifest(args: argparse.Namespace) -> int:
 
 
 def command_prime_verify(args: argparse.Namespace) -> int:
-    payload = verify_workspace(args.environment, args.workspace)
+    config = sandbox_config_from_args(args)
+    payload = (
+        verify_workspace(args.environment, args.workspace)
+        if config.backend == "local"
+        else verify_workspace_in_sandbox(args.environment, args.workspace, config)
+    )
     print(json.dumps(payload, indent=2, sort_keys=True))
     return 0 if payload.get("success") else 1
 
 
 def command_prime_smoke_test(args: argparse.Namespace) -> int:
+    config = sandbox_config_from_args(args)
     environment = load_environment(args.environment)
     visible_exists = environment.visible_root.exists() and environment.visible_root.is_dir()
     hidden_exists = environment.hidden_root.exists() and environment.hidden_root.is_dir()
     tool_schemas = get_tool_schemas(environment.manifest.tool_permissions.enabled_tools())
+    docker_ok = docker_available() if config.backend == "docker" else None
+    sandbox_smoke = None
+    if config.backend == "docker" and docker_ok:
+        with tempfile.TemporaryDirectory(prefix="swg-sandbox-smoke-") as tmp_dir:
+            result = build_sandbox_backend(config).run(
+                SandboxCommand(argv=["python", "-c", "print('swg sandbox ok')"], timeout_seconds=config.timeout_seconds),
+                Path(tmp_dir),
+            )
+            sandbox_smoke = result.success
     payload = {
         "environment": str(args.environment),
         "env_id": environment.manifest.env_id,
@@ -251,7 +300,13 @@ def command_prime_smoke_test(args: argparse.Namespace) -> int:
         "visible_exists": visible_exists,
         "hidden_exists": hidden_exists,
         "tool_schema_count": len(tool_schemas),
-        "pass": bool(visible_exists and hidden_exists and tool_schemas),
+        "sandbox": {
+            "backend": config.backend,
+            "image": config.image,
+            "docker_available": docker_ok,
+            "sandbox_smoke_test": sandbox_smoke,
+        },
+        "pass": bool(visible_exists and hidden_exists and tool_schemas and (sandbox_smoke is not False)),
     }
     print(json.dumps(payload, indent=2, sort_keys=True))
     return 0 if payload["pass"] else 1
@@ -275,7 +330,20 @@ def build_prime_client(name: str, action_json: list[str] | None = None):
     raise ValueError(f"Unsupported Prime client: {name}")
 
 
+def sandbox_config_from_args(args: argparse.Namespace) -> SandboxConfig:
+    return SandboxConfig(
+        backend=getattr(args, "sandbox", "local"),
+        image=getattr(args, "docker_image", None) or "synthetic-workspace-gym-runtime:latest",
+        network_enabled=bool(getattr(args, "sandbox_network", False)),
+        memory_limit=getattr(args, "sandbox_memory", "1g"),
+        cpus=float(getattr(args, "sandbox_cpus", 1.0)),
+        pids_limit=int(getattr(args, "sandbox_pids_limit", 256)),
+        timeout_seconds=int(getattr(args, "sandbox_timeout", 30)),
+    )
+
+
 def command_prime_rollout(args: argparse.Namespace) -> int:
+    config = sandbox_config_from_args(args)
     result = run_prime_rollout(
         family=args.family,
         scenario=args.scenario,
@@ -286,6 +354,9 @@ def command_prime_rollout(args: argparse.Namespace) -> int:
         output_dir=args.output_dir,
         max_turns=args.max_turns,
         rollout_id=args.rollout_id,
+        sandbox_backend=config.backend,
+        sandbox_config=config,
+        docker_image=config.image,
     )
     payload = {
         "rollout_id": result["rollout_id"],
@@ -301,15 +372,67 @@ def command_prime_rollout(args: argparse.Namespace) -> int:
 
 
 def command_prime_rollout_batch(args: argparse.Namespace) -> int:
+    config = sandbox_config_from_args(args)
     summary = run_prime_rollout_batch(
         args.manifest,
         client_factory=lambda: build_prime_client(args.client, args.action_json),
         output_dir=args.output_dir,
         limit=args.limit,
         max_turns=args.max_turns,
+        sandbox_backend=config.backend,
+        sandbox_config=config,
+        docker_image=config.image,
     )
     print(json.dumps(summary, indent=2, sort_keys=True))
     return 0
+
+
+def command_sandbox_build_image(args: argparse.Namespace) -> int:
+    command = ["docker", "build", "-f", "docker/Dockerfile.swg-runtime", "-t", args.tag, "."]
+    completed = subprocess.run(command, capture_output=True, text=True)
+    payload = {
+        "success": completed.returncode == 0,
+        "returncode": completed.returncode,
+        "tag": args.tag,
+        "stdout": completed.stdout,
+        "stderr": completed.stderr,
+    }
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0 if completed.returncode == 0 else 1
+
+
+def command_sandbox_check(args: argparse.Namespace) -> int:
+    available = docker_available()
+    image_available = False
+    sandbox_smoke_test = False
+    if available:
+        image_check = subprocess.run(["docker", "image", "inspect", args.image], capture_output=True, text=True)
+        image_available = image_check.returncode == 0
+        if image_available:
+            with tempfile.TemporaryDirectory(prefix="swg-sandbox-check-") as tmp_dir:
+                config = SandboxConfig(backend="docker", image=args.image)
+                result = build_sandbox_backend(config).run(
+                    SandboxCommand(argv=["python", "-c", "print('swg sandbox ok')"]),
+                    Path(tmp_dir),
+                )
+                sandbox_smoke_test = result.success
+    payload = {
+        "docker_available": available,
+        "image": args.image,
+        "image_available": image_available,
+        "sandbox_smoke_test": sandbox_smoke_test,
+    }
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0 if available else 1
+
+
+def command_sandbox_run(args: argparse.Namespace) -> int:
+    config = SandboxConfig(backend=args.backend, image=args.image)
+    backend = build_sandbox_backend(config)
+    with tempfile.TemporaryDirectory(prefix="swg-sandbox-run-") as tmp_dir:
+        result = backend.run(SandboxCommand(argv=shlex.split(args.sandbox_command_text)), Path(tmp_dir))
+    print(json.dumps(result.to_dict(), indent=2, sort_keys=True))
+    return 0 if result.success else 1
 
 
 def main() -> int:
@@ -336,6 +459,13 @@ def main() -> int:
             return command_prime_rollout(args)
         if args.prime_command == "rollout-batch":
             return command_prime_rollout_batch(args)
+    if args.command == "sandbox":
+        if args.sandbox_command == "build-image":
+            return command_sandbox_build_image(args)
+        if args.sandbox_command == "check":
+            return command_sandbox_check(args)
+        if args.sandbox_command == "run":
+            return command_sandbox_run(args)
     raise SystemExit(f"Unsupported command: {args.command}")
 
 

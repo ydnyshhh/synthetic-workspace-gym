@@ -7,16 +7,27 @@ from pathlib import Path
 
 from synthetic_workspace_gym.analysis.artifacts import changed_files, compute_digest_from_hashes, snapshot_hashes
 from synthetic_workspace_gym.runtime.policy import CommandPolicyError, resolve_python_script_command, validate_shell_command
+from synthetic_workspace_gym.sandbox.base import SandboxBackend
+from synthetic_workspace_gym.sandbox.schemas import SandboxCommand, SandboxConfig
 from synthetic_workspace_gym.schemas import Action, ActionType, ToolObservation, ToolPermissions
 from synthetic_workspace_gym.utils.paths import ensure_within_root, file_sha256
 
 
 class WorkspaceToolExecutor:
-    def __init__(self, workspace_root: Path, permissions: ToolPermissions, runtime_home: Path | None = None) -> None:
+    def __init__(
+        self,
+        workspace_root: Path,
+        permissions: ToolPermissions,
+        runtime_home: Path | None = None,
+        sandbox_backend: SandboxBackend | None = None,
+        sandbox_config: SandboxConfig | None = None,
+    ) -> None:
         self.workspace_root = workspace_root.resolve()
         self.permissions = permissions
         self.runtime_home = (runtime_home.resolve() if runtime_home is not None else self.workspace_root / ".runtime-home")
         self.runtime_home.mkdir(parents=True, exist_ok=True)
+        self.sandbox_backend = sandbox_backend
+        self.sandbox_config = sandbox_config or SandboxConfig()
         self.current_hashes = snapshot_hashes(self.workspace_root)
 
     @property
@@ -145,32 +156,58 @@ class WorkspaceToolExecutor:
             )
         timeout = self.remaining_timeout(self.permissions.shell_timeout_seconds, remaining_time_seconds)
         before = dict(self.current_hashes)
-        try:
-            completed = subprocess.run(
-                self.shell_command(command),
-                cwd=str(self.workspace_root),
-                capture_output=True,
-                text=True,
-                timeout=timeout,
-                env=self.subprocess_env(),
+        if self.sandbox_backend is not None:
+            result = self.sandbox_backend.run(
+                SandboxCommand(
+                    argv=self.sandbox_shell_command(command),
+                    timeout_seconds=max(1, int(timeout)),
+                    mode="tool",
+                    env=self.sandbox_env(),
+                ),
+                self.workspace_root,
             )
-        except subprocess.TimeoutExpired as exc:
-            return ToolObservation(
-                success=False,
-                message=f"Shell command timed out: {command}",
-                stdout=exc.stdout or "",
-                stderr=exc.stderr or "",
-                error="timeout",
-                workspace_digest=self.workspace_digest,
-            )
+            if result.timed_out:
+                return ToolObservation(
+                    success=False,
+                    message=f"Shell command timed out: {command}",
+                    stdout=result.stdout,
+                    stderr=result.stderr,
+                    error="timeout",
+                    workspace_digest=self.workspace_digest,
+                )
+            stdout = result.stdout
+            stderr = result.stderr
+            returncode = result.returncode if result.returncode is not None else 1
+        else:
+            try:
+                completed = subprocess.run(
+                    self.shell_command(command),
+                    cwd=str(self.workspace_root),
+                    capture_output=True,
+                    text=True,
+                    timeout=timeout,
+                    env=self.subprocess_env(),
+                )
+            except subprocess.TimeoutExpired as exc:
+                return ToolObservation(
+                    success=False,
+                    message=f"Shell command timed out: {command}",
+                    stdout=exc.stdout or "",
+                    stderr=exc.stderr or "",
+                    error="timeout",
+                    workspace_digest=self.workspace_digest,
+                )
+            stdout = completed.stdout
+            stderr = completed.stderr
+            returncode = completed.returncode
         after = snapshot_hashes(self.workspace_root)
         self.current_hashes = after
         return ToolObservation(
-            success=completed.returncode == 0,
+            success=returncode == 0,
             message=f"Ran shell command: {command}",
-            stdout=completed.stdout,
-            stderr=completed.stderr,
-            exit_code=completed.returncode,
+            stdout=stdout,
+            stderr=stderr,
+            exit_code=returncode,
             touched_files=changed_files(before, after),
             workspace_digest=compute_digest_from_hashes(after),
         )
@@ -195,32 +232,59 @@ class WorkspaceToolExecutor:
             )
         timeout = self.remaining_timeout(self.permissions.python_timeout_seconds, remaining_time_seconds)
         before = dict(self.current_hashes)
-        try:
-            completed = subprocess.run(
-                python_args,
-                cwd=str(self.workspace_root),
-                capture_output=True,
-                text=True,
-                timeout=timeout,
-                env=self.subprocess_env(),
+        if self.sandbox_backend is not None:
+            sandbox_args = self.sandbox_python_command(python_args)
+            result = self.sandbox_backend.run(
+                SandboxCommand(
+                    argv=sandbox_args,
+                    timeout_seconds=max(1, int(timeout)),
+                    mode="tool",
+                    env=self.sandbox_env(),
+                ),
+                self.workspace_root,
             )
-        except subprocess.TimeoutExpired as exc:
-            return ToolObservation(
-                success=False,
-                message=f"Python command timed out: {payload}",
-                stdout=exc.stdout or "",
-                stderr=exc.stderr or "",
-                error="timeout",
-                workspace_digest=self.workspace_digest,
-            )
+            if result.timed_out:
+                return ToolObservation(
+                    success=False,
+                    message=f"Python command timed out: {payload}",
+                    stdout=result.stdout,
+                    stderr=result.stderr,
+                    error="timeout",
+                    workspace_digest=self.workspace_digest,
+                )
+            stdout = result.stdout
+            stderr = result.stderr
+            returncode = result.returncode if result.returncode is not None else 1
+        else:
+            try:
+                completed = subprocess.run(
+                    python_args,
+                    cwd=str(self.workspace_root),
+                    capture_output=True,
+                    text=True,
+                    timeout=timeout,
+                    env=self.subprocess_env(),
+                )
+            except subprocess.TimeoutExpired as exc:
+                return ToolObservation(
+                    success=False,
+                    message=f"Python command timed out: {payload}",
+                    stdout=exc.stdout or "",
+                    stderr=exc.stderr or "",
+                    error="timeout",
+                    workspace_digest=self.workspace_digest,
+                )
+            stdout = completed.stdout
+            stderr = completed.stderr
+            returncode = completed.returncode
         after = snapshot_hashes(self.workspace_root)
         self.current_hashes = after
         return ToolObservation(
-            success=completed.returncode == 0,
+            success=returncode == 0,
             message=f"Ran python command: {payload}",
-            stdout=completed.stdout,
-            stderr=completed.stderr,
-            exit_code=completed.returncode,
+            stdout=stdout,
+            stderr=stderr,
+            exit_code=returncode,
             touched_files=changed_files(before, after),
             workspace_digest=compute_digest_from_hashes(after),
         )
@@ -248,6 +312,26 @@ class WorkspaceToolExecutor:
 
     def python_command(self, payload: str) -> list[str]:
         return [sys.executable, *resolve_python_script_command(self.workspace_root, payload)]
+
+    def sandbox_shell_command(self, command: str) -> list[str]:
+        if self.sandbox_config.backend == "docker":
+            return ["/bin/sh", "-c", command]
+        return self.shell_command(command)
+
+    def sandbox_python_command(self, python_args: list[str]) -> list[str]:
+        if self.sandbox_config.backend == "docker":
+            return ["python", *python_args[1:]]
+        return python_args
+
+    def sandbox_env(self) -> dict[str, str]:
+        env = self.subprocess_env()
+        if self.sandbox_config.backend == "docker":
+            env["HOME"] = "/home/swg"
+            env["USERPROFILE"] = "/home/swg"
+            env["TMP"] = "/tmp"
+            env["TEMP"] = "/tmp"
+            env["TMPDIR"] = "/tmp"
+        return env
 
     def subprocess_env(self) -> dict[str, str]:
         env = dict(os.environ)
