@@ -10,6 +10,7 @@ from synthetic_workspace_gym.verifiers.registry import (
     make_environment,
     register_with_verifiers,
 )
+from synthetic_workspace_gym.hub import load_environment
 
 
 class VerifiersRegistryTests(unittest.TestCase):
@@ -30,6 +31,22 @@ class VerifiersRegistryTests(unittest.TestCase):
 
     def test_register_with_verifiers_does_not_crash(self) -> None:
         self.assertIsInstance(register_with_verifiers(), bool)
+
+    def test_hub_loader_is_importable_from_package_name(self) -> None:
+        env = load_environment(
+            split=None,
+            family="script_repair",
+            scenario="csv_schema_drift",
+            difficulty=1,
+            seed=7,
+            max_examples=1,
+        )
+        try:
+            self.assertTrue(hasattr(env, "env_id") or hasattr(env, "reset"))
+        finally:
+            close = getattr(env, "close", None)
+            if callable(close):
+                close()
 
     @unittest.skipUnless(is_verifiers_available(), "verifiers is unavailable")
     def test_make_verifiers_env_requires_native_package(self) -> None:

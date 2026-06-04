@@ -9,6 +9,7 @@ description = "Synthetic environment generation and evaluation infrastructure fo
 readme = "README.md"
 requires-python = ">=3.11"
 authors = [{ name = "Yadnyesh Chakane" }]
+keywords = ["agent", "evaluation", "reinforcement-learning", "verifiers", "workspace"]
 dependencies = []
 
 [project.optional-dependencies]
@@ -24,3 +25,7 @@ package = true
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/synthetic_workspace_gym"]
+
+[tool.verifiers.eval]
+num_examples = 5
+rollouts_per_example = 1

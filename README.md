@@ -150,6 +150,100 @@ print(result)
 
 The adapter also includes `SyntheticWorkspacePrimeDataset` for task sampling, `get_tool_schemas()` for JSON-schema-like tool definitions, and `verify_workspace()` for normalizing SWG evaluator results into reward payloads.
 
+### Prime Environment Hub
+
+The top-level package exports `load_environment(...)`, so Prime/verifiers can resolve SWG from the package name `synthetic-workspace-gym` after installation or Hub publication:
+
+```python
+import synthetic_workspace_gym
+
+env = synthetic_workspace_gym.load_environment(
+    split="train",
+    family="script_repair",
+    max_examples=5,
+    max_turns=8,
+)
+```
+
+The Hub loader is split-aware and accepts JSON-friendly environment args:
+
+| Arg | Default | Meaning |
+| --- | --- | --- |
+| `split` | `train` | One of `train`, `validation`, `test`, `heldout`, or `null` for explicit task args |
+| `family` / `families` | all families | Single family or comma-separated/list of families |
+| `scenario` | auto | Optional scenario when `family` is fixed |
+| `difficulty` / `difficulties` | split policy | Single difficulty or comma-separated/list of difficulties |
+| `seed` / `seeds` | split policy | Single seed or comma-separated/list of seeds |
+| `split_manifest_path` | `null` | Load exact rows from an exported split manifest |
+| `include_splits` / `exclude_splits` | `null` | Filter split-manifest rows |
+| `task_id` | `null` | Select one exact task row |
+| `max_examples` | `-1` | Limit the Verifiers dataset for smoke runs |
+| `max_turns` | `12` | Maximum model turns per rollout |
+| `sandbox_backend` | `local` | SWG sandbox backend inside the hosted environment |
+| `reward_mode` | `score` | Verifiers scalar reward mode |
+
+Publish to Prime Intellect's Environments Hub from this repository after logging in:
+
+```bash
+uv tool install -U prime
+prime login
+prime env push --visibility PRIVATE
+```
+
+For a team namespace:
+
+```bash
+prime env push --team <team-username> --visibility PRIVATE
+```
+
+Run a small hosted evaluation first:
+
+```bash
+prime eval run <owner>/synthetic-workspace-gym \
+  --hosted \
+  -m Qwen/Qwen3.5-0.8B \
+  -n 5 \
+  -r 1 \
+  -a '{"split":"validation","family":"script_repair","max_examples":5,"max_turns":8}' \
+  --follow
+```
+
+Then compare train/test/heldout behavior:
+
+```bash
+prime eval run <owner>/synthetic-workspace-gym --hosted -m Qwen/Qwen3.5-0.8B -n 20 -r 1 -a '{"split":"test","max_examples":20}' --follow
+prime eval run <owner>/synthetic-workspace-gym --hosted -m Qwen/Qwen3.5-0.8B -n 20 -r 1 -a '{"split":"heldout","max_examples":20}' --follow
+```
+
+Minimal hosted training config:
+
+```toml
+# configs/rl/swg-small.toml
+model = "Qwen/Qwen3.5-0.8B"
+max_steps = 50
+batch_size = 128
+rollouts_per_example = 8
+
+[sampling]
+max_tokens = 1024
+
+[[env]]
+id = "<owner>/synthetic-workspace-gym"
+
+[env.args]
+split = "train"
+max_examples = 128
+max_turns = 8
+reward_mode = "score"
+```
+
+Launch and monitor:
+
+```bash
+prime train run configs/rl/swg-small.toml
+prime train logs <run-id> -f
+```
+
 ## Prime Export
 
 SWG can export generated or existing environments into a portable Prime/verifiers-compatible pack:
