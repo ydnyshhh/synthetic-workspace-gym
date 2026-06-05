@@ -88,6 +88,60 @@ class HubEnvironmentTests(unittest.TestCase):
 
         asyncio.run(run_turn())
 
+    @unittest.skipUnless(is_verifiers_available(), "verifiers is unavailable")
+    def test_hub_environment_executes_json_text_tool_turn(self) -> None:
+        async def run_turn() -> None:
+            with workspace_tempdir() as tmp_dir:
+                env = load_environment(
+                    split=None,
+                    family="script_repair",
+                    scenario="csv_schema_drift",
+                    difficulty=1,
+                    seed=7,
+                    max_examples=1,
+                    output_dir=str(Path(tmp_dir) / "runtime"),
+                )
+                row = env.get_dataset()[0]
+                state = {"input": row, "trajectory_id": "hub-json-test"}
+
+                await env.setup_state(state)
+                messages = [SimpleNamespace(content='{"tool":"list_directory","args":{"path":"."}}')]
+                responses = await env.env_response(messages, state)
+
+                self.assertEqual(responses[0].role, "user")
+                self.assertIn("Observation:", str(responses[0].content))
+                self.assertIn("README", str(responses[0].content))
+                state["swg_env"].close()
+
+        asyncio.run(run_turn())
+
+    @unittest.skipUnless(is_verifiers_available(), "verifiers is unavailable")
+    def test_hub_environment_requests_json_when_no_tool_action(self) -> None:
+        async def run_turn() -> None:
+            with workspace_tempdir() as tmp_dir:
+                env = load_environment(
+                    split=None,
+                    family="script_repair",
+                    scenario="csv_schema_drift",
+                    difficulty=1,
+                    seed=7,
+                    max_examples=1,
+                    output_dir=str(Path(tmp_dir) / "runtime"),
+                )
+                row = env.get_dataset()[0]
+                state = {"input": row, "trajectory_id": "hub-format-test"}
+
+                await env.setup_state(state)
+                messages = [SimpleNamespace(content="I need more information before I can help.")]
+                responses = await env.env_response(messages, state)
+
+                self.assertEqual(responses[0].role, "user")
+                self.assertIn("Respond with exactly one JSON tool action", str(responses[0].content))
+                self.assertNotIn("final_env_response", state)
+                state["swg_env"].close()
+
+        asyncio.run(run_turn())
+
 
 if __name__ == "__main__":
     unittest.main()

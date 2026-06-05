@@ -11,10 +11,17 @@ from synthetic_workspace_gym.splits.schemas import VALID_SPLITS, normalize_split
 from synthetic_workspace_gym.verifiers.compat import vf
 from synthetic_workspace_gym.verifiers.dataset import SWGVerifiersDataset
 from synthetic_workspace_gym.verifiers.env import SYSTEM_PROMPT, SyntheticWorkspaceVerifiersEnv
+from synthetic_workspace_gym.verifiers.parser import SWGToolCallParser
 from synthetic_workspace_gym.verifiers.rewards import compute_reward, normalize_reward_payload, to_verifiers_info
 
 
 DEFAULT_ENV_ID = "synthetic-workspace-gym"
+HUB_SYSTEM_PROMPT = (
+    f"{SYSTEM_PROMPT}\n\n"
+    "If native tool calling is unavailable, respond with exactly one JSON object and no extra text: "
+    '{"tool":"list_directory","args":{"path":"."}}. '
+    "Available tools are read_file, write_file, append_file, list_directory, run_shell, run_python, and submit."
+)
 
 
 def load_environment(
@@ -153,7 +160,7 @@ if _native_hub_available():
             self.output_dir = Path(output_dir).resolve() if output_dir else None
             super().__init__(
                 dataset=_to_dataset(self.rows),
-                system_prompt=SYSTEM_PROMPT,
+                system_prompt=HUB_SYSTEM_PROMPT,
                 rubric=Rubric(funcs=[swg_reward]),
                 tool_defs=get_tool_schemas(),
                 max_turns=max_turns,
@@ -188,7 +195,7 @@ if _native_hub_available():
             state["swg_reward_mode"] = self.reward_mode
             state["prompt"] = normalize_messages(
                 [
-                    {"role": "system", "content": SYSTEM_PROMPT},
+                    {"role": "system", "content": HUB_SYSTEM_PROMPT},
                     {"role": "user", "content": str(observation.get("instruction", ""))},
                 ],
                 field_name="swg.prompt",
@@ -201,19 +208,32 @@ if _native_hub_available():
             last_msg = messages[-1]
             tool_calls = getattr(last_msg, "tool_calls", None)
             if not tool_calls:
-                final = [{"role": "user", "content": "No tool call was provided; ending the SWG rollout."}]
-                state["final_env_response"] = normalize_messages(final, field_name="swg.final_env_response")
-                return state["final_env_response"]
+                action = _text_action_or_none(getattr(last_msg, "content", None))
+                if action is None:
+                    return normalize_messages(
+                        [
+                            {
+                                "role": "user",
+                                "content": (
+                                    "No tool call was provided. Respond with exactly one JSON tool action, "
+                                    'for example {"tool":"list_directory","args":{"path":"."}}.'
+                                ),
+                            }
+                        ],
+                        field_name="swg.format_correction",
+                    )
+                content, done = _execute_swg_action(state, action)
+                response = normalize_messages(
+                    [{"role": "user", "content": f"Observation:\n{content}"}],
+                    field_name="swg.text_tool_response",
+                )
+                if done:
+                    state["final_env_response"] = response
+                return response
 
             tool_messages = []
-            env = state["swg_env"]
             for tool_call in tool_calls:
-                result = env.step(_tool_call_to_action(tool_call))
-                content = str(result.get("observation", ""))
-                info = dict(result.get("info", {}) or {})
-                if info.get("reward_payload") is not None:
-                    state["swg_reward_payload"] = info["reward_payload"]
-                    state["swg_verifiers_info"] = to_verifiers_info(normalize_reward_payload(info["reward_payload"]))
+                content, done = _execute_swg_action(state, _tool_call_to_action(tool_call))
                 tool_messages.append(
                     ToolMessage(
                         role="tool",
@@ -221,7 +241,7 @@ if _native_hub_available():
                         tool_call_id=str(getattr(tool_call, "id", "")),
                     )
                 )
-                if result.get("done"):
+                if done:
                     state["final_env_response"] = tool_messages
                     break
             return tool_messages
@@ -311,6 +331,31 @@ def _tool_call_to_action(tool_call: object) -> dict[str, object]:
     if not isinstance(args, dict):
         args = {"value": args}
     return {"tool": name, "args": args}
+
+
+def _text_action_or_none(content: object) -> dict[str, object] | None:
+    if content is None:
+        return None
+    text = str(content).strip()
+    if not text:
+        return None
+    if not (text.startswith("{") or "```" in text):
+        return None
+    action = SWGToolCallParser().parse(text)
+    if action.get("parse_error"):
+        return None
+    return action
+
+
+def _execute_swg_action(state: Any, action: dict[str, object]) -> tuple[str, bool]:
+    env = state["swg_env"]
+    result = env.step(action)
+    content = str(result.get("observation", ""))
+    info = dict(result.get("info", {}) or {})
+    if info.get("reward_payload") is not None:
+        state["swg_reward_payload"] = info["reward_payload"]
+        state["swg_verifiers_info"] = to_verifiers_info(normalize_reward_payload(info["reward_payload"]))
+    return content, bool(result.get("done", False))
 
 
 def _coerce_str_list(value: str | list[str] | tuple[str, ...] | None) -> list[str] | None:
