@@ -89,6 +89,38 @@ class HubEnvironmentTests(unittest.TestCase):
         asyncio.run(run_turn())
 
     @unittest.skipUnless(is_verifiers_available(), "verifiers is unavailable")
+    def test_hub_environment_decouples_model_turns_from_tool_steps(self) -> None:
+        async def run_turn() -> None:
+            with workspace_tempdir() as tmp_dir:
+                env = load_environment(
+                    split=None,
+                    family="script_repair",
+                    scenario="csv_schema_drift",
+                    difficulty=1,
+                    seed=7,
+                    max_examples=1,
+                    max_turns=2,
+                    output_dir=str(Path(tmp_dir) / "runtime"),
+                )
+                row = env.get_dataset()[0]
+                state = {"input": row, "trajectory_id": "hub-budget-test"}
+
+                await env.setup_state(state)
+                self.assertGreaterEqual(state["swg_env"].manifest.max_steps, 24)
+
+                calls = [
+                    SimpleNamespace(id=f"call-{index}", name="list_directory", arguments='{"path":"."}')
+                    for index in range(3)
+                ]
+                tool_messages = await env.env_response([SimpleNamespace(tool_calls=calls)], state)
+
+                self.assertEqual(len(tool_messages), 3)
+                self.assertNotIn("final_env_response", state)
+                state["swg_env"].close()
+
+        asyncio.run(run_turn())
+
+    @unittest.skipUnless(is_verifiers_available(), "verifiers is unavailable")
     def test_hub_environment_executes_json_text_tool_turn(self) -> None:
         async def run_turn() -> None:
             with workspace_tempdir() as tmp_dir:

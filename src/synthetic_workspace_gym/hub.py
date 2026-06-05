@@ -39,6 +39,7 @@ def load_environment(
     task_id: str | None = None,
     max_examples: int = -1,
     max_turns: int = 12,
+    max_tool_steps: int | None = None,
     sandbox_backend: str = "local",
     docker_image: str | None = None,
     reward_mode: str = "score",
@@ -83,6 +84,7 @@ def load_environment(
         "task_id": task_id,
         "max_examples": max_examples,
         "max_turns": max_turns,
+        "max_tool_steps": max_tool_steps,
         "sandbox_backend": sandbox_backend,
         "docker_image": docker_image,
         "reward_mode": reward_mode,
@@ -95,6 +97,7 @@ def load_environment(
             env_id=env_id,
             env_args=env_args,
             max_turns=max_turns,
+            max_tool_steps=max_tool_steps,
             sandbox_backend=sandbox_backend,
             docker_image=docker_image,
             reward_mode=reward_mode,
@@ -148,6 +151,7 @@ if _native_hub_available():
             env_id: str,
             env_args: dict[str, Any],
             max_turns: int,
+            max_tool_steps: int | None,
             sandbox_backend: str,
             docker_image: str | None,
             reward_mode: str,
@@ -158,6 +162,7 @@ if _native_hub_available():
             self.docker_image = docker_image
             self.reward_mode = reward_mode
             self.output_dir = Path(output_dir).resolve() if output_dir else None
+            self.max_tool_steps = _resolve_max_tool_steps(max_turns, max_tool_steps)
             super().__init__(
                 dataset=_to_dataset(self.rows),
                 system_prompt=HUB_SYSTEM_PROMPT,
@@ -181,7 +186,7 @@ if _native_hub_available():
                 scenario=row.get("scenario"),
                 difficulty=int(row.get("difficulty") or 3),
                 seed=int(row.get("seed") or 0),
-                max_steps=self.max_turns if self.max_turns > 0 else None,
+                max_steps=self.max_tool_steps,
                 workspace_root=row.get("environment_path"),
                 output_dir=output_dir,
                 sandbox_backend=self.sandbox_backend,
@@ -356,6 +361,14 @@ def _execute_swg_action(state: Any, action: dict[str, object]) -> tuple[str, boo
         state["swg_reward_payload"] = info["reward_payload"]
         state["swg_verifiers_info"] = to_verifiers_info(normalize_reward_payload(info["reward_payload"]))
     return content, bool(result.get("done", False))
+
+
+def _resolve_max_tool_steps(max_turns: int, max_tool_steps: int | None) -> int:
+    if max_tool_steps is not None:
+        return max(1, int(max_tool_steps))
+    if max_turns > 0:
+        return max(24, int(max_turns) * 4)
+    return 24
 
 
 def _coerce_str_list(value: str | list[str] | tuple[str, ...] | None) -> list[str] | None:
