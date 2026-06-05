@@ -10,7 +10,7 @@ import test_support  # noqa: F401
 from test_support import workspace_tempdir
 
 import synthetic_workspace_gym as swg
-from synthetic_workspace_gym.hub import SyntheticWorkspaceHubEnv, load_environment
+from synthetic_workspace_gym.hub import HUB_SYSTEM_PROMPT, SyntheticWorkspaceHubEnv, load_environment
 from synthetic_workspace_gym.verifiers.compat import is_verifiers_available
 from synthetic_workspace_gym.verifiers.env import SyntheticWorkspaceVerifiersEnv
 
@@ -27,6 +27,12 @@ class HubEnvironmentTests(unittest.TestCase):
 
         self.assertTrue(pyproject.exists())
         self.assertIn("[tool.verifiers.eval]", pyproject.read_text(encoding="utf-8"))
+
+    def test_hub_system_prompt_sets_efficiency_constraints(self) -> None:
+        self.assertIn("Use relative paths only", HUB_SYSTEM_PROMPT)
+        self.assertIn("Do not look for or ask about hidden tests", HUB_SYSTEM_PROMPT)
+        self.assertIn("After an edit, run one focused public check", HUB_SYSTEM_PROMPT)
+        self.assertIn("call submit immediately", HUB_SYSTEM_PROMPT)
 
     def test_load_environment_accepts_fixed_task_args(self) -> None:
         env = load_environment(
@@ -115,6 +121,48 @@ class HubEnvironmentTests(unittest.TestCase):
                 tool_messages = await env.env_response([SimpleNamespace(tool_calls=calls)], state)
 
                 self.assertEqual(len(tool_messages), 3)
+                self.assertNotIn("final_env_response", state)
+                state["swg_env"].close()
+
+        asyncio.run(run_turn())
+
+    @unittest.skipUnless(is_verifiers_available(), "verifiers is unavailable")
+    def test_hub_environment_guides_after_write_and_check(self) -> None:
+        async def run_turn() -> None:
+            with workspace_tempdir() as tmp_dir:
+                env = load_environment(
+                    split=None,
+                    family="script_repair",
+                    scenario="csv_schema_drift",
+                    difficulty=1,
+                    seed=7,
+                    max_examples=1,
+                    output_dir=str(Path(tmp_dir) / "runtime"),
+                )
+                row = env.get_dataset()[0]
+                state = {"input": row, "trajectory_id": "hub-guidance-test"}
+
+                await env.setup_state(state)
+                write_call = SimpleNamespace(
+                    id="call-write",
+                    name="write_file",
+                    arguments='{"path":"scratch.txt","content":"ok"}',
+                )
+                write_messages = await env.env_response([SimpleNamespace(tool_calls=[write_call])], state)
+
+                self.assertIn("You changed the workspace", str(write_messages[0].content))
+                self.assertTrue(state["swg_has_written"])
+                self.assertNotIn("final_env_response", state)
+
+                check_call = SimpleNamespace(
+                    id="call-check",
+                    name="run_shell",
+                    arguments='{"command":"python --version"}',
+                )
+                check_messages = await env.env_response([SimpleNamespace(tool_calls=[check_call])], state)
+
+                self.assertIn("A check ran after your edit", str(check_messages[0].content))
+                self.assertTrue(state["swg_successful_check_after_write"])
                 self.assertNotIn("final_env_response", state)
                 state["swg_env"].close()
 

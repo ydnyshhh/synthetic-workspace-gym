@@ -18,6 +18,13 @@ from synthetic_workspace_gym.verifiers.rewards import compute_reward, normalize_
 DEFAULT_ENV_ID = "synthetic-workspace-gym"
 HUB_SYSTEM_PROMPT = (
     f"{SYSTEM_PROMPT}\n\n"
+    "SWG tasks are budgeted workspace repair tasks. Solve efficiently: inspect task.json, README.md, "
+    "and only the files needed to understand the requested behavior. Use relative paths only. Do not "
+    "look for or ask about hidden tests, evaluator files, or absolute testbed paths; hidden tests are "
+    "represented by the public task description and the visible workspace contract. Prefer small, "
+    "targeted edits over broad rewrites. After an edit, run one focused public check when useful. "
+    "If the check passes or the fix is clearly complete, call submit immediately instead of continuing "
+    "to search for more evidence. Keep reasoning brief and spend turns on tool actions.\n\n"
     "If native tool calling is unavailable, respond with exactly one JSON object and no extra text: "
     '{"tool":"list_directory","args":{"path":"."}}. '
     "Available tools are read_file, write_file, append_file, list_directory, run_shell, run_python, and submit."
@@ -198,6 +205,8 @@ if _native_hub_available():
             state["swg_reset"] = observation
             state["swg_reward_payload"] = None
             state["swg_reward_mode"] = self.reward_mode
+            state["swg_has_written"] = False
+            state["swg_successful_check_after_write"] = False
             state["prompt"] = normalize_messages(
                 [
                     {"role": "system", "content": HUB_SYSTEM_PROMPT},
@@ -221,7 +230,8 @@ if _native_hub_available():
                                 "role": "user",
                                 "content": (
                                     "No tool call was provided. Respond with exactly one JSON tool action, "
-                                    'for example {"tool":"list_directory","args":{"path":"."}}.'
+                                    'for example {"tool":"list_directory","args":{"path":"."}}. '
+                                    "Do not answer in prose; use tools to inspect, edit, check, and submit."
                                 ),
                             }
                         ],
@@ -357,10 +367,51 @@ def _execute_swg_action(state: Any, action: dict[str, object]) -> tuple[str, boo
     result = env.step(action)
     content = str(result.get("observation", ""))
     info = dict(result.get("info", {}) or {})
+    content = _with_efficiency_guidance(state, action, content, info)
     if info.get("reward_payload") is not None:
         state["swg_reward_payload"] = info["reward_payload"]
         state["swg_verifiers_info"] = to_verifiers_info(normalize_reward_payload(info["reward_payload"]))
     return content, bool(result.get("done", False))
+
+
+def _with_efficiency_guidance(
+    state: Any,
+    action: dict[str, object],
+    content: str,
+    info: dict[str, object],
+) -> str:
+    tool_name = str(action.get("tool", ""))
+    success = bool(info.get("success"))
+    guidance: str | None = None
+
+    if tool_name in {"write_file", "append_file"}:
+        if success:
+            state["swg_has_written"] = True
+            guidance = (
+                "Guidance: You changed the workspace. Run one focused public check if needed; "
+                "if the fix is verified or clearly complete, call submit next. Do not search for hidden tests."
+            )
+        else:
+            guidance = (
+                "Guidance: The edit did not succeed. Use the error to make the smallest corrective action, "
+                "then continue with the repair."
+            )
+    elif tool_name in {"run_shell", "run_python"} and state.get("swg_has_written"):
+        if success:
+            state["swg_successful_check_after_write"] = True
+            guidance = (
+                "Guidance: A check ran after your edit. If this check supports the fix, call submit next "
+                "instead of continuing broad verification. Do not look for hidden tests."
+            )
+        else:
+            guidance = (
+                "Guidance: Use this check output to make a targeted follow-up edit, then rerun only the "
+                "focused check needed to confirm the fix."
+            )
+
+    if guidance is None:
+        return content
+    return f"{content}\n\n{guidance}" if content else guidance
 
 
 def _resolve_max_tool_steps(max_turns: int, max_tool_steps: int | None) -> int:
