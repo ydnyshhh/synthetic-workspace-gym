@@ -4,6 +4,7 @@ __pycache__/
 .coverage
 .venv/
 .uv-cache/
+.prime/
 .tmp-tests/
 generated/
 episodes/
