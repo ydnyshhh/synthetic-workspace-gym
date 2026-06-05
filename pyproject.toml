@@ -11,11 +11,13 @@ requires-python = ">=3.11"
 authors = [{ name = "Yadnyesh Chakane" }]
 keywords = ["agent", "evaluation", "reinforcement-learning", "verifiers", "workspace"]
 tags = ["agent", "workspace", "tool-use", "train", "eval"]
-dependencies = []
+dependencies = [
+    "verifiers>=0.1.14",
+]
 
 [project.optional-dependencies]
 verifiers = [
-    "verifiers",
+    "verifiers>=0.1.14",
 ]
 
 [project.scripts]
