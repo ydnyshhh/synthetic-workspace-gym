@@ -55,7 +55,10 @@ class HubEnvironmentTests(unittest.TestCase):
         env = load_environment(split="heldout", family="script_repair", max_examples=2)
         try:
             rows = env.get_dataset()
+            eval_rows = env.get_eval_dataset()
             self.assertEqual(len(rows), 2)
+            self.assertEqual(len(eval_rows), 2)
+            self.assertEqual(list(rows["task_id"]), list(eval_rows["task_id"]))
             self.assertEqual(set(rows["split"]), {"heldout"})
             self.assertTrue(all(str(task_id).startswith("swg.heldout.") for task_id in rows["task_id"]))
             self.assertTrue(any(tool.name == "read_file" for tool in env.tool_defs))
@@ -90,6 +93,33 @@ class HubEnvironmentTests(unittest.TestCase):
 
                 self.assertEqual(tool_messages[0].role, "tool")
                 self.assertIn("README", str(tool_messages[0].content))
+                state["swg_env"].close()
+
+        asyncio.run(run_turn())
+
+    @unittest.skipUnless(is_verifiers_available(), "verifiers is unavailable")
+    def test_hub_environment_setup_uses_dataset_row_metadata(self) -> None:
+        async def run_turn() -> None:
+            with workspace_tempdir() as tmp_dir:
+                env = load_environment(
+                    split="validation",
+                    family="pipeline",
+                    max_examples=1,
+                    max_turns=2,
+                    output_dir=str(Path(tmp_dir) / "runtime"),
+                )
+                row = dict(env.get_eval_dataset()[0])
+                state = {"input": row, "task": row, "trajectory_id": "hub-row-test"}
+
+                await env.setup_state(state)
+
+                self.assertEqual(state["swg_task"]["task_id"], row["task_id"])
+                self.assertEqual(state["swg_task"]["family"], "pipeline")
+                self.assertEqual(state["swg_env"].manifest.family.value, "pipeline")
+                prompt_text = "\n".join(str(message.get("content", "")) for message in state["prompt"])
+                self.assertIn(str(row["task_id"]), prompt_text)
+                self.assertIn("- family: pipeline", prompt_text)
+                self.assertIn(f"- scenario: {row['scenario']}", prompt_text)
                 state["swg_env"].close()
 
         asyncio.run(run_turn())

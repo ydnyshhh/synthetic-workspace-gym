@@ -170,8 +170,10 @@ if _native_hub_available():
             self.reward_mode = reward_mode
             self.output_dir = Path(output_dir).resolve() if output_dir else None
             self.max_tool_steps = _resolve_max_tool_steps(max_turns, max_tool_steps)
+            dataset = _to_dataset(self.rows)
             super().__init__(
-                dataset=_to_dataset(self.rows),
+                dataset=dataset,
+                eval_dataset=dataset,
                 system_prompt=HUB_SYSTEM_PROMPT,
                 rubric=Rubric(funcs=[swg_reward]),
                 tool_defs=get_tool_schemas(),
@@ -181,7 +183,7 @@ if _native_hub_available():
             )
 
         async def setup_state(self, state: Any) -> None:
-            row = dict(state.get("input", {}) or {})
+            row = _state_row(state)
             sandbox_config = SandboxConfig(backend=self.sandbox_backend)
             if self.docker_image is not None:
                 sandbox_config.image = self.docker_image
@@ -203,6 +205,8 @@ if _native_hub_available():
             observation = env.reset()
             state["swg_env"] = env
             state["swg_reset"] = observation
+            state["swg_task"] = _task_metadata(row)
+            state["swg_task_row"] = row
             state["swg_reward_payload"] = None
             state["swg_reward_mode"] = self.reward_mode
             state["swg_has_written"] = False
@@ -210,7 +214,7 @@ if _native_hub_available():
             state["prompt"] = normalize_messages(
                 [
                     {"role": "system", "content": HUB_SYSTEM_PROMPT},
-                    {"role": "user", "content": str(observation.get("instruction", ""))},
+                    {"role": "user", "content": _task_user_prompt(row, observation)},
                 ],
                 field_name="swg.prompt",
             )
@@ -334,6 +338,39 @@ def _to_dataset(rows: list[dict[str, Any]]) -> object:
     from datasets import Dataset  # type: ignore[import-not-found]
 
     return Dataset.from_list(rows)
+
+
+def _state_row(state: Any) -> dict[str, Any]:
+    for key in ("input", "task"):
+        value = state.get(key)
+        if isinstance(value, dict) and value:
+            return dict(value)
+    return {}
+
+
+def _task_metadata(row: dict[str, Any]) -> dict[str, object]:
+    return {
+        "task_id": row.get("task_id"),
+        "env_id": row.get("env_id"),
+        "split": row.get("split"),
+        "family": row.get("family"),
+        "scenario": row.get("scenario"),
+        "difficulty": row.get("difficulty"),
+        "seed": row.get("seed"),
+    }
+
+
+def _task_user_prompt(row: dict[str, Any], observation: dict[str, object]) -> str:
+    metadata = _task_metadata(row)
+    lines = ["Task metadata:"]
+    for key in ("task_id", "split", "family", "scenario", "difficulty", "seed"):
+        value = metadata.get(key)
+        if value is not None:
+            lines.append(f"- {key}: {value}")
+    lines.append("")
+    lines.append("Instruction:")
+    lines.append(str(observation.get("instruction") or row.get("question") or "Solve the SWG workspace task."))
+    return "\n".join(lines)
 
 
 def _tool_call_to_action(tool_call: object) -> dict[str, object]:
