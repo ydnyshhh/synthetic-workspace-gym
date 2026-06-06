@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import threading
 from pathlib import Path
 from typing import Any
 
@@ -170,6 +171,8 @@ if _native_hub_available():
             self.reward_mode = reward_mode
             self.output_dir = Path(output_dir).resolve() if output_dir else None
             self.max_tool_steps = _resolve_max_tool_steps(max_turns, max_tool_steps)
+            self._row_cursor = 0
+            self._row_lock = threading.Lock()
             dataset = _to_dataset(self.rows)
             super().__init__(
                 dataset=dataset,
@@ -184,6 +187,8 @@ if _native_hub_available():
 
         async def setup_state(self, state: Any) -> None:
             row = _state_row(state)
+            if not _has_task_identity(row):
+                row = self._fallback_row(state)
             sandbox_config = SandboxConfig(backend=self.sandbox_backend)
             if self.docker_image is not None:
                 sandbox_config.image = self.docker_image
@@ -221,6 +226,16 @@ if _native_hub_available():
             tool_schemas = observation.get("tool_schemas")
             if isinstance(tool_schemas, list) and tool_schemas:
                 state["tool_defs"] = self._normalize_tool_defs(tool_schemas) or []
+
+        def _fallback_row(self, state: Any) -> dict[str, Any]:
+            index = _state_example_index(state)
+            if index is None:
+                with self._row_lock:
+                    index = self._row_cursor
+                    self._row_cursor += 1
+            if not self.rows:
+                return {}
+            return dict(self.rows[int(index) % len(self.rows)])
 
         async def env_response(self, messages: Any, state: Any, **kwargs: Any) -> Any:
             last_msg = messages[-1]
@@ -346,6 +361,22 @@ def _state_row(state: Any) -> dict[str, Any]:
         if isinstance(value, dict) and value:
             return dict(value)
     return {}
+
+
+def _has_task_identity(row: dict[str, Any]) -> bool:
+    return any(row.get(key) is not None for key in ("task_id", "family", "scenario", "environment_path"))
+
+
+def _state_example_index(state: Any) -> int | None:
+    for key in ("example_id", "example_index", "sample_index", "row_index"):
+        value = state.get(key)
+        if value is None:
+            continue
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            continue
+    return None
 
 
 def _task_metadata(row: dict[str, Any]) -> dict[str, object]:

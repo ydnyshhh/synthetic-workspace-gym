@@ -125,6 +125,56 @@ class HubEnvironmentTests(unittest.TestCase):
         asyncio.run(run_turn())
 
     @unittest.skipUnless(is_verifiers_available(), "verifiers is unavailable")
+    def test_hub_environment_falls_back_to_rows_when_hosted_state_is_empty(self) -> None:
+        async def run_turn() -> None:
+            with workspace_tempdir() as tmp_dir:
+                env = load_environment(
+                    split="validation",
+                    family="tabular",
+                    max_examples=2,
+                    max_turns=2,
+                    output_dir=str(Path(tmp_dir) / "runtime"),
+                )
+                first = dict(env.get_eval_dataset()[0])
+                second = dict(env.get_eval_dataset()[1])
+
+                first_state = {"trajectory_id": "hosted-empty-1"}
+                await env.setup_state(first_state)
+                self.assertEqual(first_state["swg_task"]["task_id"], first["task_id"])
+                self.assertEqual(first_state["swg_env"].manifest.family.value, "tabular")
+                first_state["swg_env"].close()
+
+                second_state = {"trajectory_id": "hosted-empty-2"}
+                await env.setup_state(second_state)
+                self.assertEqual(second_state["swg_task"]["task_id"], second["task_id"])
+                second_state["swg_env"].close()
+
+        asyncio.run(run_turn())
+
+    @unittest.skipUnless(is_verifiers_available(), "verifiers is unavailable")
+    def test_hub_environment_uses_hosted_example_index_when_available(self) -> None:
+        async def run_turn() -> None:
+            with workspace_tempdir() as tmp_dir:
+                env = load_environment(
+                    split="validation",
+                    family="tabular",
+                    max_examples=3,
+                    max_turns=2,
+                    output_dir=str(Path(tmp_dir) / "runtime"),
+                )
+                target = dict(env.get_eval_dataset()[2])
+                state = {"example_id": 2, "trajectory_id": "hosted-index-2"}
+
+                await env.setup_state(state)
+
+                self.assertEqual(state["swg_task"]["task_id"], target["task_id"])
+                prompt_text = "\n".join(str(message.get("content", "")) for message in state["prompt"])
+                self.assertIn(str(target["task_id"]), prompt_text)
+                state["swg_env"].close()
+
+        asyncio.run(run_turn())
+
+    @unittest.skipUnless(is_verifiers_available(), "verifiers is unavailable")
     def test_hub_environment_decouples_model_turns_from_tool_steps(self) -> None:
         async def run_turn() -> None:
             with workspace_tempdir() as tmp_dir:
