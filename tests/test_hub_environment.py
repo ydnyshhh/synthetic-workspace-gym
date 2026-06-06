@@ -33,6 +33,8 @@ class HubEnvironmentTests(unittest.TestCase):
         self.assertIn("Do not look for or ask about hidden tests", HUB_SYSTEM_PROMPT)
         self.assertIn("After an edit, run one focused public check", HUB_SYSTEM_PROMPT)
         self.assertIn("call submit immediately", HUB_SYSTEM_PROMPT)
+        self.assertIn("run_python accepts only a workspace-relative Python script path", HUB_SYSTEM_PROMPT)
+        self.assertIn("include any needed output-directory creation inside that script", HUB_SYSTEM_PROMPT)
 
     def test_load_environment_accepts_fixed_task_args(self) -> None:
         env = load_environment(
@@ -66,6 +68,68 @@ class HubEnvironmentTests(unittest.TestCase):
             close = getattr(env, "close", None)
             if callable(close):
                 close()
+
+    @unittest.skipUnless(is_verifiers_available(), "verifiers is unavailable")
+    def test_hub_environment_default_sampling_keeps_head_rows(self) -> None:
+        env = load_environment(split="validation", max_examples=16)
+        try:
+            rows = env.get_eval_dataset()
+            self.assertEqual(len(rows), 16)
+            self.assertEqual(set(rows["family"]), {"tabular"})
+            self.assertEqual(set(rows["scenario"]), {"monthly_segment_report"})
+        finally:
+            close = getattr(env, "close", None)
+            if callable(close):
+                close()
+
+    @unittest.skipUnless(is_verifiers_available(), "verifiers is unavailable")
+    def test_hub_environment_balanced_sampling_covers_multiple_task_types(self) -> None:
+        env = load_environment(split="validation", max_examples=16, sample_strategy="balanced")
+        try:
+            rows = env.get_eval_dataset()
+            self.assertEqual(len(rows), 16)
+            self.assertGreater(len(set(rows["family"])), 1)
+            self.assertGreater(len(set(rows["scenario"])), 1)
+            self.assertGreater(len(set(rows["difficulty"])), 1)
+        finally:
+            close = getattr(env, "close", None)
+            if callable(close):
+                close()
+
+    @unittest.skipUnless(is_verifiers_available(), "verifiers is unavailable")
+    def test_hub_environment_balanced_shuffle_is_deterministic(self) -> None:
+        first = load_environment(
+            split="validation",
+            max_examples=16,
+            sample_strategy="balanced",
+            shuffle=True,
+            shuffle_seed=42,
+        )
+        second = load_environment(
+            split="validation",
+            max_examples=16,
+            sample_strategy="balanced",
+            shuffle="true",
+            shuffle_seed=42,
+        )
+        different = load_environment(
+            split="validation",
+            max_examples=16,
+            sample_strategy="balanced",
+            shuffle=True,
+            shuffle_seed=43,
+        )
+        try:
+            first_ids = list(first.get_eval_dataset()["task_id"])
+            second_ids = list(second.get_eval_dataset()["task_id"])
+            different_ids = list(different.get_eval_dataset()["task_id"])
+            self.assertEqual(first_ids, second_ids)
+            self.assertNotEqual(first_ids, different_ids)
+        finally:
+            for env in (first, second, different):
+                close = getattr(env, "close", None)
+                if callable(close):
+                    close()
 
     @unittest.skipUnless(is_verifiers_available(), "verifiers is unavailable")
     def test_hub_environment_executes_swg_tool_turn(self) -> None:

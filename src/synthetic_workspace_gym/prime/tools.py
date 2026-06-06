@@ -72,13 +72,17 @@ SWG_PRIME_TOOL_SCHEMAS: list[dict[str, object]] = [
     },
     {
         "name": "run_python",
-        "description": "Run a Python script path or allowed Python command in the active workspace.",
+        "description": (
+            "Run a workspace-relative Python script path in the active workspace. "
+            "Pass only the script path, for example process_report.py; do not pass inline code, "
+            "python -c, python -m, or python script.py."
+        ),
         "parameters": {
             "type": "object",
             "properties": {
                 "command_or_script": {
                     "type": "string",
-                    "description": "Workspace-relative Python script path or command accepted by SWG policy.",
+                    "description": "Workspace-relative Python script path, such as process_report.py.",
                 },
             },
             "required": ["command_or_script"],

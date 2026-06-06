@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import random
 import threading
 from pathlib import Path
 from typing import Any
@@ -26,6 +27,11 @@ HUB_SYSTEM_PROMPT = (
     "targeted edits over broad rewrites. After an edit, run one focused public check when useful. "
     "If the check passes or the fix is clearly complete, call submit immediately instead of continuing "
     "to search for more evidence. Keep reasoning brief and spend turns on tool actions.\n\n"
+    "Tool-use constraints: run_python accepts only a workspace-relative Python script path such as "
+    "`scripts/check.py` or `process_report.py`; do not pass inline Python, `python -c`, `python -m`, "
+    "or `python script.py` to run_python. If you need Python logic, first create a small script with "
+    "write_file, include any needed output-directory creation inside that script, then run it with "
+    "run_python using only the script path. Shell commands must use relative paths only.\n\n"
     "If native tool calling is unavailable, respond with exactly one JSON object and no extra text: "
     '{"tool":"list_directory","args":{"path":"."}}. '
     "Available tools are read_file, write_file, append_file, list_directory, run_shell, run_python, and submit."
@@ -46,6 +52,9 @@ def load_environment(
     exclude_splits: str | list[str] | tuple[str, ...] | None = None,
     task_id: str | None = None,
     max_examples: int = -1,
+    sample_strategy: str = "first",
+    shuffle: bool | str = False,
+    shuffle_seed: int = 0,
     max_turns: int = 12,
     max_tool_steps: int | None = None,
     sandbox_backend: str = "local",
@@ -76,6 +85,9 @@ def load_environment(
         exclude_splits=exclude_splits,
         task_id=task_id,
         max_examples=max_examples,
+        sample_strategy=sample_strategy,
+        shuffle=shuffle,
+        shuffle_seed=shuffle_seed,
     )
     env_args = {
         "split": split,
@@ -91,6 +103,9 @@ def load_environment(
         "exclude_splits": exclude_splits,
         "task_id": task_id,
         "max_examples": max_examples,
+        "sample_strategy": sample_strategy,
+        "shuffle": shuffle,
+        "shuffle_seed": shuffle_seed,
         "max_turns": max_turns,
         "max_tool_steps": max_tool_steps,
         "sandbox_backend": sandbox_backend,
@@ -318,6 +333,9 @@ def _build_rows(
     exclude_splits: str | list[str] | tuple[str, ...] | None,
     task_id: str | None,
     max_examples: int,
+    sample_strategy: str,
+    shuffle: bool | str,
+    shuffle_seed: int,
 ) -> list[dict[str, Any]]:
     family_values = _coerce_str_list(families) or ([family] if family else None)
     difficulty_values = _coerce_int_list(difficulties) or ([difficulty] if difficulty is not None else None)
@@ -336,11 +354,85 @@ def _build_rows(
     rows = dataset.to_list()
     if task_id is not None:
         rows = [row for row in rows if row.get("task_id") == task_id]
-    if max_examples > 0:
-        rows = rows[:max_examples]
+    rows = _sample_rows(
+        rows,
+        max_examples=max_examples,
+        sample_strategy=sample_strategy,
+        shuffle=_coerce_bool(shuffle),
+        shuffle_seed=shuffle_seed,
+    )
     if not rows:
         raise ValueError("SWG load_environment produced no task rows for the requested arguments.")
     return [_with_prompt(row) for row in rows]
+
+
+def _sample_rows(
+    rows: list[dict[str, Any]],
+    *,
+    max_examples: int,
+    sample_strategy: str,
+    shuffle: bool,
+    shuffle_seed: int,
+) -> list[dict[str, Any]]:
+    strategy = str(sample_strategy or "first").strip().lower()
+    if strategy in {"balanced", "stratified"}:
+        return _balanced_sample_rows(rows, max_examples=max_examples, shuffle=shuffle, shuffle_seed=shuffle_seed)
+    if strategy not in {"first", "head"}:
+        raise ValueError(f"Unsupported SWG sample_strategy: {sample_strategy}")
+    sampled = [dict(row) for row in rows]
+    if shuffle:
+        random.Random(int(shuffle_seed)).shuffle(sampled)
+    if max_examples > 0:
+        sampled = sampled[:max_examples]
+    return sampled
+
+
+def _balanced_sample_rows(
+    rows: list[dict[str, Any]],
+    *,
+    max_examples: int,
+    shuffle: bool,
+    shuffle_seed: int,
+) -> list[dict[str, Any]]:
+    if max_examples <= 0:
+        sampled = [dict(row) for row in rows]
+        if shuffle:
+            random.Random(int(shuffle_seed)).shuffle(sampled)
+        return sampled
+
+    grouped: dict[tuple[str, str, int], list[dict[str, Any]]] = {}
+    for row in rows:
+        key = (
+            str(row.get("family") or ""),
+            str(row.get("scenario") or ""),
+            int(row.get("difficulty") or 0),
+        )
+        grouped.setdefault(key, []).append(dict(row))
+
+    rng = random.Random(int(shuffle_seed))
+    keys = sorted(grouped)
+    if shuffle:
+        rng.shuffle(keys)
+        for key in keys:
+            rng.shuffle(grouped[key])
+
+    sampled: list[dict[str, Any]] = []
+    while len(sampled) < max_examples and keys:
+        next_keys: list[tuple[str, str, int]] = []
+        for key in keys:
+            bucket = grouped[key]
+            if not bucket:
+                continue
+            sampled.append(bucket.pop(0))
+            if len(sampled) >= max_examples:
+                break
+            if bucket:
+                next_keys.append(key)
+        else:
+            keys = next_keys
+            continue
+        break
+    return sampled
 
 
 def _with_prompt(row: dict[str, Any]) -> dict[str, Any]:
@@ -504,6 +596,17 @@ def _coerce_int_list(value: str | list[int] | tuple[int, ...] | None) -> list[in
     if isinstance(value, str):
         return [int(item.strip()) for item in value.split(",") if item.strip()]
     return [int(item) for item in value]
+
+
+def _coerce_bool(value: bool | str) -> bool:
+    if isinstance(value, bool):
+        return value
+    normalized = str(value).strip().lower()
+    if normalized in {"1", "true", "yes", "y", "on"}:
+        return True
+    if normalized in {"0", "false", "no", "n", "off", ""}:
+        return False
+    raise ValueError(f"Expected boolean value, got: {value}")
 
 
 def _official_split(split: str | None) -> str | None:
