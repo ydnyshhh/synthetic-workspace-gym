@@ -34,6 +34,7 @@ class SyntheticWorkspaceVerifiersEnv:
         reward_mode: str = "score",
         reward_weights: dict[str, float] | None = None,
         max_turns: int | None = None,
+        time_limit_seconds: int | None = None,
         output_dir: str | Path | None = None,
     ) -> None:
         self.family = family
@@ -44,6 +45,7 @@ class SyntheticWorkspaceVerifiersEnv:
         self.reward_mode = reward_mode
         self.reward_weights = dict(reward_weights or {})
         self.max_turns = max_turns
+        self.time_limit_seconds = time_limit_seconds
         self.parser = SWGToolCallParser()
         self._last_reset: dict[str, Any] | None = None
         self._prime_env = SyntheticWorkspacePrimeEnv(
@@ -57,6 +59,7 @@ class SyntheticWorkspaceVerifiersEnv:
             sandbox_backend=sandbox_backend,
             sandbox_config=sandbox_config,
             docker_image=docker_image,
+            time_limit_seconds=time_limit_seconds,
         )
 
     def reset(self) -> dict[str, Any]:

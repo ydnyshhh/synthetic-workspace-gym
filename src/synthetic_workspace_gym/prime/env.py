@@ -33,6 +33,7 @@ class SyntheticWorkspacePrimeEnv:
         sandbox_backend: str = "local",
         sandbox_config: SandboxConfig | None = None,
         docker_image: str | None = None,
+        time_limit_seconds: int | None = None,
     ) -> None:
         self.family = family
         self.scenario = scenario
@@ -41,6 +42,7 @@ class SyntheticWorkspacePrimeEnv:
         self.max_steps = max_steps
         self.workspace_root = Path(workspace_root).resolve() if workspace_root is not None else None
         self.output_dir = Path(output_dir).resolve() if output_dir is not None else None
+        self.time_limit_seconds = int(time_limit_seconds) if time_limit_seconds is not None else None
         self.sandbox_config = sandbox_config or SandboxConfig(backend=sandbox_backend)
         self.sandbox_config.backend = sandbox_backend  # type: ignore[assignment]
         if docker_image is not None:
@@ -267,6 +269,7 @@ class SyntheticWorkspacePrimeEnv:
             seed=self.seed,
             scenario_id=self.scenario,
             max_steps=self.max_steps or 12,
+            **({"time_limit_seconds": self.time_limit_seconds} if self.time_limit_seconds is not None else {}),
         )
         bundle = generator.generate_instance(spec, self._runtime_root() / "generated")
         return load_environment(bundle.root)

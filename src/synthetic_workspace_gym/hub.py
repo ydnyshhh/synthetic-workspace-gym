@@ -26,12 +26,24 @@ HUB_SYSTEM_PROMPT = (
     "represented by the public task description and the visible workspace contract. Prefer small, "
     "targeted edits over broad rewrites. After an edit, run one focused public check when useful. "
     "If the check passes or the fix is clearly complete, call submit immediately instead of continuing "
-    "to search for more evidence. Keep reasoning brief and spend turns on tool actions.\n\n"
+    "to search for more evidence. Never stop after only writing a file; a repair is complete only after "
+    "the required artifact exists or the relevant public check has run, followed by submit. Keep reasoning "
+    "brief and spend turns on tool actions.\n\n"
+    "Family protocols:\n"
+    "- Tabular: read README.md, task.json, and the listed input files; write or edit a processing script only "
+    "if useful; run it with run_python; read the required output JSON; submit the required output path.\n"
+    "- Pipeline: inspect task.json, README.md, config, entrypoint, and relevant src files; make targeted edits; "
+    "run the public entrypoint with run_shell; read the required artifact; submit the required artifact path.\n"
+    "- Script repair: inspect task.json and target files; make the smallest source edit; run the public "
+    "entrypoint when useful; submit the changed target file.\n"
+    "- Retrieval workspace: inspect the named document roots; update the target artifact from visible evidence; "
+    "submit the target artifact path.\n\n"
     "Tool-use constraints: run_python accepts only a workspace-relative Python script path such as "
     "`scripts/check.py` or `process_report.py`; do not pass inline Python, `python -c`, `python -m`, "
     "or `python script.py` to run_python. If you need Python logic, first create a small script with "
     "write_file, include any needed output-directory creation inside that script, then run it with "
-    "run_python using only the script path. Shell commands must use relative paths only.\n\n"
+    "run_python using only the script path. Use only the Python standard library unless a dependency is "
+    "already visible in the workspace. Shell commands must use relative paths only.\n\n"
     "If native tool calling is unavailable, respond with exactly one JSON object and no extra text: "
     '{"tool":"list_directory","args":{"path":"."}}. '
     "Available tools are read_file, write_file, append_file, list_directory, run_shell, run_python, and submit."
@@ -57,6 +69,7 @@ def load_environment(
     shuffle_seed: int = 0,
     max_turns: int = 12,
     max_tool_steps: int | None = None,
+    time_limit_seconds: int | None = None,
     sandbox_backend: str = "local",
     docker_image: str | None = None,
     reward_mode: str = "score",
@@ -108,6 +121,7 @@ def load_environment(
         "shuffle_seed": shuffle_seed,
         "max_turns": max_turns,
         "max_tool_steps": max_tool_steps,
+        "time_limit_seconds": time_limit_seconds,
         "sandbox_backend": sandbox_backend,
         "docker_image": docker_image,
         "reward_mode": reward_mode,
@@ -121,6 +135,7 @@ def load_environment(
             env_args=env_args,
             max_turns=max_turns,
             max_tool_steps=max_tool_steps,
+            time_limit_seconds=time_limit_seconds,
             sandbox_backend=sandbox_backend,
             docker_image=docker_image,
             reward_mode=reward_mode,
@@ -138,6 +153,7 @@ def load_environment(
         docker_image=docker_image,
         reward_mode=reward_mode,
         max_turns=max_turns,
+        time_limit_seconds=time_limit_seconds,
         output_dir=output_dir,
     )
 
@@ -175,6 +191,7 @@ if _native_hub_available():
             env_args: dict[str, Any],
             max_turns: int,
             max_tool_steps: int | None,
+            time_limit_seconds: int | None,
             sandbox_backend: str,
             docker_image: str | None,
             reward_mode: str,
@@ -186,6 +203,7 @@ if _native_hub_available():
             self.reward_mode = reward_mode
             self.output_dir = Path(output_dir).resolve() if output_dir else None
             self.max_tool_steps = _resolve_max_tool_steps(max_turns, max_tool_steps)
+            self.time_limit_seconds = _resolve_time_limit_seconds(max_turns, time_limit_seconds)
             self._row_cursor = 0
             self._row_lock = threading.Lock()
             dataset = _to_dataset(self.rows)
@@ -216,6 +234,7 @@ if _native_hub_available():
                 difficulty=int(row.get("difficulty") or 3),
                 seed=int(row.get("seed") or 0),
                 max_steps=self.max_tool_steps,
+                time_limit_seconds=self.time_limit_seconds,
                 workspace_root=row.get("environment_path"),
                 output_dir=output_dir,
                 sandbox_backend=self.sandbox_backend,
@@ -231,6 +250,9 @@ if _native_hub_available():
             state["swg_reward_mode"] = self.reward_mode
             state["swg_has_written"] = False
             state["swg_successful_check_after_write"] = False
+            state["swg_required_output_path"] = _required_output_path(observation)
+            state["swg_entrypoint"] = _entrypoint(observation)
+            state["swg_target_files"] = _target_files(observation)
             state["prompt"] = normalize_messages(
                 [
                     {"role": "system", "content": HUB_SYSTEM_PROMPT},
@@ -493,7 +515,51 @@ def _task_user_prompt(row: dict[str, Any], observation: dict[str, object]) -> st
     lines.append("")
     lines.append("Instruction:")
     lines.append(str(observation.get("instruction") or row.get("question") or "Solve the SWG workspace task."))
+    required_output = _required_output_path(observation)
+    entrypoint = _entrypoint(observation)
+    if required_output:
+        lines.append("")
+        lines.append(f"Required final artifact: {required_output}")
+    if entrypoint:
+        lines.append(f"Public check/entrypoint: {entrypoint}")
     return "\n".join(lines)
+
+
+def _task_descriptor(observation: dict[str, object]) -> dict[str, object]:
+    metadata = observation.get("metadata")
+    if not isinstance(metadata, dict):
+        return {}
+    descriptor = metadata.get("task_descriptor")
+    return dict(descriptor) if isinstance(descriptor, dict) else {}
+
+
+def _required_output_path(observation: dict[str, object]) -> str | None:
+    descriptor = _task_descriptor(observation)
+    for key in ("required_output_path", "output_path", "target_path"):
+        value = descriptor.get(key)
+        if value:
+            return str(value)
+    metadata = observation.get("metadata")
+    if isinstance(metadata, dict):
+        layout = metadata.get("visible_artifact_layout")
+        if isinstance(layout, dict):
+            for key in ("required_output_path", "output_path", "target_path"):
+                value = layout.get(key)
+                if value:
+                    return str(value)
+    return None
+
+
+def _entrypoint(observation: dict[str, object]) -> str | None:
+    value = _task_descriptor(observation).get("entrypoint")
+    return str(value) if value else None
+
+
+def _target_files(observation: dict[str, object]) -> list[str]:
+    value = _task_descriptor(observation).get("target_files")
+    if isinstance(value, list):
+        return [str(item) for item in value]
+    return []
 
 
 def _tool_call_to_action(tool_call: object) -> dict[str, object]:
@@ -523,6 +589,10 @@ def _text_action_or_none(content: object) -> dict[str, object] | None:
 
 
 def _execute_swg_action(state: Any, action: dict[str, object]) -> tuple[str, bool]:
+    submit_correction = _submit_correction_or_none(state, action)
+    if submit_correction is not None:
+        return submit_correction, False
+
     env = state["swg_env"]
     result = env.step(action)
     content = str(result.get("observation", ""))
@@ -543,13 +613,22 @@ def _with_efficiency_guidance(
     tool_name = str(action.get("tool", ""))
     success = bool(info.get("success"))
     guidance: str | None = None
+    family = str((state.get("swg_task") or {}).get("family") or "")
+    required_output_path = str(state.get("swg_required_output_path") or "")
+    entrypoint = str(state.get("swg_entrypoint") or "")
+    target_files = [str(item) for item in state.get("swg_target_files", []) or []]
+    action_path = _action_path(action)
 
     if tool_name in {"write_file", "append_file"}:
         if success:
             state["swg_has_written"] = True
-            guidance = (
-                "Guidance: You changed the workspace. Run one focused public check if needed; "
-                "if the fix is verified or clearly complete, call submit next. Do not search for hidden tests."
+            state["swg_last_written_path"] = action_path
+            guidance = _post_write_guidance(
+                family=family,
+                written_path=action_path,
+                required_output_path=required_output_path,
+                entrypoint=entrypoint,
+                target_files=target_files,
             )
         else:
             guidance = (
@@ -559,9 +638,11 @@ def _with_efficiency_guidance(
     elif tool_name in {"run_shell", "run_python"} and state.get("swg_has_written"):
         if success:
             state["swg_successful_check_after_write"] = True
-            guidance = (
-                "Guidance: A check ran after your edit. If this check supports the fix, call submit next "
-                "instead of continuing broad verification. Do not look for hidden tests."
+            guidance = _post_check_guidance(
+                state,
+                family=family,
+                required_output_path=required_output_path,
+                target_files=target_files,
             )
         else:
             guidance = (
@@ -574,12 +655,143 @@ def _with_efficiency_guidance(
     return f"{content}\n\n{guidance}" if content else guidance
 
 
+def _post_write_guidance(
+    *,
+    family: str,
+    written_path: str,
+    required_output_path: str,
+    entrypoint: str,
+    target_files: list[str],
+) -> str:
+    if family == "tabular":
+        if written_path.endswith(".py") and written_path != required_output_path:
+            return (
+                "Guidance: You wrote a processing script, but the required artifact is not complete until "
+                f"`{required_output_path}` exists. Next run `run_python` on `{written_path}`, read "
+                f"`{required_output_path}`, then call `submit` with `{required_output_path}`. "
+                "Do not stop after writing the script."
+            )
+        if written_path == required_output_path:
+            return (
+                f"Guidance: You wrote the required artifact `{required_output_path}`. Read it if you need "
+                f"one quick validation, then call `submit` with `{required_output_path}`."
+            )
+        return (
+            f"Guidance: You changed the workspace. For tabular tasks, the required final artifact is "
+            f"`{required_output_path}`; run the focused script/check that creates it, read it, then submit it."
+        )
+    if family == "pipeline":
+        run_hint = f"`{entrypoint}`" if entrypoint else "the public entrypoint"
+        return (
+            "Guidance: You changed the pipeline. Next run the public entrypoint "
+            f"{run_hint} with `run_shell`, read `{required_output_path}`, then call `submit` with "
+            f"`{required_output_path}`. Do not stop after editing config or source."
+        )
+    if family == "retrieval_workspace":
+        target = required_output_path or written_path
+        return (
+            f"Guidance: You changed the retrieval artifact. If `{target}` reflects the visible evidence, "
+            f"call `submit` with `{target}` now; otherwise make one targeted correction."
+        )
+    if family == "script_repair":
+        target = target_files[0] if target_files else written_path
+        check = f" Run `{entrypoint}` with `run_shell` if you need one focused check." if entrypoint else ""
+        return (
+            f"Guidance: You changed the repair target.{check} If the fix is complete, call `submit` "
+            f"with `{target}` instead of continuing broad verification."
+        )
+    return (
+        "Guidance: You changed the workspace. Run one focused public check if needed; "
+        "if the fix is verified or clearly complete, call submit next. Do not search for hidden tests."
+    )
+
+
+def _post_check_guidance(
+    state: Any,
+    *,
+    family: str,
+    required_output_path: str,
+    target_files: list[str],
+) -> str:
+    if family in {"tabular", "pipeline"} and required_output_path:
+        if _workspace_path_exists(state, required_output_path):
+            return (
+                f"Guidance: A check ran and `{required_output_path}` exists. Read that artifact if needed, "
+                f"then call `submit` with `{required_output_path}`. Do not continue broad verification."
+            )
+        return (
+            f"Guidance: A check ran, but the required artifact `{required_output_path}` is not present yet. "
+            "Make the smallest targeted fix so the next check creates it."
+        )
+    if family == "script_repair":
+        target = target_files[0] if target_files else str(state.get("swg_last_written_path") or "")
+        return (
+            f"Guidance: A check ran after your edit. If this supports the fix, call `submit` with `{target}` "
+            "instead of continuing broad verification. Do not look for hidden tests."
+        )
+    return (
+        "Guidance: A check ran after your edit. If this check supports the fix, call submit next "
+        "instead of continuing broad verification. Do not look for hidden tests."
+    )
+
+
+def _submit_correction_or_none(state: Any, action: dict[str, object]) -> str | None:
+    if str(action.get("tool", "")) != "submit":
+        return None
+    family = str((state.get("swg_task") or {}).get("family") or "")
+    required_output_path = str(state.get("swg_required_output_path") or "")
+    if family not in {"tabular", "pipeline", "retrieval_workspace"} or not required_output_path:
+        return None
+    submitted_path = str((action.get("args") or {}).get("path_or_answer", "")).strip().replace("\\", "/")
+    required = required_output_path.replace("\\", "/")
+    if submitted_path != required:
+        return (
+            f"Submit correction: this task must submit the required artifact path `{required}`. "
+            f"You tried to submit `{submitted_path or '<empty>'}`. If the artifact is ready, call "
+            f"`submit` with `{required}`; otherwise create or fix it first."
+        )
+    if not _workspace_path_exists(state, required):
+        return (
+            f"Submit correction: `{required}` does not exist yet. Create it by running the focused "
+            "script or public entrypoint, read it if needed, then submit that path."
+        )
+    return None
+
+
+def _workspace_path_exists(state: Any, relative_path: str) -> bool:
+    env = state.get("swg_env")
+    if env is None or not relative_path:
+        return False
+    try:
+        return (env.active_workspace / relative_path).exists()
+    except Exception:
+        return False
+
+
+def _action_path(action: dict[str, object]) -> str:
+    args = action.get("args")
+    if not isinstance(args, dict):
+        return ""
+    for key in ("path", "command_or_script", "path_or_answer"):
+        if key in args:
+            return str(args.get(key) or "").replace("\\", "/")
+    return ""
+
+
 def _resolve_max_tool_steps(max_turns: int, max_tool_steps: int | None) -> int:
     if max_tool_steps is not None:
         return max(1, int(max_tool_steps))
     if max_turns > 0:
         return max(24, int(max_turns) * 4)
     return 24
+
+
+def _resolve_time_limit_seconds(max_turns: int, time_limit_seconds: int | None) -> int:
+    if time_limit_seconds is not None:
+        return max(1, int(time_limit_seconds))
+    if max_turns > 0:
+        return max(180, int(max_turns) * 12)
+    return 180
 
 
 def _coerce_str_list(value: str | list[str] | tuple[str, ...] | None) -> list[str] | None:

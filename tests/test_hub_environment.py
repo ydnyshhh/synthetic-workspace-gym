@@ -35,6 +35,9 @@ class HubEnvironmentTests(unittest.TestCase):
         self.assertIn("call submit immediately", HUB_SYSTEM_PROMPT)
         self.assertIn("run_python accepts only a workspace-relative Python script path", HUB_SYSTEM_PROMPT)
         self.assertIn("include any needed output-directory creation inside that script", HUB_SYSTEM_PROMPT)
+        self.assertIn("Never stop after only writing a file", HUB_SYSTEM_PROMPT)
+        self.assertIn("Tabular: read README.md, task.json, and the listed input files", HUB_SYSTEM_PROMPT)
+        self.assertIn("Use only the Python standard library", HUB_SYSTEM_PROMPT)
 
     def test_load_environment_accepts_fixed_task_args(self) -> None:
         env = load_environment(
@@ -294,7 +297,8 @@ class HubEnvironmentTests(unittest.TestCase):
                 )
                 write_messages = await env.env_response([SimpleNamespace(tool_calls=[write_call])], state)
 
-                self.assertIn("You changed the workspace", str(write_messages[0].content))
+                self.assertIn("You changed the repair target", str(write_messages[0].content))
+                self.assertIn("python run_example.py", str(write_messages[0].content))
                 self.assertTrue(state["swg_has_written"])
                 self.assertNotIn("final_env_response", state)
 
@@ -307,6 +311,71 @@ class HubEnvironmentTests(unittest.TestCase):
 
                 self.assertIn("A check ran after your edit", str(check_messages[0].content))
                 self.assertTrue(state["swg_successful_check_after_write"])
+                self.assertNotIn("final_env_response", state)
+                state["swg_env"].close()
+
+        asyncio.run(run_turn())
+
+    @unittest.skipUnless(is_verifiers_available(), "verifiers is unavailable")
+    def test_hub_environment_guides_tabular_script_execution(self) -> None:
+        async def run_turn() -> None:
+            with workspace_tempdir() as tmp_dir:
+                env = load_environment(
+                    split=None,
+                    family="tabular",
+                    scenario="weekly_refund_rollup",
+                    difficulty=2,
+                    seed=88,
+                    max_examples=1,
+                    output_dir=str(Path(tmp_dir) / "runtime"),
+                )
+                row = env.get_dataset()[0]
+                state = {"input": row, "trajectory_id": "hub-tabular-guidance-test"}
+
+                await env.setup_state(state)
+                write_call = SimpleNamespace(
+                    id="call-write",
+                    name="write_file",
+                    arguments='{"path":"scripts/process_events.py","content":"print(1)"}',
+                )
+                write_messages = await env.env_response([SimpleNamespace(tool_calls=[write_call])], state)
+
+                content = str(write_messages[0].content)
+                self.assertIn("You wrote a processing script", content)
+                self.assertIn("run_python", content)
+                self.assertIn("outputs/weekly_rollup.json", content)
+                self.assertIn("Do not stop after writing the script", content)
+                state["swg_env"].close()
+
+        asyncio.run(run_turn())
+
+    @unittest.skipUnless(is_verifiers_available(), "verifiers is unavailable")
+    def test_hub_environment_blocks_wrong_artifact_submit(self) -> None:
+        async def run_turn() -> None:
+            with workspace_tempdir() as tmp_dir:
+                env = load_environment(
+                    split=None,
+                    family="tabular",
+                    scenario="weekly_refund_rollup",
+                    difficulty=2,
+                    seed=88,
+                    max_examples=1,
+                    output_dir=str(Path(tmp_dir) / "runtime"),
+                )
+                row = env.get_dataset()[0]
+                state = {"input": row, "trajectory_id": "hub-submit-correction-test"}
+
+                await env.setup_state(state)
+                submit_call = SimpleNamespace(
+                    id="call-submit",
+                    name="submit",
+                    arguments='{"path_or_answer":"scripts/process_events.py"}',
+                )
+                messages = await env.env_response([SimpleNamespace(tool_calls=[submit_call])], state)
+
+                content = str(messages[0].content)
+                self.assertIn("Submit correction", content)
+                self.assertIn("outputs/weekly_rollup.json", content)
                 self.assertNotIn("final_env_response", state)
                 state["swg_env"].close()
 
