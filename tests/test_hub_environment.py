@@ -39,6 +39,14 @@ class HubEnvironmentTests(unittest.TestCase):
         self.assertIn("Tabular: read README.md, task.json, and the listed input files", HUB_SYSTEM_PROMPT)
         self.assertIn("Use only the Python standard library", HUB_SYSTEM_PROMPT)
 
+    def test_truncate_observation_marks_omitted_content(self) -> None:
+        from synthetic_workspace_gym.hub import _truncate_observation
+
+        content = _truncate_observation("abcdef", 3)
+        self.assertIn("abc", content)
+        self.assertIn("Observation truncated by SWG", content)
+        self.assertIn("3 characters omitted", content)
+
     def test_load_environment_accepts_fixed_task_args(self) -> None:
         env = load_environment(
             split=None,
@@ -182,6 +190,9 @@ class HubEnvironmentTests(unittest.TestCase):
 
                 self.assertEqual(state["swg_task"]["task_id"], row["task_id"])
                 self.assertEqual(state["swg_task"]["family"], "pipeline")
+                self.assertEqual(state["swg_task"]["difficulty"], row["difficulty"])
+                self.assertEqual(state["swg_task"]["seed"], row["seed"])
+                self.assertEqual(state["swg_max_observation_chars"], 20000)
                 self.assertEqual(state["swg_env"].manifest.family.value, "pipeline")
                 prompt_text = "\n".join(str(message.get("content", "")) for message in state["prompt"])
                 self.assertIn(str(row["task_id"]), prompt_text)

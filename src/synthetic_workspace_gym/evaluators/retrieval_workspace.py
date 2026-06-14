@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from synthetic_workspace_gym.evaluators.base import BaseEvaluator
-from synthetic_workspace_gym.evaluators.metrics import row_overlap_metrics, weighted_match_score
+from synthetic_workspace_gym.evaluators.metrics import flatten_json, json_field_diff_diagnostics, row_overlap_metrics, weighted_match_score
 from synthetic_workspace_gym.schemas import EnvironmentManifest, EvaluatorResult
 from synthetic_workspace_gym.utils.io import read_json
 
@@ -86,6 +86,8 @@ class RetrievalWorkspaceEvaluator(BaseEvaluator):
             "expected_preview": self.preview(expected),
             "actual_preview": self.preview(actual),
         }
+        if not success:
+            diagnostics.update(json_field_diff_diagnostics(expected, actual))
         return EvaluatorResult(
             success=success,
             score=score,
@@ -173,21 +175,7 @@ class RetrievalWorkspaceEvaluator(BaseEvaluator):
         }
 
     def flatten_json(self, value: Any, *, prefix: str = "$") -> list[dict[str, object]]:
-        if isinstance(value, dict):
-            if not value:
-                return [{"path": prefix, "value": "<empty_object>"}]
-            flattened: list[dict[str, object]] = []
-            for key in sorted(value):
-                flattened.extend(self.flatten_json(value[key], prefix=f"{prefix}.{key}"))
-            return flattened
-        if isinstance(value, list):
-            if not value:
-                return [{"path": prefix, "value": "<empty_list>"}]
-            flattened: list[dict[str, object]] = []
-            for index, item in enumerate(value):
-                flattened.extend(self.flatten_json(item, prefix=f"{prefix}[{index}]"))
-            return flattened
-        return [{"path": prefix, "value": value}]
+        return flatten_json(value, prefix=prefix)
 
     def preview(self, value: Any) -> Any:
         if isinstance(value, list):

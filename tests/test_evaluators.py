@@ -65,6 +65,9 @@ class EvaluatorCorrectnessTests(unittest.TestCase):
             self.assertFalse(result.success)
             self.assertGreater(result.score, 0.0)
             self.assertLess(result.score, 1.0)
+            self.assertIn("missing_rows_preview", result.diagnostics)
+            self.assertIn("unexpected_rows_preview", result.diagnostics)
+            self.assertIn("expected_schema_keys", result.diagnostics)
 
     def test_tabular_evaluator_rejects_wrong_json_shape(self) -> None:
         with workspace_tempdir() as tmp_dir:
@@ -145,6 +148,10 @@ class EvaluatorCorrectnessTests(unittest.TestCase):
             self.assertGreater(result.score, 0.0)
             self.assertLess(result.score, 1.0)
             self.assertGreater(result.subscores["field_f1"], 0.0)
+            self.assertIn("value_mismatches", result.diagnostics)
+            mismatch_paths = {item["path"] for item in result.diagnostics["value_mismatches"]}
+            self.assertIn("$.region", mismatch_paths)
+            self.assertIn("$.retry_attempts", mismatch_paths)
 
     def inject_sleep(self, source: str) -> str:
         header = "from __future__ import annotations\n\n"

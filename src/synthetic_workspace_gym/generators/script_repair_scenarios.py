@@ -74,6 +74,12 @@ def build_csv_schema_drift_scenario(generator) -> dict[str, object]:
             "Cancelled rows should be excluded from the final report, not dropped before parsing.",
             "The final report is sorted by region, not by aggregate size.",
         ],
+        "repair_contract": [
+            "Load every row keyed by the visible `account_id` column; do not look for `customer_id`.",
+            "Normalize `region` with `strip().lower()` before reporting.",
+            "Exclude rows whose normalized status is `cancelled` in the report step.",
+            "Return report rows sorted lexicographically by lowercase `region`.",
+        ],
         "structure": {
             "repair_surface": "parser_interface",
             "bug_scope": "cross_file",

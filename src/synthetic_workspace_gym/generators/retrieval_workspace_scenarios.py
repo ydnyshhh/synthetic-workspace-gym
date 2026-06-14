@@ -63,6 +63,7 @@ def base_profile(
     failure_mode: str,
     smoke_test_quality: str,
     content_variant_id: str | None = None,
+    **extra: object,
 ) -> dict[str, object]:
     settings = difficulty_settings(difficulty)
     profile = {
@@ -80,6 +81,7 @@ def base_profile(
     }
     if content_variant_id is not None:
         profile["content_variant_id"] = content_variant_id
+    profile.update(extra)
     return profile
 
 
@@ -646,6 +648,8 @@ def build_migration_plan_bundle_scenario(rng: random.Random, spec: EnvironmentSp
     difficulty = spec.difficulty
     variant = select_fixture_variant(spec.seed, migration_plan_variants())
     expected_output = build_migration_expected_output(variant)
+    schema_version = str(variant["schema_version"])
+    schema_spec_path = f"specs/schema_{schema_version}.md"
     rename_fields = list(variant["rename_fields"])
     backfill_rules = list(variant["backfill_rules"])
     visible_files: dict[str, str] = {
@@ -671,13 +675,13 @@ def build_migration_plan_bundle_scenario(rng: random.Random, spec: EnvironmentSp
             for item in backfill_rules
         )
         validation_lines = "\n".join(f"- {item}" for item in variant["validation_checks"])
-        visible_files["specs/schema_v3.md"] = dedent(
+        visible_files[schema_spec_path] = dedent(
             f"""
-            # Schema {variant["schema_version"]}
+            # Schema {schema_version}
 
             Produce a migration plan with:
 
-            - schema version `{variant["schema_version"]}`
+            - schema version `{schema_version}`
             {rename_lines}
             {drop_lines}
             {backfill_lines}
@@ -690,15 +694,15 @@ def build_migration_plan_bundle_scenario(rng: random.Random, spec: EnvironmentSp
             for item in rename_fields
         )
         drop_lines = "\n".join(f"- drop `{item}`" for item in variant["drop_fields"])
-        visible_files["specs/schema_v3.md"] = dedent(
+        visible_files[schema_spec_path] = dedent(
             f"""
-            # Schema {variant["schema_version"]}
+            # Schema {schema_version}
 
             Required schema changes:
 
             {rename_lines}
             {drop_lines}
-            - schema version `{variant["schema_version"]}`
+            - schema version `{schema_version}`
             """
         ).strip() + "\n"
         visible_files["notes/backfill_rules.md"] = dedent(
@@ -752,9 +756,9 @@ def build_migration_plan_bundle_scenario(rng: random.Random, spec: EnvironmentSp
         visible_files["changelog/2026-02-migration.md"] = dedent(
             "\n".join(
                 [
-                    f"# 2026-02 Migration for {variant['schema_version']}",
+                    f"# 2026-02 Migration for {schema_version}",
                     "",
-                    f"Superseded by the schema {variant['schema_version']} documents.",
+                    f"Superseded by the schema {schema_version} documents.",
                     "",
                     "Historical draft:",
                     "",
@@ -773,6 +777,8 @@ def build_migration_plan_bundle_scenario(rng: random.Random, spec: EnvironmentSp
         "target_path": "artifacts/migration_plan.json",
         "task_type": "migration_planning",
         "output_style": "migration_plan",
+        "schema_version": schema_version,
+        "schema_spec_path": schema_spec_path,
         "entrypoint": None,
         "files": visible_files,
         "expected_output": expected_output,
@@ -787,12 +793,12 @@ def build_migration_plan_bundle_scenario(rng: random.Random, spec: EnvironmentSp
         "hints": [
             "The schema spec defines field renames and removals.",
             "Backfill rules may be split away from the cutover order.",
-            "Older migration drafts can be wrong once the v3 schema is introduced.",
+            f"Older migration drafts can be wrong once schema {schema_version} is introduced.",
         ],
         "output_contract": [
             "Write the final plan to `artifacts/migration_plan.json`.",
             "Keep the JSON keys and list ordering stable.",
-            "The plan must reflect the current v3 schema, not older migration drafts.",
+            f"The plan must reflect the current schema `{schema_version}` from `{schema_spec_path}`, not older migration drafts.",
         ],
         "structure": base_profile(
             files=visible_files,
@@ -803,6 +809,7 @@ def build_migration_plan_bundle_scenario(rng: random.Random, spec: EnvironmentSp
             failure_mode="grounding_and_semantic",
             smoke_test_quality="none",
             content_variant_id=str(variant["variant_id"]),
+            schema_version=schema_version,
         ),
         "document_roots": document_roots(visible_files),
     }

@@ -63,6 +63,7 @@ class ScriptRepairGenerator(BaseGenerator):
             "entrypoint": "python run_example.py",
             "target_files": sorted(touched_files),
             "hints": self.visible_hints(list(scenario["hints"]), spec.difficulty),
+            "repair_contract": list(scenario.get("repair_contract", [])),
         }
         write_text(visible_root / "README.md", self.build_readme(scenario, task_descriptor))
         write_json(visible_root / "task.json", task_descriptor)
@@ -115,6 +116,8 @@ class ScriptRepairGenerator(BaseGenerator):
     def build_readme(self, scenario: dict[str, object], task_descriptor: dict[str, object]) -> str:
         hints = "\n".join(f"- {hint}" for hint in task_descriptor["hints"])
         targets = "\n".join(f"- `{item}`" for item in task_descriptor["target_files"])
+        contract = "\n".join(f"- {item}" for item in task_descriptor.get("repair_contract", []))
+        contract_section = f"## Expected behavior\n{contract}\n\n" if contract else ""
         return (
             f"# {scenario['title']}\n\n"
             "One or more Python files in this workspace are buggy. Repair the code so the hidden tests pass.\n\n"
@@ -126,6 +129,7 @@ class ScriptRepairGenerator(BaseGenerator):
             f"- `{task_descriptor['entrypoint']}`\n\n"
             "## Likely target files\n"
             f"{targets}\n\n"
+            f"{contract_section}"
             "## Hints\n"
             f"{hints}\n"
         )

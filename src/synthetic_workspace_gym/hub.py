@@ -70,6 +70,7 @@ def load_environment(
     max_turns: int = 12,
     max_tool_steps: int | None = None,
     time_limit_seconds: int | None = None,
+    max_observation_chars: int | None = 20000,
     sandbox_backend: str = "local",
     docker_image: str | None = None,
     reward_mode: str = "score",
@@ -122,6 +123,7 @@ def load_environment(
         "max_turns": max_turns,
         "max_tool_steps": max_tool_steps,
         "time_limit_seconds": time_limit_seconds,
+        "max_observation_chars": max_observation_chars,
         "sandbox_backend": sandbox_backend,
         "docker_image": docker_image,
         "reward_mode": reward_mode,
@@ -136,6 +138,7 @@ def load_environment(
             max_turns=max_turns,
             max_tool_steps=max_tool_steps,
             time_limit_seconds=time_limit_seconds,
+            max_observation_chars=max_observation_chars,
             sandbox_backend=sandbox_backend,
             docker_image=docker_image,
             reward_mode=reward_mode,
@@ -192,6 +195,7 @@ if _native_hub_available():
             max_turns: int,
             max_tool_steps: int | None,
             time_limit_seconds: int | None,
+            max_observation_chars: int | None,
             sandbox_backend: str,
             docker_image: str | None,
             reward_mode: str,
@@ -204,6 +208,7 @@ if _native_hub_available():
             self.output_dir = Path(output_dir).resolve() if output_dir else None
             self.max_tool_steps = _resolve_max_tool_steps(max_turns, max_tool_steps)
             self.time_limit_seconds = _resolve_time_limit_seconds(max_turns, time_limit_seconds)
+            self.max_observation_chars = _resolve_max_observation_chars(max_observation_chars)
             self._row_cursor = 0
             self._row_lock = threading.Lock()
             dataset = _to_dataset(self.rows)
@@ -248,6 +253,7 @@ if _native_hub_available():
             state["swg_task_row"] = row
             state["swg_reward_payload"] = None
             state["swg_reward_mode"] = self.reward_mode
+            state["swg_max_observation_chars"] = self.max_observation_chars
             state["swg_has_written"] = False
             state["swg_successful_check_after_write"] = False
             state["swg_required_output_path"] = _required_output_path(observation)
@@ -502,6 +508,7 @@ def _task_metadata(row: dict[str, Any]) -> dict[str, object]:
         "scenario": row.get("scenario"),
         "difficulty": row.get("difficulty"),
         "seed": row.get("seed"),
+        "environment_path": row.get("environment_path"),
     }
 
 
@@ -596,6 +603,7 @@ def _execute_swg_action(state: Any, action: dict[str, object]) -> tuple[str, boo
     env = state["swg_env"]
     result = env.step(action)
     content = str(result.get("observation", ""))
+    content = _truncate_observation(content, int(state.get("swg_max_observation_chars") or 0))
     info = dict(result.get("info", {}) or {})
     content = _with_efficiency_guidance(state, action, content, info)
     if info.get("reward_payload") is not None:
@@ -792,6 +800,23 @@ def _resolve_time_limit_seconds(max_turns: int, time_limit_seconds: int | None) 
     if max_turns > 0:
         return max(180, int(max_turns) * 12)
     return 180
+
+
+def _resolve_max_observation_chars(max_observation_chars: int | None) -> int:
+    if max_observation_chars is None:
+        return 0
+    return max(0, int(max_observation_chars))
+
+
+def _truncate_observation(content: str, limit: int) -> str:
+    if limit <= 0 or len(content) <= limit:
+        return content
+    omitted = len(content) - limit
+    return (
+        content[:limit]
+        + f"\n\n[Observation truncated by SWG after {limit} characters; {omitted} characters omitted. "
+        "Use narrower file reads or focused checks when possible.]"
+    )
 
 
 def _coerce_str_list(value: str | list[str] | tuple[str, ...] | None) -> list[str] | None:

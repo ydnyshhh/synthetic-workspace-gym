@@ -5,7 +5,7 @@ import time
 from pathlib import Path
 
 from synthetic_workspace_gym.evaluators.base import BaseEvaluator
-from synthetic_workspace_gym.evaluators.metrics import row_overlap_metrics, weighted_match_score
+from synthetic_workspace_gym.evaluators.metrics import row_diff_diagnostics, row_overlap_metrics, weighted_match_score
 from synthetic_workspace_gym.schemas import EnvironmentManifest, EvaluatorResult
 from synthetic_workspace_gym.utils.io import read_json
 
@@ -48,6 +48,7 @@ class TabularEvaluator(BaseEvaluator):
         if not success:
             diagnostics["expected_preview"] = expected[:2] if isinstance(expected, list) else expected
             diagnostics["actual_preview"] = actual[:2] if isinstance(actual, list) else actual
+            diagnostics.update(row_diff_diagnostics(expected, actual))
         return EvaluatorResult(
             success=success,
             score=score,

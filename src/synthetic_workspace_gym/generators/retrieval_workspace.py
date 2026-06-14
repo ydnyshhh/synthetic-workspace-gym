@@ -28,6 +28,10 @@ class RetrievalWorkspaceGenerator(BaseGenerator):
             "document_roots": scenario["document_roots"],
             "hints": self.visible_hints(list(scenario["hints"]), spec.difficulty),
         }
+        if scenario.get("schema_version"):
+            task_descriptor["schema_version"] = scenario["schema_version"]
+        if scenario.get("schema_spec_path"):
+            task_descriptor["schema_spec_path"] = scenario["schema_spec_path"]
         if scenario.get("entrypoint"):
             task_descriptor["entrypoint"] = scenario["entrypoint"]
 

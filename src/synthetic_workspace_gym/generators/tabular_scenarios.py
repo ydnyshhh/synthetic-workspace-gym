@@ -332,17 +332,19 @@ def build_weekly_refund_rollup_scenario(rng: random.Random, spec: EnvironmentSpe
             "Write a JSON array to `outputs/weekly_rollup.json`.",
             "Include `week`, `region`, `event_count`, and `net_amount`.",
             "Use ISO-style week buckets like `2024-W09`.",
+            "Normalize `region` by stripping whitespace and lowercasing account lookup values; do not title-case regions.",
             "Sort rows by `week` then `region`.",
         ],
         "hints": [
             "Pending events are visible noise and should not affect the rollup.",
             "Refund rows subtract from the weekly total instead of adding to it.",
-            "Region names come from the account lookup file and need normalization.",
+            "Region names come from the account lookup file and should be emitted in canonical lowercase.",
         ],
         "structure": {
             "task_type": "time_bucket_rollup",
             "input_shape": "json_csv_mix",
             "time_bucketing": "iso_week",
+            "region_normalization": "strip_lowercase",
             "output_style": "sorted_row_summary",
         },
         "files": files,
@@ -351,6 +353,7 @@ def build_weekly_refund_rollup_scenario(rng: random.Random, spec: EnvironmentSpe
             "input_files": ["data/events.json", "data/accounts.csv"],
             "output_path": "outputs/weekly_rollup.json",
             "operations": ["parse_timestamps", "join_accounts", "filter_pending", "subtract_refunds", "bucket_by_week"],
+            "normalization": {"region": "strip_lowercase"},
         },
     }
 

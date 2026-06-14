@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import unittest
 from pathlib import Path
 
@@ -163,6 +164,52 @@ class GeneratorValidityTests(unittest.TestCase):
                         first.manifest.reference_solution["files"],
                         second.manifest.reference_solution["files"],
                     )
+
+    def test_weekly_refund_contract_names_lowercase_region_normalization(self) -> None:
+        with workspace_tempdir() as tmp_dir:
+            generator = get_generator("tabular")
+            spec = generator.sample_spec(difficulty=4, seed=102, scenario_id="weekly_refund_rollup")
+            bundle = generator.generate_instance(spec, Path(tmp_dir))
+
+            readme = (bundle.visible_root / "README.md").read_text(encoding="utf-8")
+            task = (bundle.visible_root / "task.json").read_text(encoding="utf-8")
+            expected_rows = json.loads(bundle.manifest.reference_solution["files"]["outputs/weekly_rollup.json"])
+            expected_regions = {row["region"] for row in expected_rows}
+
+            self.assertIn("lowercasing account lookup values", readme)
+            self.assertIn("strip_lowercase", task)
+            self.assertTrue(expected_regions)
+            self.assertTrue(all(region == region.lower() for region in expected_regions))
+
+    def test_migration_plan_schema_spec_path_matches_selected_schema(self) -> None:
+        with workspace_tempdir() as tmp_dir:
+            generator = get_generator("retrieval_workspace")
+            for seed in (1, 2, 3):
+                with self.subTest(seed=seed):
+                    spec = generator.sample_spec(difficulty=5, seed=seed, scenario_id="migration_plan_bundle")
+                    bundle = generator.generate_instance(spec, Path(tmp_dir) / f"seed-{seed}")
+                    task = bundle.manifest.metadata["task_descriptor"]
+                    schema_version = str(task["schema_version"])
+                    schema_path = str(task["schema_spec_path"])
+                    readme = (bundle.visible_root / "README.md").read_text(encoding="utf-8")
+
+                    self.assertEqual(schema_path, f"specs/schema_{schema_version}.md")
+                    self.assertTrue((bundle.visible_root / schema_path).exists())
+                    self.assertIn(f"current schema `{schema_version}`", readme)
+                    self.assertNotIn("current v3 schema", readme)
+
+    def test_csv_schema_drift_readme_includes_repair_contract(self) -> None:
+        with workspace_tempdir() as tmp_dir:
+            generator = get_generator("script_repair")
+            spec = generator.sample_spec(difficulty=2, seed=7, scenario_id="csv_schema_drift")
+            bundle = generator.generate_instance(spec, Path(tmp_dir))
+            readme = (bundle.visible_root / "README.md").read_text(encoding="utf-8")
+            task = bundle.manifest.metadata["task_descriptor"]
+
+            self.assertIn("## Expected behavior", readme)
+            self.assertIn("account_id", readme)
+            self.assertIn("sorted lexicographically by lowercase `region`", readme)
+            self.assertIn("repair_contract", task)
 
 
 if __name__ == "__main__":
