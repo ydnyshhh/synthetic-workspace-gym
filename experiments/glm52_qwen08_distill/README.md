@@ -10,7 +10,7 @@ The target behavior is not full trace memorization. The dataset turns successful
 inspect -> read relevant files -> write/edit -> run public check -> read artifact -> submit
 ```
 
-The first experiment extracts only perfect-reward GLM-5.2 traces and converts assistant tool-call turns into intermediate action windows. These examples are not yet a Prime trainer-ready dataset; add an exporter before hosted SFT.
+The first experiment extracts only perfect-reward GLM-5.2 traces and converts assistant tool-call turns into intermediate action windows. These examples are not yet assumed to be Prime trainer-ready.
 
 ## Teacher Run
 
@@ -94,9 +94,9 @@ The JSONL shape is:
 {"messages": [...], "target": {...}, "metadata": {...}}
 ```
 
-That shape is intentionally inspectable and intermediate. Before hosted training, add an `export_prime_sft.py` converter for the exact trainer format, such as `{"messages": [..., target_assistant_message]}` or prompt-completion JSONL.
+That shape is intentionally inspectable and intermediate.
 
-This branch includes a first messages-format exporter:
+This branch includes a first generic messages-format exporter. Before hosted training, verify that its output exactly matches the current Prime SFT trainer schema.
 
 ```bash
 python experiments/glm52_qwen08_distill/export_prime_sft.py \
@@ -110,6 +110,16 @@ Do not commit raw hosted-eval traces, generated JSONL datasets, model checkpoint
 
 Only commit scripts, configs, README files, small synthetic fixtures, report templates, and tests.
 
+## Tests
+
+Run the synthetic fixture tests with:
+
+```bash
+python -m unittest experiments.glm52_qwen08_distill.tests.test_dataset_builder -v
+```
+
+The tests use `experiments/glm52_qwen08_distill/tests/fixtures/tiny_trace.json` and cover quality-gate behavior, invalid `run_python` detection, absolute-path auditing, sequential single-tool targets, tool-call ID preservation in history, and the messages-format exporter.
+
 ## Next Steps
 
 1. Build and inspect the perfect-only raw and sequentialized datasets.
@@ -117,4 +127,4 @@ Only commit scripts, configs, README files, small synthetic fixtures, report tem
 3. Prefer the sequentialized variant if raw targets contain frequent multi-tool calls.
 4. Build a scenario-balanced partial-trace variant if perfect-only coverage is sparse.
 5. Later, add recovery-state examples from Qwen failure traces before launching training.
-6. Add a Prime SFT exporter once the intermediate dataset has passed quality review.
+6. Verify or adapt the generic messages-format exporter once the intermediate dataset has passed quality review.

@@ -22,3 +22,4 @@ data/reports/
 outputs/
 checkpoints/
 wandb/
+experiments/glm52_qwen08_distill/tests/tmp/

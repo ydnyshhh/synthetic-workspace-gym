@@ -14,65 +14,6 @@ I think one of the bottlenecks in agent research is that environments are still 
 | Packaging | Python package with `uv` workflow and `swg` CLI |
 | Status | v1 research infrastructure |
 
-## Branch: GLM-5.2 to Qwen3.5-0.8B Distillation
-
-This branch adds the first trajectory-distillation experiment for SWG. It converts the GLM-5.2 hosted-eval run `kxhqr8w6kxeficm93rp7s5k6` into supervised state-to-next-tool-action examples for a later `Qwen/Qwen3.5-0.8B` student run.
-
-The experiment code lives in:
-
-```text
-experiments/glm52_qwen08_distill/
-```
-
-The branch intentionally commits only experiment code, configs, README files, and empty `data/` placeholders. Raw hosted-eval traces, processed JSONL datasets, and generated reports are local artifacts and remain ignored by Git.
-
-Local outputs use these paths:
-
-```text
-data/raw_traces/glm52/
-data/processed_traces/glm52_qwen08/glm52_perfect_raw_actions.jsonl
-data/processed_traces/glm52_qwen08/glm52_perfect_sequential_actions.jsonl
-data/reports/glm52_qwen08/perfect_dataset_report.json
-data/reports/glm52_qwen08/perfect_dataset_report.md
-```
-
-The current builder creates an intermediate action-window dataset:
-
-```json
-{"messages": [...], "target": {...}, "metadata": {...}}
-```
-
-This is for inspection and conversion. Add a dedicated exporter before hosted training to convert it into the exact Prime SFT format.
-
-Observed local build summary:
-
-| Metric | Value |
-| --- | ---: |
-| Hosted-eval samples loaded | 390 |
-| Perfect traces used | 304 |
-| Raw action-window examples | 2,084 |
-| Sequentialized single-tool examples | 4,244 |
-| Malformed or unknown tool calls | 0 |
-| Invalid `run_python` calls | 0 |
-| Absolute-path `run_shell` targets flagged and excluded | 3 |
-
-Rebuild the dataset from hosted-eval page exports with:
-
-```bash
-python experiments/glm52_qwen08_distill/build_dataset.py \
-  --input-dir data/raw_traces/glm52 \
-  --output-dir data/processed_traces/glm52_qwen08 \
-  --report-dir data/reports/glm52_qwen08 \
-  --teacher glm-5.2 \
-  --student Qwen/Qwen3.5-0.8B \
-  --eval-id kxhqr8w6kxeficm93rp7s5k6 \
-  --reward-filter perfect \
-  --write-raw \
-  --write-sequential
-```
-
-Strict quality is the default. With the current local traces, the script writes the report and refuses JSONL output until the three absolute-path target windows are audited, or until the run is explicitly marked analysis-only with `--allow-quality-warnings`.
-
 ## System Design
 
 ![Synthetic Workspace Gym system design diagram](docs/system-design.png)

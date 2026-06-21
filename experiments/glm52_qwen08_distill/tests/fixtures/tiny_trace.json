@@ -1,0 +1,81 @@
+{
+  "evaluation_id": "tiny-eval",
+  "samples": [
+    {
+      "trace_id": "tiny-trace-1",
+      "example_id": 1,
+      "prompt": [
+        {
+          "role": "system",
+          "content": "Use tools. Return exactly one tool call per turn.",
+          "tool_calls": "",
+          "tool_call_id": ""
+        },
+        {
+          "role": "user",
+          "content": "Task metadata:\n- task_id: swg.validation.tabular.tiny_scenario.d2.s7\n- split: validation\n- family: tabular\n- scenario: tiny_scenario\n- difficulty: 2\n- seed: 7\n\nInstruction:\nCreate the required artifact.\n\nRequired final artifact: outputs/result.json",
+          "tool_calls": "",
+          "tool_call_id": ""
+        }
+      ],
+      "completion": [
+        {
+          "role": "assistant",
+          "content": "",
+          "reasoning_content": "I will inspect the workspace.",
+          "tool_calls": "{\"id\":\"call_read_task\",\"name\":\"read_file\",\"arguments\":\"{\\\"path\\\":\\\"task.json\\\"}\"} {\"id\":\"call_read_readme\",\"name\":\"read_file\",\"arguments\":\"{\\\"path\\\":\\\"README.md\\\"}\"}",
+          "tool_call_id": ""
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "call_read_task",
+          "content": "Read task.json\n{\"target\":\"outputs/result.json\"}",
+          "tool_calls": ""
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "call_read_readme",
+          "content": "Read README.md\nWrite outputs/result.json.",
+          "tool_calls": ""
+        },
+        {
+          "role": "assistant",
+          "content": "",
+          "tool_calls": "{\"id\":\"call_bad_python\",\"name\":\"run_python\",\"arguments\":\"{\\\"path\\\":\\\"python -c 'print(1)'\\\"}\"}",
+          "tool_call_id": ""
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "call_bad_python",
+          "content": "Rejected invalid run_python call.",
+          "tool_calls": ""
+        },
+        {
+          "role": "assistant",
+          "content": "",
+          "tool_calls": "{\"id\":\"call_abs_shell\",\"name\":\"run_shell\",\"arguments\":\"{\\\"command\\\":\\\"cd /tmp && python check.py\\\"}\"}",
+          "tool_call_id": ""
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "call_abs_shell",
+          "content": "Rejected absolute path command.",
+          "tool_calls": ""
+        },
+        {
+          "role": "assistant",
+          "content": "",
+          "tool_calls": "{\"id\":\"call_submit\",\"name\":\"submit\",\"arguments\":\"{\\\"path_or_answer\\\":\\\"outputs/result.json\\\"}\"}",
+          "tool_call_id": ""
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "call_submit",
+          "content": "Submitted outputs/result.json",
+          "tool_calls": ""
+        }
+      ],
+      "reward": 1.0
+    }
+  ]
+}
