@@ -4,11 +4,18 @@ import copy
 from typing import Any
 
 
-def public_tool_call(call: dict[str, Any]) -> dict[str, Any]:
+def public_tool_call_for_target(call: dict[str, Any]) -> dict[str, Any]:
     return {
         "name": call["name"],
         "arguments": copy.deepcopy(call.get("arguments", {})),
     }
+
+
+def public_tool_call_for_history(call: dict[str, Any]) -> dict[str, Any]:
+    tool_call = public_tool_call_for_target(call)
+    if call.get("id"):
+        tool_call["id"] = call["id"]
+    return tool_call
 
 
 def sequentialize_action_window(
@@ -44,7 +51,7 @@ def sequentialize_action_window(
         target = {
             "role": "assistant",
             "content": "",
-            "tool_calls": [public_tool_call(call)],
+            "tool_calls": [public_tool_call_for_target(call)],
         }
         examples.append(
             {
@@ -54,7 +61,13 @@ def sequentialize_action_window(
             }
         )
 
-        working_history.append(copy.deepcopy(target))
+        working_history.append(
+            {
+                "role": "assistant",
+                "content": "",
+                "tool_calls": [public_tool_call_for_history(call)],
+            }
+        )
         if call_id and call_id in tools_by_id:
             working_history.append(copy.deepcopy(tools_by_id[call_id]))
 

@@ -24,17 +24,27 @@ The experiment code lives in:
 experiments/glm52_qwen08_distill/
 ```
 
-The generated processed dataset artifacts included on this branch are:
+The branch intentionally commits only experiment code, configs, README files, and empty `data/` placeholders. Raw hosted-eval traces, processed JSONL datasets, and generated reports are local artifacts and remain ignored by Git.
+
+Local outputs use these paths:
 
 ```text
-data/raw_traces/glm52/glm52_raw_traces_pages.json
+data/raw_traces/glm52/
 data/processed_traces/glm52_qwen08/glm52_perfect_raw_actions.jsonl
 data/processed_traces/glm52_qwen08/glm52_perfect_sequential_actions.jsonl
 data/reports/glm52_qwen08/perfect_dataset_report.json
 data/reports/glm52_qwen08/perfect_dataset_report.md
 ```
 
-Current build summary:
+The current builder creates an intermediate action-window dataset:
+
+```json
+{"messages": [...], "target": {...}, "metadata": {...}}
+```
+
+This is for inspection and conversion. Add a dedicated exporter before hosted training to convert it into the exact Prime SFT format.
+
+Observed local build summary:
 
 | Metric | Value |
 | --- | ---: |
@@ -50,7 +60,7 @@ Rebuild the dataset from hosted-eval page exports with:
 
 ```bash
 python experiments/glm52_qwen08_distill/build_dataset.py \
-  --input-dir data/raw_traces/glm52/glm52_raw_traces_pages.json \
+  --input-dir data/raw_traces/glm52 \
   --output-dir data/processed_traces/glm52_qwen08 \
   --report-dir data/reports/glm52_qwen08 \
   --teacher glm-5.2 \
@@ -61,7 +71,7 @@ python experiments/glm52_qwen08_distill/build_dataset.py \
   --write-sequential
 ```
 
-`glm52_raw_traces_pages.json` is a single-file bundle of the 20 hosted-eval page exports. The original page-export folder remains a local research input and is not required for rebuilding this branch's committed dataset.
+Strict quality is the default. With the current local traces, the script writes the report and refuses JSONL output until the three absolute-path target windows are audited, or until the run is explicitly marked analysis-only with `--allow-quality-warnings`.
 
 ## System Design
 

@@ -10,7 +10,7 @@ The target behavior is not full trace memorization. The dataset turns successful
 inspect -> read relevant files -> write/edit -> run public check -> read artifact -> submit
 ```
 
-The first experiment extracts only perfect-reward GLM-5.2 traces and converts assistant tool-call turns into SFT-ready action windows.
+The first experiment extracts only perfect-reward GLM-5.2 traces and converts assistant tool-call turns into intermediate action windows. These examples are not yet a Prime trainer-ready dataset; add an exporter before hosted SFT.
 
 ## Teacher Run
 
@@ -44,19 +44,13 @@ data/raw_traces/glm52/samples-page-20.json
 
 The loader reads `*.json` files with `utf-8-sig` encoding and skips JSON files that do not contain a `samples` list.
 
-This branch also includes a single-file raw trace bundle:
-
-```text
-data/raw_traces/glm52/glm52_raw_traces_pages.json
-```
-
-The builder can use either the original page-export directory or this bundled raw trace JSON file as `--input-dir`.
+The builder can also read a single JSON file containing either a `samples` list or a `pages` list, but raw trace bundles should remain local and ignored.
 
 ## Build Command
 
 ```bash
 python experiments/glm52_qwen08_distill/build_dataset.py \
-  --input-dir data/raw_traces/glm52/glm52_raw_traces_pages.json \
+  --input-dir data/raw_traces/glm52 \
   --output-dir data/processed_traces/glm52_qwen08 \
   --report-dir data/reports/glm52_qwen08 \
   --teacher glm-5.2 \
@@ -66,6 +60,8 @@ python experiments/glm52_qwen08_distill/build_dataset.py \
   --write-raw \
   --write-sequential
 ```
+
+The default quality gate writes a report but refuses JSONL output when critical issues are found. Use `--allow-quality-warnings` only for analysis-only dataset output after reviewing the audit section.
 
 Use `--dry-run` to inspect stats without writing datasets or reports. Use `inspect_traces.py` for the same dry-run path:
 
@@ -92,6 +88,22 @@ data/reports/glm52_qwen08/perfect_dataset_report.md
 
 Variant A keeps raw assistant action turns, including multi-tool targets. Variant B splits multi-tool assistant turns into single-tool targets and appends aligned tool observations to later split-window histories when `tool_call_id` matching is available.
 
+The JSONL shape is:
+
+```json
+{"messages": [...], "target": {...}, "metadata": {...}}
+```
+
+That shape is intentionally inspectable and intermediate. Before hosted training, add an `export_prime_sft.py` converter for the exact trainer format, such as `{"messages": [..., target_assistant_message]}` or prompt-completion JSONL.
+
+This branch includes a first messages-format exporter:
+
+```bash
+python experiments/glm52_qwen08_distill/export_prime_sft.py \
+  --input-jsonl data/processed_traces/glm52_qwen08/glm52_perfect_sequential_actions.jsonl \
+  --output-jsonl data/processed_traces/glm52_qwen08/glm52_perfect_sequential_prime_sft.jsonl
+```
+
 ## Safety
 
 Do not commit raw hosted-eval traces, generated JSONL datasets, model checkpoints, adapters, logs, WandB outputs, or report outputs under `data/`.
@@ -105,3 +117,4 @@ Only commit scripts, configs, README files, small synthetic fixtures, report tem
 3. Prefer the sequentialized variant if raw targets contain frequent multi-tool calls.
 4. Build a scenario-balanced partial-trace variant if perfect-only coverage is sparse.
 5. Later, add recovery-state examples from Qwen failure traces before launching training.
+6. Add a Prime SFT exporter once the intermediate dataset has passed quality review.

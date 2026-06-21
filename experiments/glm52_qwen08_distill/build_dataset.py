@@ -4,7 +4,8 @@ import argparse
 import copy
 import json
 import math
-from collections import Counter, defaultdict
+import sys
+from collections import Counter
 from pathlib import Path
 from typing import Any
 
@@ -12,13 +13,17 @@ from metrics import (
     ALLOWED_TOOLS,
     FOCUS_SCENARIOS,
     counter_to_dict,
-    find_absolute_path_values,
+    find_absolute_path_entries,
     format_reward,
     invalid_run_python_path,
     numeric_stats,
     summarize_examples,
 )
-from sequentialize_tools import public_tool_call, sequentialize_action_window
+from sequentialize_tools import (
+    public_tool_call_for_history,
+    public_tool_call_for_target,
+    sequentialize_action_window,
+)
 
 DEFAULT_EVAL_ID = "kxhqr8w6kxeficm93rp7s5k6"
 RAW_FILENAME = "glm52_perfect_raw_actions.jsonl"
@@ -52,9 +57,10 @@ class TraceFormatError(ValueError):
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Build GLM-5.2 perfect-trace SFT action datasets.")
-    parser.add_argument("--input-dir", type=Path, required=True)
-    parser.add_argument("--output-dir", type=Path, required=True)
-    parser.add_argument("--report-dir", type=Path, required=True)
+    parser.add_argument("--config", type=Path)
+    parser.add_argument("--input-dir", type=Path)
+    parser.add_argument("--output-dir", type=Path)
+    parser.add_argument("--report-dir", type=Path)
     parser.add_argument("--teacher", default="glm-5.2")
     parser.add_argument("--student", default="Qwen/Qwen3.5-0.8B")
     parser.add_argument("--eval-id", default=DEFAULT_EVAL_ID)
@@ -66,7 +72,55 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--verbose", action="store_true")
     parser.add_argument("--allow-non-390", action="store_true")
-    return parser.parse_args(argv)
+    parser.add_argument("--allow-quality-warnings", action="store_true")
+    parser.add_argument("--strict-quality", action="store_true", default=True)
+
+    config_parser = argparse.ArgumentParser(add_help=False)
+    config_parser.add_argument("--config", type=Path)
+    config_args, _ = config_parser.parse_known_args(argv)
+    if config_args.config:
+        parser.set_defaults(**load_config_defaults(config_args.config))
+
+    args = parser.parse_args(argv)
+    missing = [
+        name
+        for name in ("input_dir", "output_dir", "report_dir")
+        if getattr(args, name) is None
+    ]
+    if missing:
+        parser.error("missing required arguments: " + ", ".join("--" + name.replace("_", "-") for name in missing))
+    return args
+
+
+def load_config_defaults(path: Path) -> dict[str, Any]:
+    defaults: dict[str, Any] = {}
+    if not path.exists():
+        raise FileNotFoundError(f"Config file does not exist: {path}")
+    for line_number, raw_line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+        line = raw_line.strip()
+        if not line or line.startswith("#"):
+            continue
+        if ":" not in line:
+            raise TraceFormatError(f"{path}:{line_number} is not a simple key: value YAML line")
+        key, value = line.split(":", 1)
+        key = key.strip().replace("-", "_")
+        value = value.strip()
+        if not value:
+            continue
+        if value.lower() in {"true", "false"}:
+            parsed: Any = value.lower() == "true"
+        else:
+            try:
+                parsed = int(value)
+            except ValueError:
+                try:
+                    parsed = float(value)
+                except ValueError:
+                    parsed = value.strip("'\"")
+        if key in {"input_dir", "output_dir", "report_dir"}:
+            parsed = Path(str(parsed))
+        defaults[key] = parsed
+    return defaults
 
 
 def get_nested(mapping: dict[str, Any], path: tuple[str, ...]) -> Any:
@@ -338,7 +392,13 @@ def normalize_tool_calls(value: Any, quality: Counter[str]) -> list[dict[str, An
     return calls
 
 
-def validate_target_calls(calls: list[dict[str, Any]], quality: Counter[str]) -> bool:
+def validate_target_calls(
+    calls: list[dict[str, Any]],
+    quality: Counter[str],
+    audit: list[dict[str, Any]],
+    metadata: dict[str, Any],
+    target_index: int,
+) -> bool:
     valid = True
     for call in calls:
         name = call["name"]
@@ -346,10 +406,22 @@ def validate_target_calls(calls: list[dict[str, Any]], quality: Counter[str]) ->
         if name not in ALLOWED_TOOLS:
             quality["unknown_tools"] += 1
             valid = False
-        absolute_paths = find_absolute_path_values(arguments)
+        absolute_paths = find_absolute_path_entries(arguments)
         if absolute_paths:
             quality["absolute_path_attempts"] += len(absolute_paths)
             valid = False
+            for entry in absolute_paths:
+                audit.append(
+                    {
+                        "example_id": metadata.get("example_id"),
+                        "trace_id": metadata.get("trace_id"),
+                        "scenario": metadata.get("scenario"),
+                        "target_index": target_index,
+                        "tool": name,
+                        "argument_path": entry["argument_path"],
+                        "value": entry["value"],
+                    }
+                )
         if name == "run_python" and invalid_run_python_path(arguments):
             quality["invalid_run_python_calls"] += 1
             valid = False
@@ -372,7 +444,7 @@ def clean_message(message: dict[str, Any], quality: Counter[str], count_reasonin
     calls = normalize_tool_calls(message.get("tool_calls"), quality)
     if role == "assistant" and calls:
         cleaned["content"] = ""
-        cleaned["tool_calls"] = [public_tool_call(call) for call in calls]
+        cleaned["tool_calls"] = [public_tool_call_for_history(call) for call in calls]
     return cleaned
 
 
@@ -441,6 +513,7 @@ def build_examples(samples: list[dict[str, Any]], args: argparse.Namespace) -> t
     rewards: list[float] = []
     reward_distribution: Counter[str] = Counter()
     selected_trace_ids: set[str] = set()
+    absolute_path_examples: list[dict[str, Any]] = []
 
     for sample in samples:
         try:
@@ -476,11 +549,11 @@ def build_examples(samples: list[dict[str, Any]], args: argparse.Namespace) -> t
                 assistant_history_message = {
                     "role": "assistant",
                     "content": "",
-                    "tool_calls": [public_tool_call(call) for call in calls],
+                    "tool_calls": [public_tool_call_for_history(call) for call in calls],
                 } if calls else clean_message(message, quality, count_reasoning=False)
 
                 if calls:
-                    if validate_target_calls(calls, quality):
+                    if validate_target_calls(calls, quality, absolute_path_examples, metadata, index):
                         raw_metadata = copy.deepcopy(metadata)
                         raw_metadata["raw_multi_tool"] = len(calls) > 1
                         raw_example = {
@@ -488,7 +561,7 @@ def build_examples(samples: list[dict[str, Any]], args: argparse.Namespace) -> t
                             "target": {
                                 "role": "assistant",
                                 "content": "",
-                                "tool_calls": [public_tool_call(call) for call in calls],
+                                "tool_calls": [public_tool_call_for_target(call) for call in calls],
                             },
                             "metadata": raw_metadata,
                         }
@@ -510,6 +583,8 @@ def build_examples(samples: list[dict[str, Any]], args: argparse.Namespace) -> t
                             validate_written_example(split_example)
                         sequential_examples.extend(split_examples)
                         sequential_examples_by_scenario[scenario] += len(split_examples)
+                    else:
+                        quality["invalid_target_windows_excluded"] += 1
                     history.append(assistant_history_message)
                 else:
                     if str(message.get("content", "")).strip():
@@ -536,6 +611,7 @@ def build_examples(samples: list[dict[str, Any]], args: argparse.Namespace) -> t
         "sequential_examples_by_scenario": sequential_examples_by_scenario,
         "duplicate_example_ids": duplicate_example_ids,
         "duplicate_trace_ids": duplicate_trace_ids,
+        "absolute_path_examples": absolute_path_examples,
     }
     return raw_examples, sequential_examples, build_info
 
@@ -596,6 +672,7 @@ def build_report(
         "duplicate_example_ids": build_info["duplicate_example_ids"],
         "duplicate_trace_ids": build_info["duplicate_trace_ids"],
         "sequentialization_warnings": quality["sequentialization_warnings"],
+        "invalid_target_windows_excluded": quality["invalid_target_windows_excluded"],
     }
     recommendation = make_recommendation(
         raw_examples,
@@ -621,6 +698,7 @@ def build_report(
             "sequential": summarize_examples(sequential_examples),
         },
         "data_quality_stats": data_quality,
+        "absolute_path_examples": build_info["absolute_path_examples"],
         "scenario_coverage": scenario_coverage,
         "coverage_warnings": {
             "low_coverage_scenarios": low_coverage,
@@ -696,6 +774,16 @@ def render_markdown_report(report: dict[str, Any]) -> str:
     ]
     for key, value in quality.items():
         lines.append(f"- {key}: {value}")
+    if report["absolute_path_examples"]:
+        lines.extend(["", "### Absolute Path Examples", ""])
+        lines.append("| example_id | scenario | target_index | tool | argument_path | value |")
+        lines.append("| ---: | --- | ---: | --- | --- | --- |")
+        for item in report["absolute_path_examples"]:
+            value = str(item["value"]).replace("|", "\\|").replace("\n", " ")
+            lines.append(
+                f"| {item['example_id']} | {item['scenario']} | {item['target_index']} | "
+                f"{item['tool']} | {item['argument_path']} | `{value}` |"
+            )
     lines.extend(
         [
             "",
@@ -779,8 +867,19 @@ def print_summary(load_info: dict[str, Any], report: dict[str, Any], args: argpa
     print(f"Invalid run_python calls: {quality['invalid_run_python_calls']}")
     if args.dry_run:
         print("Dry run completed; no datasets or reports were written.")
+    elif critical_quality_count(quality) and not args.allow_quality_warnings:
+        print("Quality gate failed; report was written but datasets were not written.")
     else:
         print("Wrote dataset and report successfully.")
+
+
+def critical_quality_count(quality: dict[str, Any]) -> int:
+    return (
+        int(quality["malformed_tool_calls"])
+        + int(quality["unknown_tools"])
+        + int(quality["absolute_path_attempts"])
+        + int(quality["invalid_run_python_calls"])
+    )
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -792,13 +891,20 @@ def main(argv: list[str] | None = None) -> int:
 
     raw_examples, sequential_examples, build_info = build_examples(samples, args)
     report = build_report(samples, load_info, raw_examples, sequential_examples, build_info, args)
+    quality = report["data_quality_stats"]
+    quality_failed = bool(critical_quality_count(quality)) and not args.allow_quality_warnings
 
     if not args.dry_run:
+        write_report(args.report_dir, report)
+        if quality_failed and (args.write_raw or args.write_sequential):
+            print_summary(load_info, report, args)
+            print("Refusing to write JSONL datasets because critical quality issues were found.", file=sys.stderr)
+            print("Inspect the report, or rerun with --allow-quality-warnings for analysis-only dataset output.", file=sys.stderr)
+            return 2
         if args.write_raw:
             write_jsonl(args.output_dir / RAW_FILENAME, raw_examples)
         if args.write_sequential:
             write_jsonl(args.output_dir / SEQUENTIAL_FILENAME, sequential_examples)
-        write_report(args.report_dir, report)
 
     print_summary(load_info, report, args)
     return 0

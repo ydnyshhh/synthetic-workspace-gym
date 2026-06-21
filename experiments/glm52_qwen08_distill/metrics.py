@@ -99,6 +99,26 @@ def looks_like_absolute_path(value: str) -> bool:
     return bool(re.search(r"(^|\s)(/[^\s]+|[A-Za-z]:[\\/][^\s]+|\\\\[^\s]+)", text))
 
 
+def find_absolute_path_entries(value: Any, path: str = "") -> list[dict[str, str]]:
+    if path.endswith(".content") or path == "content":
+        return []
+    if isinstance(value, dict):
+        found: list[dict[str, str]] = []
+        for child_key, child_value in value.items():
+            child_path = f"{path}.{child_key}" if path else str(child_key)
+            found.extend(find_absolute_path_entries(child_value, child_path))
+        return found
+    if isinstance(value, list):
+        found = []
+        for index, item in enumerate(value):
+            child_path = f"{path}[{index}]" if path else f"[{index}]"
+            found.extend(find_absolute_path_entries(item, child_path))
+        return found
+    if isinstance(value, str) and looks_like_absolute_path(value):
+        return [{"argument_path": path, "value": value}]
+    return []
+
+
 def find_absolute_path_values(value: Any, key: str = "") -> list[str]:
     if key == "content":
         return []
