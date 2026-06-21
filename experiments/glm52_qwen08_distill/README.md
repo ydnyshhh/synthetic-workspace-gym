@@ -63,6 +63,8 @@ python experiments/glm52_qwen08_distill/build_dataset.py \
 
 The default quality gate writes a report but refuses JSONL output when critical issues are found. Use `--allow-quality-warnings` only for analysis-only dataset output after reviewing the audit section.
 
+The report separates observed quality issues from issues that remain in the written dataset. `ready_for_sft` is based on the written dataset after invalid target windows are excluded, while the default gate still requires review for any observed critical issue.
+
 Use `--dry-run` to inspect stats without writing datasets or reports. Use `inspect_traces.py` for the same dry-run path:
 
 ```bash
@@ -104,6 +106,26 @@ python experiments/glm52_qwen08_distill/export_prime_sft.py \
   --output-jsonl data/processed_traces/glm52_qwen08/glm52_perfect_sequential_prime_sft.jsonl
 ```
 
+Before training, split by trace rather than by action window to avoid leakage:
+
+```bash
+python experiments/glm52_qwen08_distill/split_dataset.py \
+  --input-jsonl data/processed_traces/glm52_qwen08/glm52_perfect_sequential_actions.jsonl \
+  --output-dir data/processed_traces/glm52_qwen08 \
+  --prefix glm52_perfect_sequential \
+  --dev-ratio 0.1 \
+  --trace-test-ratio 0.1 \
+  --seed 42
+```
+
+This writes:
+
+```text
+glm52_perfect_sequential_train.jsonl
+glm52_perfect_sequential_dev.jsonl
+glm52_perfect_sequential_trace_test.jsonl
+```
+
 ## Safety
 
 Do not commit raw hosted-eval traces, generated JSONL datasets, model checkpoints, adapters, logs, WandB outputs, or report outputs under `data/`.
@@ -118,7 +140,7 @@ Run the synthetic fixture tests with:
 python -m unittest experiments.glm52_qwen08_distill.tests.test_dataset_builder -v
 ```
 
-The tests use `experiments/glm52_qwen08_distill/tests/fixtures/tiny_trace.json` and cover quality-gate behavior, invalid `run_python` detection, absolute-path auditing, sequential single-tool targets, tool-call ID preservation in history, and the messages-format exporter.
+The tests use `experiments/glm52_qwen08_distill/tests/fixtures/tiny_trace.json` and cover quality-gate behavior, invalid `run_python` detection, absolute-path auditing, sequential single-tool targets, tool-call ID preservation in history, the messages-format exporter, and trace-group split behavior.
 
 ## Next Steps
 

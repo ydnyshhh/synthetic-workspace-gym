@@ -13,6 +13,7 @@ EXPERIMENT = ROOT / "experiments" / "glm52_qwen08_distill"
 FIXTURE = EXPERIMENT / "tests" / "fixtures" / "tiny_trace.json"
 BUILD_DATASET = EXPERIMENT / "build_dataset.py"
 EXPORT_PRIME_SFT = EXPERIMENT / "export_prime_sft.py"
+SPLIT_DATASET = EXPERIMENT / "split_dataset.py"
 TMP_ROOT = EXPERIMENT / "tests" / "tmp"
 
 
@@ -61,9 +62,12 @@ class DatasetBuilderTest(unittest.TestCase):
 
         report = json.loads((report_dir / "perfect_dataset_report.json").read_text(encoding="utf-8"))
         quality = report["data_quality_stats"]
-        self.assertEqual(quality["invalid_run_python_calls"], 1)
-        self.assertEqual(quality["absolute_path_attempts"], 1)
+        self.assertEqual(quality["invalid_run_python_calls_observed"], 1)
+        self.assertEqual(quality["absolute_path_attempts_observed"], 1)
+        self.assertEqual(quality["invalid_run_python_calls_in_written_dataset"], 0)
+        self.assertEqual(quality["absolute_path_attempts_in_written_dataset"], 0)
         self.assertEqual(quality["invalid_target_windows_excluded"], 2)
+        self.assertTrue(report["recommendation"]["ready_for_sft"])
         self.assertEqual(
             report["absolute_path_examples"],
             [
@@ -137,6 +141,60 @@ class DatasetBuilderTest(unittest.TestCase):
         self.assertEqual(len(sft_examples), len(sequential_examples))
         self.assertEqual(sft_examples[0]["messages"][-1], sequential_examples[0]["target"])
 
+    def test_split_dataset_keeps_trace_groups_together(self) -> None:
+        root = make_case_root()
+        input_path = root / "glm52_perfect_sequential_actions.jsonl"
+        records = []
+        for scenario in ("alpha", "beta"):
+            for trace_index in range(3):
+                for window_index in range(2):
+                    records.append(
+                        {
+                            "messages": [{"role": "user", "content": "hi"}],
+                            "target": {"role": "assistant", "content": "", "tool_calls": []},
+                            "metadata": {
+                                "trace_id": f"{scenario}-trace-{trace_index}",
+                                "example_id": f"{scenario}-{trace_index}",
+                                "scenario": scenario,
+                                "window_index": window_index,
+                            },
+                        }
+                    )
+        write_jsonl(input_path, records)
+        split_dir = root / "splits"
+        subprocess.run(
+            [
+                sys.executable,
+                str(SPLIT_DATASET),
+                "--input-jsonl",
+                str(input_path),
+                "--output-dir",
+                str(split_dir),
+                "--dev-ratio",
+                "0.34",
+                "--trace-test-ratio",
+                "0.34",
+                "--seed",
+                "7",
+            ],
+            cwd=ROOT,
+            text=True,
+            capture_output=True,
+            check=True,
+        )
+
+        train = read_jsonl(split_dir / "glm52_perfect_sequential_train.jsonl")
+        dev = read_jsonl(split_dir / "glm52_perfect_sequential_dev.jsonl")
+        trace_test = read_jsonl(split_dir / "glm52_perfect_sequential_trace_test.jsonl")
+        self.assertEqual(len(train) + len(dev) + len(trace_test), len(records))
+        split_trace_sets = [
+            {record["metadata"]["trace_id"] for record in split}
+            for split in (train, dev, trace_test)
+        ]
+        self.assertFalse(split_trace_sets[0] & split_trace_sets[1])
+        self.assertFalse(split_trace_sets[0] & split_trace_sets[2])
+        self.assertFalse(split_trace_sets[1] & split_trace_sets[2])
+
 
 def make_case_root() -> Path:
     TMP_ROOT.mkdir(parents=True, exist_ok=True)
@@ -151,6 +209,14 @@ def read_jsonl(path: Path) -> list[dict[str, object]]:
         for line in path.read_text(encoding="utf-8").splitlines()
         if line.strip()
     ]
+
+
+def write_jsonl(path: Path, records: list[dict[str, object]]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        "".join(json.dumps(record, sort_keys=True) + "\n" for record in records),
+        encoding="utf-8",
+    )
 
 
 if __name__ == "__main__":

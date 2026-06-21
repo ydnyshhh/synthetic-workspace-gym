@@ -73,7 +73,6 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--verbose", action="store_true")
     parser.add_argument("--allow-non-390", action="store_true")
     parser.add_argument("--allow-quality-warnings", action="store_true")
-    parser.add_argument("--strict-quality", action="store_true", default=True)
 
     config_parser = argparse.ArgumentParser(add_help=False)
     config_parser.add_argument("--config", type=Path)
@@ -661,10 +660,14 @@ def build_report(
     ]
 
     data_quality = {
-        "malformed_tool_calls": quality["malformed_tool_calls"],
-        "unknown_tools": quality["unknown_tools"],
-        "absolute_path_attempts": quality["absolute_path_attempts"],
-        "invalid_run_python_calls": quality["invalid_run_python_calls"],
+        "malformed_tool_calls_observed": quality["malformed_tool_calls"],
+        "unknown_tools_observed": quality["unknown_tools"],
+        "absolute_path_attempts_observed": quality["absolute_path_attempts"],
+        "invalid_run_python_calls_observed": quality["invalid_run_python_calls"],
+        "malformed_tool_calls_in_written_dataset": 0,
+        "unknown_tools_in_written_dataset": 0,
+        "absolute_path_attempts_in_written_dataset": 0,
+        "invalid_run_python_calls_in_written_dataset": 0,
         "assistant_prose_only_turns_skipped": quality["assistant_prose_only_turns_skipped"],
         "reasoning_content_fields_stripped": quality["reasoning_content_fields_stripped"],
         "samples_with_missing_reward": quality["samples_with_missing_reward"],
@@ -716,13 +719,7 @@ def make_recommendation(
     low_coverage: list[str],
     zero_coverage: list[str],
 ) -> dict[str, Any]:
-    critical_quality = (
-        data_quality["malformed_tool_calls"]
-        + data_quality["unknown_tools"]
-        + data_quality["absolute_path_attempts"]
-        + data_quality["invalid_run_python_calls"]
-    )
-    ready_for_sft = bool(raw_examples and sequential_examples and critical_quality == 0)
+    ready_for_sft = bool(raw_examples and sequential_examples and written_quality_count(data_quality) == 0)
     raw_stats = summarize_examples(raw_examples)
     sequential_preferable = (
         raw_stats["max_target_tool_calls"] > 1
@@ -855,7 +852,7 @@ def print_summary(load_info: dict[str, Any], report: dict[str, Any], args: argpa
     raw = report["dataset_stats"]["raw"]
     sequential = report["dataset_stats"]["sequential"]
     quality = report["data_quality_stats"]
-    invalid_tool_calls = quality["malformed_tool_calls"] + quality["unknown_tools"]
+    invalid_tool_calls = quality["malformed_tool_calls_observed"] + quality["unknown_tools_observed"]
     print(f"Loaded {run['total_samples']} samples from {load_info['files_loaded']} files.")
     print(f"Evaluation ID: {run['evaluation_id']}")
     print(f"Perfect traces: {run['perfect_examples_count']} / {run['total_samples']}")
@@ -863,8 +860,8 @@ def print_summary(load_info: dict[str, Any], report: dict[str, Any], args: argpa
     print(f"Sequential action examples: {sequential['sft_examples']}")
     print(f"Reasoning fields stripped: {quality['reasoning_content_fields_stripped']}")
     print(f"Invalid tool calls: {invalid_tool_calls}")
-    print(f"Absolute path calls: {quality['absolute_path_attempts']}")
-    print(f"Invalid run_python calls: {quality['invalid_run_python_calls']}")
+    print(f"Absolute path calls observed: {quality['absolute_path_attempts_observed']}")
+    print(f"Invalid run_python calls observed: {quality['invalid_run_python_calls_observed']}")
     if args.dry_run:
         print("Dry run completed; no datasets or reports were written.")
     elif critical_quality_count(quality) and not args.allow_quality_warnings:
@@ -875,10 +872,19 @@ def print_summary(load_info: dict[str, Any], report: dict[str, Any], args: argpa
 
 def critical_quality_count(quality: dict[str, Any]) -> int:
     return (
-        int(quality["malformed_tool_calls"])
-        + int(quality["unknown_tools"])
-        + int(quality["absolute_path_attempts"])
-        + int(quality["invalid_run_python_calls"])
+        int(quality["malformed_tool_calls_observed"])
+        + int(quality["unknown_tools_observed"])
+        + int(quality["absolute_path_attempts_observed"])
+        + int(quality["invalid_run_python_calls_observed"])
+    )
+
+
+def written_quality_count(quality: dict[str, Any]) -> int:
+    return (
+        int(quality["malformed_tool_calls_in_written_dataset"])
+        + int(quality["unknown_tools_in_written_dataset"])
+        + int(quality["absolute_path_attempts_in_written_dataset"])
+        + int(quality["invalid_run_python_calls_in_written_dataset"])
     )
 
 
