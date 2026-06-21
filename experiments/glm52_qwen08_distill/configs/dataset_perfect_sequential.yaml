@@ -1,0 +1,10 @@
+input_dir: data/raw_traces/glm52
+output_dir: data/processed_traces/glm52_qwen08
+report_dir: data/reports/glm52_qwen08
+teacher: glm-5.2
+student: Qwen/Qwen3.5-0.8B
+eval_id: kxhqr8w6kxeficm93rp7s5k6
+reward_filter: perfect
+write_raw: false
+write_sequential: true
+sequential_output: glm52_perfect_sequential_actions.jsonl

@@ -13,3 +13,12 @@ smoke-generated/
 smoke-episodes/
 scratch-check/
 debug-*/
+data/raw_traces/
+data/processed_traces/
+data/reports/
+*.jsonl
+*.parquet
+*.arrow
+outputs/
+checkpoints/
+wandb/
