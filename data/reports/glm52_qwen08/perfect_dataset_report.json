@@ -1,0 +1,258 @@
+{
+  "coverage_warnings": {
+    "focus_scenario_warnings": [
+      {
+        "action_examples_raw": 0,
+        "action_examples_sequential": 0,
+        "perfect_traces": 0,
+        "scenario": "migration_plan_bundle",
+        "total_traces": 30
+      }
+    ],
+    "low_coverage_scenarios": [
+      "migration_plan_bundle"
+    ],
+    "zero_coverage_scenarios": [
+      "migration_plan_bundle"
+    ]
+  },
+  "data_quality_stats": {
+    "absolute_path_attempts": 3,
+    "assistant_prose_only_turns_skipped": 0,
+    "duplicate_example_ids": 0,
+    "duplicate_trace_ids": 0,
+    "invalid_run_python_calls": 0,
+    "malformed_tool_calls": 0,
+    "reasoning_content_fields_stripped": 825,
+    "samples_with_missing_reward": 0,
+    "samples_with_missing_task_metadata": 0,
+    "sequentialization_warnings": 0,
+    "unknown_tools": 0
+  },
+  "dataset_stats": {
+    "raw": {
+      "avg_examples_per_trace": 6.855263157894737,
+      "avg_history_messages": 12.617562380038388,
+      "avg_target_tool_calls": 2.036468330134357,
+      "count_by_difficulty": {
+        "2": 703,
+        "3": 691,
+        "4": 690
+      },
+      "count_by_family": {
+        "pipeline": 678,
+        "retrieval_workspace": 297,
+        "script_repair": 707,
+        "tabular": 402
+      },
+      "count_by_scenario": {
+        "artifact_stitch_pipeline": 260,
+        "channel_status_pivot": 58,
+        "csv_schema_drift": 195,
+        "incident_report_bundle": 175,
+        "inventory_report": 222,
+        "monthly_segment_report": 175,
+        "path_batch": 186,
+        "sales_csv_pipeline": 207,
+        "service_config_reconciliation": 122,
+        "team_hours_pipeline": 211,
+        "timestamp_normalization": 104,
+        "weekly_refund_rollup": 169
+      },
+      "count_by_target_tool_name": {
+        "list_directory": 1044,
+        "read_file": 2152,
+        "run_python": 72,
+        "run_shell": 217,
+        "submit": 305,
+        "write_file": 454
+      },
+      "max_history_messages": 37,
+      "max_target_tool_calls": 8,
+      "run_python_targets": 72,
+      "run_shell_targets": 217,
+      "sft_examples": 2084,
+      "submit_targets": 305,
+      "traces_used": 304,
+      "write_file_targets": 454
+    },
+    "sequential": {
+      "avg_examples_per_trace": 13.960526315789474,
+      "avg_history_messages": 12.266729500471254,
+      "avg_target_tool_calls": 1.0,
+      "count_by_difficulty": {
+        "2": 1323,
+        "3": 1443,
+        "4": 1478
+      },
+      "count_by_family": {
+        "pipeline": 1509,
+        "retrieval_workspace": 801,
+        "script_repair": 1296,
+        "tabular": 638
+      },
+      "count_by_scenario": {
+        "artifact_stitch_pipeline": 579,
+        "channel_status_pivot": 93,
+        "csv_schema_drift": 373,
+        "incident_report_bundle": 470,
+        "inventory_report": 393,
+        "monthly_segment_report": 281,
+        "path_batch": 355,
+        "sales_csv_pipeline": 466,
+        "service_config_reconciliation": 331,
+        "team_hours_pipeline": 464,
+        "timestamp_normalization": 175,
+        "weekly_refund_rollup": 264
+      },
+      "count_by_target_tool_name": {
+        "list_directory": 1044,
+        "read_file": 2152,
+        "run_python": 72,
+        "run_shell": 217,
+        "submit": 305,
+        "write_file": 454
+      },
+      "max_history_messages": 37,
+      "max_target_tool_calls": 1,
+      "run_python_targets": 72,
+      "run_shell_targets": 217,
+      "sft_examples": 4244,
+      "submit_targets": 305,
+      "traces_used": 304,
+      "write_file_targets": 454
+    }
+  },
+  "recommendation": {
+    "next_dataset_variant": "Build a scenario-balanced partial-trace dataset that adds high-reward non-perfect traces for sparse scenarios.",
+    "perfect_only_coverage_too_sparse": true,
+    "ready_for_sft": false,
+    "sequentialized_variant_preferable": true
+  },
+  "run_level_stats": {
+    "evaluation_id": "kxhqr8w6kxeficm93rp7s5k6",
+    "max": 1.0,
+    "mean": 0.9166604692307693,
+    "median": 1.0,
+    "min": 0.333333,
+    "non_perfect_count": 86,
+    "perfect_examples_count": 304,
+    "reward_distribution": {
+      "0.333333": 1,
+      "0.4": 22,
+      "0.5": 5,
+      "0.548849": 1,
+      "0.560588": 1,
+      "0.565325": 1,
+      "0.570588": 4,
+      "0.57647": 1,
+      "0.583088": 1,
+      "0.654011": 1,
+      "0.666667": 16,
+      "0.694117": 1,
+      "0.752941": 2,
+      "0.76": 2,
+      "0.781176": 1,
+      "0.782353": 12,
+      "0.812941": 4,
+      "0.828572": 10,
+      "1": 304
+    },
+    "total_files_loaded": 20,
+    "total_samples": 390,
+    "unique_example_ids": 390
+  },
+  "scenario_coverage": [
+    {
+      "action_examples_raw": 260,
+      "action_examples_sequential": 579,
+      "perfect_traces": 30,
+      "scenario": "artifact_stitch_pipeline",
+      "total_traces": 30
+    },
+    {
+      "action_examples_raw": 58,
+      "action_examples_sequential": 93,
+      "perfect_traces": 10,
+      "scenario": "channel_status_pivot",
+      "total_traces": 30
+    },
+    {
+      "action_examples_raw": 195,
+      "action_examples_sequential": 373,
+      "perfect_traces": 30,
+      "scenario": "csv_schema_drift",
+      "total_traces": 30
+    },
+    {
+      "action_examples_raw": 175,
+      "action_examples_sequential": 470,
+      "perfect_traces": 28,
+      "scenario": "incident_report_bundle",
+      "total_traces": 30
+    },
+    {
+      "action_examples_raw": 222,
+      "action_examples_sequential": 393,
+      "perfect_traces": 29,
+      "scenario": "inventory_report",
+      "total_traces": 30
+    },
+    {
+      "action_examples_raw": 0,
+      "action_examples_sequential": 0,
+      "perfect_traces": 0,
+      "scenario": "migration_plan_bundle",
+      "total_traces": 30
+    },
+    {
+      "action_examples_raw": 175,
+      "action_examples_sequential": 281,
+      "perfect_traces": 30,
+      "scenario": "monthly_segment_report",
+      "total_traces": 30
+    },
+    {
+      "action_examples_raw": 186,
+      "action_examples_sequential": 355,
+      "perfect_traces": 25,
+      "scenario": "path_batch",
+      "total_traces": 30
+    },
+    {
+      "action_examples_raw": 207,
+      "action_examples_sequential": 466,
+      "perfect_traces": 28,
+      "scenario": "sales_csv_pipeline",
+      "total_traces": 30
+    },
+    {
+      "action_examples_raw": 122,
+      "action_examples_sequential": 331,
+      "perfect_traces": 20,
+      "scenario": "service_config_reconciliation",
+      "total_traces": 30
+    },
+    {
+      "action_examples_raw": 211,
+      "action_examples_sequential": 464,
+      "perfect_traces": 30,
+      "scenario": "team_hours_pipeline",
+      "total_traces": 30
+    },
+    {
+      "action_examples_raw": 104,
+      "action_examples_sequential": 175,
+      "perfect_traces": 14,
+      "scenario": "timestamp_normalization",
+      "total_traces": 30
+    },
+    {
+      "action_examples_raw": 169,
+      "action_examples_sequential": 264,
+      "perfect_traces": 30,
+      "scenario": "weekly_refund_rollup",
+      "total_traces": 30
+    }
+  ]
+}
