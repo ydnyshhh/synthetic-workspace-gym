@@ -120,15 +120,17 @@ Prime tool-use SFT also needs tool definitions on each row. After exporting prom
 python experiments/glm52_qwen08_distill/scripts/add_swg_tool_defs.py `
   --input-jsonl data/processed_traces/glm52_qwen08/glm52_perfect_sequential_train_prompt_completion.jsonl `
   --output-jsonl data/processed_traces/glm52_qwen08/glm52_perfect_sequential_train_pc_tooldefs.jsonl `
-  --drop-metadata
+  --drop-metadata `
+  --openai-tool-calls
 
 python experiments/glm52_qwen08_distill/scripts/add_swg_tool_defs.py `
   --input-jsonl data/processed_traces/glm52_qwen08/glm52_perfect_sequential_dev_prompt_completion.jsonl `
   --output-jsonl data/processed_traces/glm52_qwen08/glm52_perfect_sequential_dev_pc_tooldefs.jsonl `
-  --drop-metadata
+  --drop-metadata `
+  --openai-tool-calls
 ```
 
-These rows keep only `prompt`, `completion`, and `tool_defs`. The `tool_defs` value is a list of SWG tool schemas for `read_file`, `write_file`, `append_file`, `list_directory`, `run_shell`, `run_python`, and `submit`.
+These rows keep only `prompt`, `completion`, and `tool_defs`. The `tool_defs` value is a list of SWG tool schemas for `read_file`, `write_file`, `append_file`, `list_directory`, `run_shell`, `run_python`, and `submit`. Use `--openai-tool-calls` for Prime SFT so assistant tool calls are rendered as OpenAI function calls with `type: "function"` and JSON-string `function.arguments`, instead of the simplified intermediate `name` / `arguments` shape.
 
 The messages-format exporter is also available as a schema candidate:
 

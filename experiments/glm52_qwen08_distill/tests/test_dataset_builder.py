@@ -199,6 +199,7 @@ class DatasetBuilderTest(unittest.TestCase):
                 "--output-jsonl",
                 str(tool_defs_path),
                 "--drop-metadata",
+                "--openai-tool-calls",
             ],
             cwd=ROOT,
             text=True,
@@ -211,6 +212,23 @@ class DatasetBuilderTest(unittest.TestCase):
             set(tool_defs_examples[0]),
             {"prompt", "completion", "tool_defs"},
         )
+        target_call = tool_defs_examples[0]["completion"]["tool_calls"][0]
+        self.assertEqual(target_call["type"], "function")
+        self.assertEqual(target_call["function"]["name"], sequential_examples[0]["target"]["tool_calls"][0]["name"])
+        self.assertIsInstance(target_call["function"]["arguments"], str)
+        self.assertEqual(
+            json.loads(target_call["function"]["arguments"]),
+            sequential_examples[0]["target"]["tool_calls"][0]["arguments"],
+        )
+        history_calls = [
+            call
+            for item in tool_defs_examples
+            for message in item["prompt"]
+            for call in message.get("tool_calls", [])
+        ]
+        self.assertTrue(history_calls)
+        self.assertTrue(all(call["type"] == "function" for call in history_calls))
+        self.assertTrue(any("id" in call for call in history_calls))
         tool_names = {tool["name"] for tool in tool_defs_examples[0]["tool_defs"]}
         self.assertEqual(
             tool_names,

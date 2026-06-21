@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 from pathlib import Path
 from typing import Any
@@ -138,18 +139,76 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--input-jsonl", type=Path, required=True)
     parser.add_argument("--output-jsonl", type=Path, required=True)
     parser.add_argument("--drop-metadata", action="store_true")
+    parser.add_argument(
+        "--openai-tool-calls",
+        action="store_true",
+        help="Convert assistant tool_calls to OpenAI function-calling shape.",
+    )
     return parser.parse_args()
 
 
-def convert_row(row: dict[str, Any], drop_metadata: bool) -> dict[str, Any]:
+def convert_tool_call_to_openai(call: dict[str, Any]) -> dict[str, Any]:
+    if call.get("type") == "function" and isinstance(call.get("function"), dict):
+        return copy.deepcopy(call)
+    name = call.get("name")
+    arguments = call.get("arguments", {})
+    if not isinstance(name, str) or not name:
+        raise ValueError(f"Tool call is missing a string name: {call!r}")
+    if not isinstance(arguments, dict):
+        raise ValueError(f"Tool call arguments must be an object: {call!r}")
+
+    converted = {
+        "type": "function",
+        "function": {
+            "name": name,
+            "arguments": json.dumps(arguments, ensure_ascii=False, sort_keys=True),
+        },
+    }
+    if call.get("id"):
+        converted["id"] = call["id"]
+    return converted
+
+
+def convert_message_tool_calls(message: dict[str, Any]) -> dict[str, Any]:
+    converted = copy.deepcopy(message)
+    tool_calls = converted.get("tool_calls")
+    if tool_calls is None:
+        return converted
+    if not isinstance(tool_calls, list):
+        raise ValueError(f"Message tool_calls must be a list: {message!r}")
+    converted["tool_calls"] = [
+        convert_tool_call_to_openai(call)
+        for call in tool_calls
+    ]
+    return converted
+
+
+def convert_row(
+    row: dict[str, Any],
+    drop_metadata: bool,
+    openai_tool_calls: bool,
+) -> dict[str, Any]:
     if "messages" in row:
         raise ValueError("messages key must not be present in prompt/completion input")
     if "prompt" not in row or "completion" not in row:
         raise ValueError("Input row must contain prompt and completion")
 
+    prompt = copy.deepcopy(row["prompt"])
+    completion = copy.deepcopy(row["completion"])
+    if openai_tool_calls:
+        if not isinstance(prompt, list):
+            raise ValueError("Input prompt must be a list")
+        if not isinstance(completion, dict):
+            raise ValueError("Input completion must be an object")
+        prompt = [
+            convert_message_tool_calls(message)
+            for message in prompt
+        ]
+        completion = convert_message_tool_calls(completion)
+
     out = {
-        "prompt": row["prompt"],
-        "completion": row["completion"],
+        "prompt": prompt,
+        "completion": completion,
         "tool_defs": SWG_TOOL_DEFS,
     }
     if not drop_metadata and "metadata" in row:
@@ -172,7 +231,7 @@ def main() -> int:
                     continue
                 try:
                     row = json.loads(line)
-                    out = convert_row(row, args.drop_metadata)
+                    out = convert_row(row, args.drop_metadata, args.openai_tool_calls)
                 except Exception as exc:
                     raise ValueError(f"{args.input_jsonl}:{line_number}: {exc}") from exc
                 target.write(json.dumps(out, ensure_ascii=False, sort_keys=True) + "\n")
