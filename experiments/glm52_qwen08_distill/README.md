@@ -98,7 +98,23 @@ The JSONL shape is:
 
 That shape is intentionally inspectable and intermediate.
 
-This branch includes a first generic messages-format exporter. Before hosted training, verify that its output exactly matches the current Prime SFT trainer schema.
+This branch includes two generic exporters. Prime-RL's SFT docs say prompt/completion rows mask the prompt and compute loss only over the completion, while `messages` rows train over all assistant turns and take precedence if both formats are present. For action-window distillation, prefer the prompt/completion export unless the target trainer explicitly supports final-assistant-only masking for `messages`.
+
+Use the prompt/completion exporter when you need unambiguous final-target-only supervision:
+
+```bash
+python experiments/glm52_qwen08_distill/export_prompt_completion_sft.py \
+  --input-jsonl data/processed_traces/glm52_qwen08/glm52_perfect_sequential_train.jsonl \
+  --output-jsonl data/processed_traces/glm52_qwen08/glm52_perfect_sequential_train_prompt_completion.jsonl
+```
+
+It writes records shaped as:
+
+```json
+{"prompt": [...], "completion": {"role": "assistant", "content": "", "tool_calls": [...]}, "metadata": {...}}
+```
+
+The messages-format exporter is also available as a schema candidate:
 
 ```bash
 python experiments/glm52_qwen08_distill/export_prime_sft.py \
@@ -140,7 +156,7 @@ Run the synthetic fixture tests with:
 python -m unittest experiments.glm52_qwen08_distill.tests.test_dataset_builder -v
 ```
 
-The tests use `experiments/glm52_qwen08_distill/tests/fixtures/tiny_trace.json` and cover quality-gate behavior, invalid `run_python` detection, malformed submit argument detection, absolute-path auditing, sequential single-tool targets, tool-call ID preservation in history, the messages-format exporter, and trace-group split behavior.
+The tests use `experiments/glm52_qwen08_distill/tests/fixtures/tiny_trace.json` and cover quality-gate behavior, invalid `run_python` detection, malformed submit argument detection, absolute-path auditing, sequential single-tool targets, tool-call ID preservation in history, the messages-format exporter, the prompt/completion exporter, and trace-group split behavior.
 
 ## Next Steps
 

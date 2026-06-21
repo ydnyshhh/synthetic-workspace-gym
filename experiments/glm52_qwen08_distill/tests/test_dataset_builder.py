@@ -13,6 +13,7 @@ EXPERIMENT = ROOT / "experiments" / "glm52_qwen08_distill"
 FIXTURE = EXPERIMENT / "tests" / "fixtures" / "tiny_trace.json"
 BUILD_DATASET = EXPERIMENT / "build_dataset.py"
 EXPORT_PRIME_SFT = EXPERIMENT / "export_prime_sft.py"
+EXPORT_PROMPT_COMPLETION_SFT = EXPERIMENT / "export_prompt_completion_sft.py"
 SPLIT_DATASET = EXPERIMENT / "split_dataset.py"
 TMP_ROOT = EXPERIMENT / "tests" / "tmp"
 
@@ -166,6 +167,26 @@ class DatasetBuilderTest(unittest.TestCase):
         sft_examples = read_jsonl(sft_path)
         self.assertEqual(len(sft_examples), len(sequential_examples))
         self.assertEqual(sft_examples[0]["messages"][-1], sequential_examples[0]["target"])
+
+        prompt_completion_path = root / "prompt_completion_sft.jsonl"
+        subprocess.run(
+            [
+                sys.executable,
+                str(EXPORT_PROMPT_COMPLETION_SFT),
+                "--input-jsonl",
+                str(sequential_path),
+                "--output-jsonl",
+                str(prompt_completion_path),
+            ],
+            cwd=ROOT,
+            text=True,
+            capture_output=True,
+            check=True,
+        )
+        prompt_completion_examples = read_jsonl(prompt_completion_path)
+        self.assertEqual(len(prompt_completion_examples), len(sequential_examples))
+        self.assertEqual(prompt_completion_examples[0]["prompt"], sequential_examples[0]["messages"])
+        self.assertEqual(prompt_completion_examples[0]["completion"], sequential_examples[0]["target"])
 
     def test_split_dataset_keeps_trace_groups_together(self) -> None:
         root = make_case_root()
