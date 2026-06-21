@@ -14,6 +14,7 @@ FIXTURE = EXPERIMENT / "tests" / "fixtures" / "tiny_trace.json"
 BUILD_DATASET = EXPERIMENT / "build_dataset.py"
 EXPORT_PRIME_SFT = EXPERIMENT / "export_prime_sft.py"
 EXPORT_PROMPT_COMPLETION_SFT = EXPERIMENT / "export_prompt_completion_sft.py"
+ADD_SWG_TOOL_DEFS = EXPERIMENT / "scripts" / "add_swg_tool_defs.py"
 SPLIT_DATASET = EXPERIMENT / "split_dataset.py"
 TMP_ROOT = EXPERIMENT / "tests" / "tmp"
 
@@ -187,6 +188,43 @@ class DatasetBuilderTest(unittest.TestCase):
         self.assertEqual(len(prompt_completion_examples), len(sequential_examples))
         self.assertEqual(prompt_completion_examples[0]["prompt"], sequential_examples[0]["messages"])
         self.assertEqual(prompt_completion_examples[0]["completion"], sequential_examples[0]["target"])
+
+        tool_defs_path = root / "prompt_completion_tooldefs_sft.jsonl"
+        subprocess.run(
+            [
+                sys.executable,
+                str(ADD_SWG_TOOL_DEFS),
+                "--input-jsonl",
+                str(prompt_completion_path),
+                "--output-jsonl",
+                str(tool_defs_path),
+                "--drop-metadata",
+            ],
+            cwd=ROOT,
+            text=True,
+            capture_output=True,
+            check=True,
+        )
+        tool_defs_examples = read_jsonl(tool_defs_path)
+        self.assertEqual(len(tool_defs_examples), len(sequential_examples))
+        self.assertEqual(
+            set(tool_defs_examples[0]),
+            {"prompt", "completion", "tool_defs"},
+        )
+        tool_names = {tool["name"] for tool in tool_defs_examples[0]["tool_defs"]}
+        self.assertEqual(
+            tool_names,
+            {"read_file", "write_file", "append_file", "list_directory", "run_shell", "run_python", "submit"},
+        )
+        submit_defs = [
+            tool
+            for tool in tool_defs_examples[0]["tool_defs"]
+            if tool["name"] == "submit"
+        ]
+        self.assertEqual(
+            submit_defs[0]["parameters"]["required"],
+            ["path_or_answer"],
+        )
 
     def test_split_dataset_keeps_trace_groups_together(self) -> None:
         root = make_case_root()

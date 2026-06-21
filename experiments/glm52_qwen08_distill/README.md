@@ -114,6 +114,22 @@ It writes records shaped as:
 {"prompt": [...], "completion": {"role": "assistant", "content": "", "tool_calls": [...]}, "metadata": {...}}
 ```
 
+Prime tool-use SFT also needs tool definitions on each row. After exporting prompt/completion split files, add SWG tool definitions and drop metadata for trainer-facing files:
+
+```powershell
+python experiments/glm52_qwen08_distill/scripts/add_swg_tool_defs.py `
+  --input-jsonl data/processed_traces/glm52_qwen08/glm52_perfect_sequential_train_prompt_completion.jsonl `
+  --output-jsonl data/processed_traces/glm52_qwen08/glm52_perfect_sequential_train_pc_tooldefs.jsonl `
+  --drop-metadata
+
+python experiments/glm52_qwen08_distill/scripts/add_swg_tool_defs.py `
+  --input-jsonl data/processed_traces/glm52_qwen08/glm52_perfect_sequential_dev_prompt_completion.jsonl `
+  --output-jsonl data/processed_traces/glm52_qwen08/glm52_perfect_sequential_dev_pc_tooldefs.jsonl `
+  --drop-metadata
+```
+
+These rows keep only `prompt`, `completion`, and `tool_defs`. The `tool_defs` value is a list of SWG tool schemas for `read_file`, `write_file`, `append_file`, `list_directory`, `run_shell`, `run_python`, and `submit`.
+
 The messages-format exporter is also available as a schema candidate:
 
 ```bash
@@ -156,7 +172,7 @@ Run the synthetic fixture tests with:
 python -m unittest experiments.glm52_qwen08_distill.tests.test_dataset_builder -v
 ```
 
-The tests use `experiments/glm52_qwen08_distill/tests/fixtures/tiny_trace.json` and cover quality-gate behavior, invalid `run_python` detection, malformed submit argument detection, absolute-path auditing, sequential single-tool targets, tool-call ID preservation in history, the messages-format exporter, the prompt/completion exporter, and trace-group split behavior.
+The tests use `experiments/glm52_qwen08_distill/tests/fixtures/tiny_trace.json` and cover quality-gate behavior, invalid `run_python` detection, malformed submit argument detection, absolute-path auditing, sequential single-tool targets, tool-call ID preservation in history, the messages-format exporter, the prompt/completion exporter, SWG tool-definition injection, and trace-group split behavior.
 
 ## Next Steps
 
