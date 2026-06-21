@@ -44,11 +44,19 @@ data/raw_traces/glm52/samples-page-20.json
 
 The loader reads `*.json` files with `utf-8-sig` encoding and skips JSON files that do not contain a `samples` list.
 
+This branch also includes a single-file raw trace bundle:
+
+```text
+data/raw_traces/glm52/glm52_raw_traces_pages.json
+```
+
+The builder can use either the original page-export directory or this bundled raw trace JSON file as `--input-dir`.
+
 ## Build Command
 
 ```bash
 python experiments/glm52_qwen08_distill/build_dataset.py \
-  --input-dir data/raw_traces/glm52 \
+  --input-dir data/raw_traces/glm52/glm52_raw_traces_pages.json \
   --output-dir data/processed_traces/glm52_qwen08 \
   --report-dir data/reports/glm52_qwen08 \
   --teacher glm-5.2 \

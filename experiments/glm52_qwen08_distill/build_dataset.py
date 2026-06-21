@@ -97,17 +97,34 @@ def extract_reward(sample: dict[str, Any]) -> float:
 
 def load_samples(input_dir: Path, verbose: bool = False) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     if not input_dir.exists():
-        raise FileNotFoundError(f"Input directory does not exist: {input_dir}")
+        raise FileNotFoundError(f"Input path does not exist: {input_dir}")
 
     samples: list[dict[str, Any]] = []
     files_loaded = 0
     skipped_files: list[str] = []
     eval_ids: set[str] = set()
-    json_files = sorted(input_dir.glob("*.json"))
+    json_files = [input_dir] if input_dir.is_file() else sorted(input_dir.glob("*.json"))
 
     for path in json_files:
         with path.open("r", encoding="utf-8-sig") as handle:
             payload = json.load(handle)
+        if isinstance(payload, dict) and isinstance(payload.get("pages"), list):
+            for page in payload["pages"]:
+                if not isinstance(page, dict) or not isinstance(page.get("samples"), list):
+                    raise TraceFormatError(f"{path.name} contains a malformed raw-trace page bundle")
+                files_loaded += 1
+                page_eval_id = page.get("evaluation_id") or payload.get("evaluation_id")
+                if page_eval_id is not None:
+                    eval_ids.add(str(page_eval_id))
+                for sample in page["samples"]:
+                    if not isinstance(sample, dict):
+                        raise TraceFormatError(f"{path.name} contains a non-object sample: {sample!r}")
+                    item = dict(sample)
+                    item["_source_file"] = str(page.get("file") or path.name)
+                    item["_source_evaluation_id"] = page_eval_id
+                    samples.append(item)
+            continue
+
         page_samples = payload.get("samples") if isinstance(payload, dict) else None
         if not isinstance(page_samples, list):
             skipped_files.append(path.name)

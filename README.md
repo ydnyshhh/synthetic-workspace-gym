@@ -27,6 +27,7 @@ experiments/glm52_qwen08_distill/
 The generated processed dataset artifacts included on this branch are:
 
 ```text
+data/raw_traces/glm52/glm52_raw_traces_pages.json
 data/processed_traces/glm52_qwen08/glm52_perfect_raw_actions.jsonl
 data/processed_traces/glm52_qwen08/glm52_perfect_sequential_actions.jsonl
 data/reports/glm52_qwen08/perfect_dataset_report.json
@@ -49,7 +50,7 @@ Rebuild the dataset from hosted-eval page exports with:
 
 ```bash
 python experiments/glm52_qwen08_distill/build_dataset.py \
-  --input-dir prime-eval-exports/kxhqr8w6kxeficm93rp7s5k6 \
+  --input-dir data/raw_traces/glm52/glm52_raw_traces_pages.json \
   --output-dir data/processed_traces/glm52_qwen08 \
   --report-dir data/reports/glm52_qwen08 \
   --teacher glm-5.2 \
@@ -60,7 +61,7 @@ python experiments/glm52_qwen08_distill/build_dataset.py \
   --write-sequential
 ```
 
-Raw hosted-eval traces remain local research inputs and are not part of the committed dataset artifacts.
+`glm52_raw_traces_pages.json` is a single-file bundle of the 20 hosted-eval page exports. The original page-export folder remains a local research input and is not required for rebuilding this branch's committed dataset.
 
 ## System Design
 
