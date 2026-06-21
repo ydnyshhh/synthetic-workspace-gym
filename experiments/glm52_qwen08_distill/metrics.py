@@ -15,6 +15,16 @@ ALLOWED_TOOLS = {
     "submit",
 }
 
+REQUIRED_ARGS = {
+    "read_file": {"path"},
+    "write_file": {"path", "content"},
+    "append_file": {"path", "content"},
+    "list_directory": {"path"},
+    "run_shell": {"command"},
+    "run_python": {"path"},
+    "submit": {"path_or_answer"},
+}
+
 FOCUS_SCENARIOS = {
     "migration_plan_bundle",
     "channel_status_pivot",

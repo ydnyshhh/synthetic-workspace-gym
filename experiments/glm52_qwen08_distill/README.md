@@ -63,7 +63,7 @@ python experiments/glm52_qwen08_distill/build_dataset.py \
 
 The default quality gate writes a report but refuses JSONL output when critical issues are found. Use `--allow-quality-warnings` only for analysis-only dataset output after reviewing the audit section.
 
-The report separates observed quality issues from issues that remain in the written dataset. `ready_for_sft` is based on the written dataset after invalid target windows are excluded, while the default gate still requires review for any observed critical issue.
+The report separates observed quality issues from issues that remain in the written dataset. `ready_for_sft` is based on the written dataset after invalid target windows are excluded, while the default gate still requires review for any observed critical issue. Target validation checks tool names, required tool arguments such as `submit.path_or_answer`, absolute path attempts, and invalid `run_python` script paths. Invalid assistant actions are kept in later histories with their tool corrections, but they are not emitted as supervised targets.
 
 Use `--dry-run` to inspect stats without writing datasets or reports. Use `inspect_traces.py` for the same dry-run path:
 
@@ -140,7 +140,7 @@ Run the synthetic fixture tests with:
 python -m unittest experiments.glm52_qwen08_distill.tests.test_dataset_builder -v
 ```
 
-The tests use `experiments/glm52_qwen08_distill/tests/fixtures/tiny_trace.json` and cover quality-gate behavior, invalid `run_python` detection, absolute-path auditing, sequential single-tool targets, tool-call ID preservation in history, the messages-format exporter, and trace-group split behavior.
+The tests use `experiments/glm52_qwen08_distill/tests/fixtures/tiny_trace.json` and cover quality-gate behavior, invalid `run_python` detection, malformed submit argument detection, absolute-path auditing, sequential single-tool targets, tool-call ID preservation in history, the messages-format exporter, and trace-group split behavior.
 
 ## Next Steps
 

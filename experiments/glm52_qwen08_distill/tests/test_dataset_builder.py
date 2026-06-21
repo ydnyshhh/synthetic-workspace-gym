@@ -64,9 +64,11 @@ class DatasetBuilderTest(unittest.TestCase):
         quality = report["data_quality_stats"]
         self.assertEqual(quality["invalid_run_python_calls_observed"], 1)
         self.assertEqual(quality["absolute_path_attempts_observed"], 1)
+        self.assertEqual(quality["tool_argument_schema_violations_observed"], 1)
         self.assertEqual(quality["invalid_run_python_calls_in_written_dataset"], 0)
         self.assertEqual(quality["absolute_path_attempts_in_written_dataset"], 0)
-        self.assertEqual(quality["invalid_target_windows_excluded"], 2)
+        self.assertEqual(quality["tool_argument_schema_violations_in_written_dataset"], 0)
+        self.assertEqual(quality["invalid_target_windows_excluded"], 3)
         self.assertTrue(report["recommendation"]["ready_for_sft"])
         self.assertEqual(
             report["absolute_path_examples"],
@@ -79,6 +81,20 @@ class DatasetBuilderTest(unittest.TestCase):
                     "tool": "run_shell",
                     "trace_id": "tiny-trace-1",
                     "value": "cd /tmp && python check.py",
+                }
+            ],
+        )
+        self.assertEqual(
+            report["tool_argument_schema_examples"],
+            [
+                {
+                    "arguments": {"path_or_script": "outputs/result.json"},
+                    "example_id": 1,
+                    "missing_args": ["path_or_answer"],
+                    "scenario": "tiny_scenario",
+                    "target_index": 7,
+                    "tool": "submit",
+                    "trace_id": "tiny-trace-1",
                 }
             ],
         )
@@ -96,6 +112,16 @@ class DatasetBuilderTest(unittest.TestCase):
 
         self.assertEqual(len(raw_examples), 2)
         self.assertEqual(len(sequential_examples), 3)
+        self.assertEqual(
+            sum(1 for item in sequential_examples if item["target"]["tool_calls"][0]["name"] == "submit"),
+            1,
+        )
+        self.assertFalse(
+            any(
+                "path_or_script" in item["target"]["tool_calls"][0]["arguments"]
+                for item in sequential_examples
+            )
+        )
         self.assertTrue(all("reasoning_content" not in item["target"] for item in raw_examples))
         self.assertLessEqual(
             max(len(item["target"]["tool_calls"]) for item in sequential_examples),

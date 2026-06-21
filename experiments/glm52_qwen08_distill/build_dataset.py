@@ -12,6 +12,7 @@ from typing import Any
 from metrics import (
     ALLOWED_TOOLS,
     FOCUS_SCENARIOS,
+    REQUIRED_ARGS,
     counter_to_dict,
     find_absolute_path_entries,
     format_reward,
@@ -394,7 +395,8 @@ def normalize_tool_calls(value: Any, quality: Counter[str]) -> list[dict[str, An
 def validate_target_calls(
     calls: list[dict[str, Any]],
     quality: Counter[str],
-    audit: list[dict[str, Any]],
+    absolute_path_audit: list[dict[str, Any]],
+    schema_audit: list[dict[str, Any]],
     metadata: dict[str, Any],
     target_index: int,
 ) -> bool:
@@ -405,12 +407,27 @@ def validate_target_calls(
         if name not in ALLOWED_TOOLS:
             quality["unknown_tools"] += 1
             valid = False
+        missing_args = sorted(REQUIRED_ARGS.get(name, set()) - set(arguments))
+        if missing_args:
+            quality["tool_argument_schema_violations"] += 1
+            valid = False
+            schema_audit.append(
+                {
+                    "example_id": metadata.get("example_id"),
+                    "trace_id": metadata.get("trace_id"),
+                    "scenario": metadata.get("scenario"),
+                    "target_index": target_index,
+                    "tool": name,
+                    "missing_args": missing_args,
+                    "arguments": copy.deepcopy(arguments),
+                }
+            )
         absolute_paths = find_absolute_path_entries(arguments)
         if absolute_paths:
             quality["absolute_path_attempts"] += len(absolute_paths)
             valid = False
             for entry in absolute_paths:
-                audit.append(
+                absolute_path_audit.append(
                     {
                         "example_id": metadata.get("example_id"),
                         "trace_id": metadata.get("trace_id"),
@@ -513,6 +530,7 @@ def build_examples(samples: list[dict[str, Any]], args: argparse.Namespace) -> t
     reward_distribution: Counter[str] = Counter()
     selected_trace_ids: set[str] = set()
     absolute_path_examples: list[dict[str, Any]] = []
+    tool_argument_schema_examples: list[dict[str, Any]] = []
 
     for sample in samples:
         try:
@@ -552,7 +570,14 @@ def build_examples(samples: list[dict[str, Any]], args: argparse.Namespace) -> t
                 } if calls else clean_message(message, quality, count_reasoning=False)
 
                 if calls:
-                    if validate_target_calls(calls, quality, absolute_path_examples, metadata, index):
+                    if validate_target_calls(
+                        calls,
+                        quality,
+                        absolute_path_examples,
+                        tool_argument_schema_examples,
+                        metadata,
+                        index,
+                    ):
                         raw_metadata = copy.deepcopy(metadata)
                         raw_metadata["raw_multi_tool"] = len(calls) > 1
                         raw_example = {
@@ -611,6 +636,7 @@ def build_examples(samples: list[dict[str, Any]], args: argparse.Namespace) -> t
         "duplicate_example_ids": duplicate_example_ids,
         "duplicate_trace_ids": duplicate_trace_ids,
         "absolute_path_examples": absolute_path_examples,
+        "tool_argument_schema_examples": tool_argument_schema_examples,
     }
     return raw_examples, sequential_examples, build_info
 
@@ -664,10 +690,12 @@ def build_report(
         "unknown_tools_observed": quality["unknown_tools"],
         "absolute_path_attempts_observed": quality["absolute_path_attempts"],
         "invalid_run_python_calls_observed": quality["invalid_run_python_calls"],
+        "tool_argument_schema_violations_observed": quality["tool_argument_schema_violations"],
         "malformed_tool_calls_in_written_dataset": 0,
         "unknown_tools_in_written_dataset": 0,
         "absolute_path_attempts_in_written_dataset": 0,
         "invalid_run_python_calls_in_written_dataset": 0,
+        "tool_argument_schema_violations_in_written_dataset": 0,
         "assistant_prose_only_turns_skipped": quality["assistant_prose_only_turns_skipped"],
         "reasoning_content_fields_stripped": quality["reasoning_content_fields_stripped"],
         "samples_with_missing_reward": quality["samples_with_missing_reward"],
@@ -702,6 +730,7 @@ def build_report(
         },
         "data_quality_stats": data_quality,
         "absolute_path_examples": build_info["absolute_path_examples"],
+        "tool_argument_schema_examples": build_info["tool_argument_schema_examples"],
         "scenario_coverage": scenario_coverage,
         "coverage_warnings": {
             "low_coverage_scenarios": low_coverage,
@@ -780,6 +809,18 @@ def render_markdown_report(report: dict[str, Any]) -> str:
             lines.append(
                 f"| {item['example_id']} | {item['scenario']} | {item['target_index']} | "
                 f"{item['tool']} | {item['argument_path']} | `{value}` |"
+            )
+    if report["tool_argument_schema_examples"]:
+        lines.extend(["", "### Tool Argument Schema Examples", ""])
+        lines.append("| example_id | scenario | target_index | tool | missing_args | arguments |")
+        lines.append("| ---: | --- | ---: | --- | --- | --- |")
+        for item in report["tool_argument_schema_examples"]:
+            arguments = json.dumps(item["arguments"], ensure_ascii=False, sort_keys=True)
+            arguments = arguments.replace("|", "\\|")
+            missing = ", ".join(item["missing_args"])
+            lines.append(
+                f"| {item['example_id']} | {item['scenario']} | {item['target_index']} | "
+                f"{item['tool']} | `{missing}` | `{arguments}` |"
             )
     lines.extend(
         [
@@ -862,6 +903,7 @@ def print_summary(load_info: dict[str, Any], report: dict[str, Any], args: argpa
     print(f"Invalid tool calls: {invalid_tool_calls}")
     print(f"Absolute path calls observed: {quality['absolute_path_attempts_observed']}")
     print(f"Invalid run_python calls observed: {quality['invalid_run_python_calls_observed']}")
+    print(f"Tool argument schema violations observed: {quality['tool_argument_schema_violations_observed']}")
     if args.dry_run:
         print("Dry run completed; no datasets or reports were written.")
     elif critical_quality_count(quality) and not args.allow_quality_warnings:
@@ -876,6 +918,7 @@ def critical_quality_count(quality: dict[str, Any]) -> int:
         + int(quality["unknown_tools_observed"])
         + int(quality["absolute_path_attempts_observed"])
         + int(quality["invalid_run_python_calls_observed"])
+        + int(quality["tool_argument_schema_violations_observed"])
     )
 
 
@@ -885,6 +928,7 @@ def written_quality_count(quality: dict[str, Any]) -> int:
         + int(quality["unknown_tools_in_written_dataset"])
         + int(quality["absolute_path_attempts_in_written_dataset"])
         + int(quality["invalid_run_python_calls_in_written_dataset"])
+        + int(quality["tool_argument_schema_violations_in_written_dataset"])
     )
 
 

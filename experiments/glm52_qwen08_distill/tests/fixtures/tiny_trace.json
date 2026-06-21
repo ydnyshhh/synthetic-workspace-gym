@@ -65,6 +65,18 @@
         {
           "role": "assistant",
           "content": "",
+          "tool_calls": "{\"id\":\"call_bad_submit\",\"name\":\"submit\",\"arguments\":\"{\\\"path_or_script\\\":\\\"outputs/result.json\\\"}\"}",
+          "tool_call_id": ""
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "call_bad_submit",
+          "content": "Submit expected path_or_answer, not path_or_script.",
+          "tool_calls": ""
+        },
+        {
+          "role": "assistant",
+          "content": "",
           "tool_calls": "{\"id\":\"call_submit\",\"name\":\"submit\",\"arguments\":\"{\\\"path_or_answer\\\":\\\"outputs/result.json\\\"}\"}",
           "tool_call_id": ""
         },
