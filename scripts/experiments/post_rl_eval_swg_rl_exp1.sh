@@ -10,7 +10,7 @@ if [[ $# -lt 1 || -z "${1:-}" ]]; then
 fi
 
 MODEL_ID="$1"
-ENV_ID="${ENV_ID:-ydnyshhh/synthetic-workspace-gym}"
+ENV_ID="${ENV_ID:-yadnyesh/synthetic-workspace-gym}"
 MAX_EXAMPLES="${MAX_EXAMPLES:-40}"
 MAX_TURNS="${MAX_TURNS:-8}"
 

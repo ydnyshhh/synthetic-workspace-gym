@@ -5,7 +5,7 @@ set -euo pipefail
 # Change ENV_ID if you pushed the environment under another owner or namespace.
 
 MODEL_ID="${MODEL_ID:-Qwen/Qwen3.5-0.8B}"
-ENV_ID="${ENV_ID:-ydnyshhh/synthetic-workspace-gym}"
+ENV_ID="${ENV_ID:-yadnyesh/synthetic-workspace-gym}"
 MAX_EXAMPLES="${MAX_EXAMPLES:-40}"
 MAX_TURNS="${MAX_TURNS:-8}"
 

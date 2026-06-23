@@ -21,7 +21,7 @@ probe.
 ## Setup
 
 - Model: `Qwen/Qwen3.5-0.8B`
-- Environment: `ydnyshhh/synthetic-workspace-gym`
+- Environment: `yadnyesh/synthetic-workspace-gym`
 - Family: `script_repair`
 - Reward mode: `score`
 - Training steps: `50`
