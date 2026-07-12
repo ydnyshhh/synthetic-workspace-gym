@@ -16,7 +16,7 @@ I think one of the bottlenecks in agent research is that environments are still 
 
 ## System Design
 
-![Synthetic Workspace Gym system design diagram](docs/system-design.png)
+![Synthetic Workspace Gym internals and architecture diagram](docs/swg-internals-architecture.png)
 
 *Figure: Internal flow from `swg` CLI requests through environment generation, manifest packaging, scratch runtime execution, hidden evaluation, artifact export, benchmarking, and extension points.*
 
