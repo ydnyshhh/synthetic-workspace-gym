@@ -1,0 +1,10 @@
+[
+  {
+    "content": "Repair the provided Python workspace so that the hidden tests pass.",
+    "role": "user"
+  },
+  {
+    "content": "Continue solving the task from the current workspace state. The workspace already includes all earlier edits. Do not repeat completed work unless verification requires it. Use the remaining tool budget efficiently. Submit when the required artifact or repair is complete.",
+    "role": "user"
+  }
+]

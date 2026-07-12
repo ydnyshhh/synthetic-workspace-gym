@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Any
 
 from synthetic_workspace_gym.prime.clients import PrimeModelClient, ScriptedPrimeClient, normalize_client_response
-from synthetic_workspace_gym.prime.rollout import run_prime_rollout, write_prime_rollout_artifacts
+from synthetic_workspace_gym.prime.rollout import run_prime_branch_rollout, run_prime_rollout, write_prime_rollout_artifacts
 
 from .env import SyntheticWorkspaceVerifiersEnv
 
@@ -18,7 +18,14 @@ def run_verifiers_rollout(
 ) -> dict[str, Any]:
     client = _as_prime_client(client_or_policy)
     environment_path = env.environment_path
-    if environment_path is not None:
+    if env.branch_manifest_path is not None:
+        result = run_prime_branch_rollout(
+            env.branch_manifest_path, task_id=env.branch_task.task_id if env.branch_task else None,
+            branch_mode=env.branch_mode, client=client, output_dir=output_dir, max_turns=max_turns,
+            rollout_id=rollout_id, sandbox_backend=env.prime_env.sandbox_config.backend,
+            sandbox_config=env.prime_env.sandbox_config, docker_image=env.prime_env.sandbox_config.image,
+        )
+    elif environment_path is not None:
         result = run_prime_rollout(
             environment_path=environment_path,
             client=client,

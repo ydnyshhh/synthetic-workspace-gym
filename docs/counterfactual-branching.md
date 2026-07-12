@@ -57,8 +57,23 @@ One continuation does not establish causality. Stochastic policies require repea
 
 ## Prime and Verifiers direction
 
-Local deterministic agents rehydrate their caches from exact stored tool messages without replaying tool effects. This validates local continuation mechanics, but it is not a substitute for an LLM client consuming the message prefix directly.
+Local deterministic agents rehydrate their caches from exact stored tool messages without replaying tool effects. Prime model clients and Verifiers policies use the same exact prefix directly. `swg prime branch-rollout` loads a packaged task, injects a forced action before the first sampled model turn (or leaves the first action open), appends its observation, and records forced-action metadata in the transcript and model metadata.
 
-Each branch environment uses the existing SWG `manifest.json` layout and filesystem loader, so it can be mounted as an environment path today. Hosted execution still needs packaging or Hub resolution for `branch_manifest_path`, plus thin Prime/Verifiers adapters that load `prefix_messages`, execute forced actions before the first sampled turn, and preserve forced-action metadata. No Prime RL changes are required: the `rl-taskset` export is an open-action manifest suitable for an environment loader argument.
+```bash
+uv run swg prime branch-rollout \
+  --manifest examples/counterfactual/demo-pack/manifest.jsonl \
+  --task-index 2 --mode forced --client scripted \
+  --output-dir prime-branch-runs/demo
+```
+
+`SyntheticWorkspacePrimeBranchEnv`, `run_prime_branch_rollout`, and `SyntheticWorkspaceVerifiersEnv(branch_manifest_path=...)` provide JSON-friendly programmatic entry points. Hosted execution requires the branch pack to be bundled in the published environment or resolved from a Hub artifact; no additional prefix or forced-action adapter is required. No Prime RL changes are required: `rl-taskset` produces an open-action manifest suitable for `branch_manifest_path`.
+
+The evaluator-backed positive demo is reproducible with:
+
+```bash
+uv run python examples/counterfactual/positive_demo.py
+```
+
+It intentionally uses a privileged known-good patch to validate the analysis pipeline: original return `0.0`, corrected return `1.0`, regret `1.0`, and `recoverable=true`. It is a pipeline demonstration, not a claim about model capability.
 
 Recommended first real experiment: 40 roots, two branch points, four candidates, and four continuations (`1,280` branch continuations). Primary reporting should include the share of states with regret above `0.20`, recoverability, original-action optimality, candidate-type value, and family/difficulty breakdowns.

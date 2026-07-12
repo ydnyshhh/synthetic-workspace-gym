@@ -22,7 +22,7 @@ def configure_parser(subparsers: argparse._SubParsersAction) -> None:
     counterfactual = subparsers.add_parser("counterfactual", help="Counterfactual trajectory branching commands")
     cf = counterfactual.add_subparsers(dest="counterfactual_command", required=True)
     collect = cf.add_parser("collect"); collect.add_argument("--environment", type=Path, required=True); collect.add_argument("--agent", choices=["scripted", "heuristic"], default="scripted"); collect.add_argument("--snapshot-policy", choices=["none", "every_step", "writes", "checks", "submits", "writes_checks_submit", "selected"], default="writes_checks_submit"); collect.add_argument("--max-snapshots", type=int, default=3); collect.add_argument("--max-signal-snapshots", type=int, default=2); collect.add_argument("--intermediate-evaluation", action="store_true"); collect.add_argument("--output-dir", type=Path, required=True)
-    build = cf.add_parser("build"); build.add_argument("--snapshots", type=Path, required=True); build.add_argument("--selectors", default="before_first_write,before_submit"); build.add_argument("--candidates", default="original,submit,run_public_check,read_relevant_file"); build.add_argument("--mode", choices=["forced", "open"], default="forced"); build.add_argument("--max-branch-points", type=int, default=2); build.add_argument("--max-candidates", type=int, default=4); build.add_argument("--output-dir", type=Path, required=True)
+    build = cf.add_parser("build"); build.add_argument("--snapshots", type=Path, required=True); build.add_argument("--selectors", default="before_first_write,before_submit"); build.add_argument("--candidates", default="original,submit,run_public_check,read_relevant_file"); build.add_argument("--mode", choices=["forced", "open"], default="forced"); build.add_argument("--max-branch-points", type=int, default=2, help="Maximum selected states per trajectory"); build.add_argument("--max-branch-points-total", type=int); build.add_argument("--max-candidates", type=int, default=4); build.add_argument("--output-dir", type=Path, required=True)
     run = cf.add_parser("run"); run.add_argument("--manifest", type=Path, required=True); run.add_argument("--client", choices=["scripted", "heuristic"], default="scripted"); run.add_argument("--rollouts-per-branch", type=int, default=1); run.add_argument("--output-dir", type=Path, required=True)
     analyze = cf.add_parser("analyze"); analyze.add_argument("--outcomes", type=Path, required=True); analyze.add_argument("--recoverable-threshold", type=float, default=.95); analyze.add_argument("--optimality-tolerance", type=float, default=.05); analyze.add_argument("--output", type=Path, required=True)
     export = cf.add_parser("export"); export.add_argument("--comparisons", type=Path, required=True); export.add_argument("--branch-manifest", type=Path, required=True); export.add_argument("--format", choices=["sft", "preference", "critic", "rl-taskset"], required=True); export.add_argument("--min-margin", type=float, default=.2); export.add_argument("--min-regret", type=float, default=.2); export.add_argument("--exclude-privileged", action="store_true"); export.add_argument("--output", type=Path, required=True)
@@ -43,7 +43,17 @@ def dispatch(args: argparse.Namespace, get_agent) -> int:
             if name not in SELECTORS: raise ValueError(f"unknown selector: {name}")
             selected_ids.extend(x.snapshot_id for x in SELECTORS[name].select([s for s, _ in snapshots]))
         items = []
-        for snapshot, root in [(s, r) for s, r in snapshots if s.snapshot_id in dict.fromkeys(selected_ids)][:args.max_branch_points]:
+        selected_set = set()
+        per_trajectory_counts = {}
+        for selected_id in dict.fromkeys(selected_ids):
+            selected_snapshot = next(s for s, _ in snapshots if s.snapshot_id == selected_id)
+            count = per_trajectory_counts.get(selected_snapshot.trajectory_id, 0)
+            if count < args.max_branch_points:
+                selected_set.add(selected_id)
+                per_trajectory_counts[selected_snapshot.trajectory_id] = count + 1
+            if args.max_branch_points_total is not None and len(selected_set) >= args.max_branch_points_total:
+                break
+        for snapshot, root in [(s, r) for s, r in snapshots if s.snapshot_id in selected_set]:
             manifest = load_environment(root).manifest
             for candidate in generate_candidates(snapshot, manifest, root, _csv(args.candidates), args.max_candidates):
                 if args.mode == "forced" and candidate.action is None: continue

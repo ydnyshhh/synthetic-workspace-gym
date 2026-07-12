@@ -56,6 +56,7 @@ class SyntheticWorkspacePrimeEnv:
         self._step_count = 0
         self._started_at: float | None = None
         self._last_reward_payload: dict[str, object] | None = None
+        self._step_limit: int | None = None
 
     def reset(self) -> dict[str, object]:
         self.close()
@@ -88,6 +89,7 @@ class SyntheticWorkspacePrimeEnv:
         self._last_reward_payload = None
 
         manifest = environment.manifest
+        self._step_limit = int(self.max_steps or manifest.max_steps)
         return {
             "env_id": manifest.env_id,
             "instruction": manifest.instruction,
@@ -95,7 +97,7 @@ class SyntheticWorkspacePrimeEnv:
             "scenario": manifest.metadata.get("scenario_id", self.scenario),
             "difficulty": manifest.difficulty,
             "seed": manifest.seed,
-            "max_steps": manifest.max_steps,
+            "max_steps": self._step_limit,
             "time_limit_seconds": manifest.time_limit_seconds,
             "tool_schemas": get_tool_schemas(manifest.tool_permissions.enabled_tools()),
             "sandbox": {
@@ -153,7 +155,7 @@ class SyntheticWorkspacePrimeEnv:
 
         self._done = (
             swg_action.action_type == ActionType.SUBMIT
-            or self._step_count >= environment.manifest.max_steps
+            or self._step_count >= int(self._step_limit or environment.manifest.max_steps)
             or self._remaining_time_seconds() <= 0
         )
 
@@ -168,7 +170,7 @@ class SyntheticWorkspacePrimeEnv:
         info.update(
             {
                 "step_index": self._step_count - 1,
-                "remaining_steps": max(0, environment.manifest.max_steps - self._step_count),
+                "remaining_steps": max(0, int(self._step_limit or environment.manifest.max_steps) - self._step_count),
                 "submitted": swg_action.action_type == ActionType.SUBMIT,
             }
         )

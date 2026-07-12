@@ -1,0 +1,6 @@
+account_id,region,status,amount
+A-100,North,complete,120.00
+A-101,West,complete,95.50
+A-102,East,cancelled,20.00
+A-103,North,complete,90.00
+A-104,East,complete,85.00

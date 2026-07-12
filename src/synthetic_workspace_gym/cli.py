@@ -22,7 +22,7 @@ from synthetic_workspace_gym.prime.export import (
     export_prime_pack,
     write_manifest_jsonl,
 )
-from synthetic_workspace_gym.prime.rollout import run_prime_rollout, run_prime_rollout_batch
+from synthetic_workspace_gym.prime.rollout import run_prime_branch_rollout, run_prime_rollout, run_prime_rollout_batch
 from synthetic_workspace_gym.runtime.environment import load_environment
 from synthetic_workspace_gym.runtime.runner import EpisodeRunner
 from synthetic_workspace_gym.sandbox.evaluator import verify_workspace_in_sandbox
@@ -129,6 +129,17 @@ def build_parser() -> argparse.ArgumentParser:
     prime_rollout.add_argument("--rollout-id")
     add_sandbox_args(prime_rollout)
 
+    prime_branch = prime_subparsers.add_parser("branch-rollout", help="Run a forced or open counterfactual branch through a Prime model client")
+    prime_branch.add_argument("--manifest", type=Path, required=True)
+    prime_branch.add_argument("--task-id")
+    prime_branch.add_argument("--task-index", type=int, default=0)
+    prime_branch.add_argument("--mode", choices=["forced", "open"])
+    prime_branch.add_argument("--client", choices=["scripted", "heuristic-reference"], default="scripted")
+    prime_branch.add_argument("--action-json", action="append", default=[])
+    prime_branch.add_argument("--output-dir", type=Path, default=Path("prime_branch_rollouts"))
+    prime_branch.add_argument("--max-turns", type=int)
+    prime_branch.add_argument("--rollout-id")
+    add_sandbox_args(prime_branch)
     prime_rollout_batch = prime_subparsers.add_parser("rollout-batch", help="Run Prime rollouts from manifest.jsonl")
     prime_rollout_batch.add_argument("--manifest", type=Path, required=True)
     prime_rollout_batch.add_argument("--client", choices=["scripted", "heuristic-reference"], default="scripted")
@@ -456,6 +467,17 @@ def command_prime_rollout(args: argparse.Namespace) -> int:
     return 0
 
 
+
+def command_prime_branch_rollout(args: argparse.Namespace) -> int:
+    config = sandbox_config_from_args(args)
+    result = run_prime_branch_rollout(
+        args.manifest, task_id=args.task_id, task_index=args.task_index, branch_mode=args.mode,
+        client=build_prime_client(args.client, args.action_json), output_dir=args.output_dir,
+        max_turns=args.max_turns, rollout_id=args.rollout_id, sandbox_backend=config.backend,
+        sandbox_config=config, docker_image=config.image,
+    )
+    print(json.dumps(result, indent=2, sort_keys=True, default=str))
+    return 0
 def command_prime_rollout_batch(args: argparse.Namespace) -> int:
     config = sandbox_config_from_args(args)
     summary = run_prime_rollout_batch(
@@ -680,6 +702,8 @@ def main() -> int:
             return command_prime_smoke_test(args)
         if args.prime_command == "rollout":
             return command_prime_rollout(args)
+        if args.prime_command == "branch-rollout":
+            return command_prime_branch_rollout(args)
         if args.prime_command == "rollout-batch":
             return command_prime_rollout_batch(args)
     if args.command == "sandbox":

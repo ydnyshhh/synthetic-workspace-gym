@@ -36,7 +36,24 @@ class SyntheticWorkspaceVerifiersEnv:
         max_turns: int | None = None,
         time_limit_seconds: int | None = None,
         output_dir: str | Path | None = None,
+        branch_manifest_path: str | Path | None = None,
+        branch_task_id: str | None = None,
+        branch_mode: str | None = None,
     ) -> None:
+        self.branch_manifest_path = Path(branch_manifest_path).resolve() if branch_manifest_path is not None else None
+        self.branch_task = None
+        self.branch_mode = branch_mode
+        if self.branch_manifest_path is not None:
+            from synthetic_workspace_gym.counterfactual.runner import read_branch_manifest
+            tasks = read_branch_manifest(self.branch_manifest_path)
+            matches = [task for task in tasks if branch_task_id is None or task.task_id == branch_task_id]
+            if not matches:
+                raise ValueError(f"branch task not found: {branch_task_id!r}")
+            self.branch_task = matches[0]
+            family, scenario, difficulty, seed = self.branch_task.family, self.branch_task.scenario_id, self.branch_task.difficulty, self.branch_task.seed
+            environment_path = self.branch_task.environment_path
+            max_turns = max_turns or self.branch_task.remaining_steps
+            self.branch_mode = branch_mode or self.branch_task.mode
         self.family = family
         self.scenario = scenario
         self.difficulty = int(difficulty)
@@ -70,8 +87,17 @@ class SyntheticWorkspaceVerifiersEnv:
             "system_prompt": self.system_prompt,
             "tools": self.tools,
             "task": self.task,
+            "messages": self._branch_messages(),
+            "forced_action": self.branch_task.forced_action if self.branch_task and self.branch_mode == "forced" else None,
         }
 
+    def _branch_messages(self) -> list[dict[str, Any]]:
+        if self.branch_task is None:
+            return [{"role": "system", "content": self.system_prompt}, {"role": "user", "content": str((self._last_reset or {}).get("instruction", ""))}]
+        messages = [dict(message) for message in self.branch_task.prefix_messages]
+        if not messages or messages[0].get("role") != "system":
+            messages.insert(0, {"role": "system", "content": self.system_prompt})
+        return messages
     def step(self, action_or_completion: object) -> dict[str, Any]:
         action = self.parser.parse(action_or_completion)
         result = self._prime_env.step(action)
@@ -231,7 +257,6 @@ class _NativeVerifiersAdapter:
 
     def reset(self) -> dict[str, Any]:
         return self.base_env.reset()
-
     def step(self, action_or_completion: object) -> dict[str, Any]:
         return self.base_env.step(action_or_completion)
 

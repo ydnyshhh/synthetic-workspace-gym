@@ -1,0 +1,19 @@
+{
+  "entrypoint": "python run_example.py",
+  "family": "script_repair",
+  "hints": [
+    "The CSV headers and the parser must agree on the account identifier column.",
+    "Cancelled rows should be excluded from the final report, not dropped before parsing.",
+    "The final report is sorted by region, not by aggregate size."
+  ],
+  "repair_contract": [
+    "Load every row keyed by the visible `account_id` column; do not look for `customer_id`.",
+    "Normalize `region` with `strip().lower()` before reporting.",
+    "Exclude rows whose normalized status is `cancelled` in the report step.",
+    "Return report rows sorted lexicographically by lowercase `region`."
+  ],
+  "scenario_id": "csv_schema_drift",
+  "target_files": [
+    "src/repair_target/parser.py"
+  ]
+}

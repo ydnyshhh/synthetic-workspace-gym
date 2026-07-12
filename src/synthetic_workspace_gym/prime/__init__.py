@@ -16,6 +16,7 @@ from .export import (
 from .rollout import (
     build_batch_summary,
     build_prime_rollout_payload,
+    run_prime_branch_rollout,
     run_prime_rollout,
     run_prime_rollout_batch,
     write_prime_rollout_artifacts,
@@ -26,6 +27,9 @@ from .verifier import evaluator_result_to_prime_reward, verify_workspace
 
 
 def make_env(*args: object, **kwargs: object) -> SyntheticWorkspacePrimeEnv:
+    if kwargs.get("branch_manifest_path") is not None:
+        from synthetic_workspace_gym.counterfactual.prime import SyntheticWorkspacePrimeBranchEnv
+        return SyntheticWorkspacePrimeBranchEnv(*args, **kwargs)
     return SyntheticWorkspacePrimeEnv(*args, **kwargs)
 
 
@@ -49,6 +53,7 @@ __all__ = [
     "make_env",
     "make_event",
     "read_transcript_jsonl",
+    "run_prime_branch_rollout",
     "run_prime_rollout",
     "run_prime_rollout_batch",
     "verify_workspace",

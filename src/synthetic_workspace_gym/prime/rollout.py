@@ -31,6 +31,10 @@ def run_prime_rollout(
     sandbox_backend: str = "local",
     sandbox_config: SandboxConfig | None = None,
     docker_image: str | None = None,
+    prefix_messages: list[dict[str, Any]] | None = None,
+    forced_action: dict[str, Any] | None = None,
+    branch_metadata: dict[str, Any] | None = None,
+    step_limit: int | None = None,
 ) -> dict[str, Any]:
     runtime_root = Path(output_dir) / ".tmp" / f"runtime-{uuid4().hex[:10]}"
     env = SyntheticWorkspacePrimeEnv(
@@ -40,6 +44,7 @@ def run_prime_rollout(
         seed=seed,
         workspace_root=environment_path,
         output_dir=runtime_root,
+        max_steps=step_limit,
         sandbox_backend=sandbox_backend,
         sandbox_config=sandbox_config,
         docker_image=docker_image,
@@ -48,7 +53,7 @@ def run_prime_rollout(
     started = time.perf_counter()
     try:
         agent = PrimeReActAgent(client or ScriptedPrimeClient(_default_scripted_actions()), max_turns=max_turns)
-        rollout = agent.run(env)
+        rollout = agent.run(env, prefix_messages=prefix_messages, forced_action=forced_action, branch_metadata=branch_metadata)
         ended_at = utc_timestamp()
         rollout.update(
             {
@@ -161,6 +166,7 @@ def build_prime_rollout_payload(
             "max_steps": manifest.max_steps,
             "time_limit_seconds": manifest.time_limit_seconds,
             "environment_path": str(env.environment.root),
+            "counterfactual": dict(rollout.get("branch_metadata", {}) or {}),
         },
         "sandbox": {
             "backend": env.sandbox_config.backend,
@@ -284,3 +290,46 @@ def _default_scripted_actions() -> list[dict[str, Any]]:
         {"tool": "list_directory", "args": {"path": "."}},
         {"tool": "submit", "args": {"path_or_answer": "done"}},
     ]
+
+
+def run_prime_branch_rollout(
+    branch_manifest_path: str | Path,
+    *,
+    task_id: str | None = None,
+    task_index: int = 0,
+    branch_mode: str | None = None,
+    client: PrimeModelClient | None = None,
+    output_dir: str | Path = "prime_branch_rollouts",
+    max_turns: int | None = None,
+    rollout_id: str | None = None,
+    sandbox_backend: str = "local",
+    sandbox_config: SandboxConfig | None = None,
+    docker_image: str | None = None,
+) -> dict[str, Any]:
+    from synthetic_workspace_gym.counterfactual.runner import read_branch_manifest
+
+    tasks = read_branch_manifest(Path(branch_manifest_path))
+    if task_id is not None:
+        matches = [task for task in tasks if task.task_id == task_id]
+        if len(matches) != 1:
+            raise ValueError(f"expected exactly one branch task {task_id!r}, found {len(matches)}")
+        task = matches[0]
+    else:
+        task = tasks[task_index]
+    mode = branch_mode or task.mode
+    if mode not in {"forced", "open"}:
+        raise ValueError("branch_mode must be 'forced' or 'open'")
+    forced_action = task.forced_action if mode == "forced" else None
+    result = run_prime_rollout(
+        family=task.family, scenario=task.scenario_id, difficulty=task.difficulty, seed=task.seed,
+        environment_path=task.environment_path, client=client, output_dir=output_dir,
+        max_turns=max_turns or task.remaining_steps, rollout_id=rollout_id,
+        sandbox_backend=sandbox_backend, sandbox_config=sandbox_config, docker_image=docker_image,
+        prefix_messages=task.prefix_messages, forced_action=forced_action, step_limit=task.remaining_steps,
+        branch_metadata={**task.metadata, "task_id": task.task_id, "branch_group_id": task.branch_group_id,
+                         "snapshot_id": task.snapshot_id, "candidate_id": task.candidate_id,
+                         "mode": mode, "forced_action": forced_action},
+    )
+    result["branch_task_id"] = task.task_id
+    result["branch_mode"] = mode
+    return result

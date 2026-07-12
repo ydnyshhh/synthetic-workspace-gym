@@ -44,7 +44,7 @@ def export_rl_taskset(comparisons: list[BranchComparison], tasks: dict[str, Bran
         target = output_root / "environments" / source.task_id
         if target.exists(): shutil.rmtree(target)
         shutil.copytree(Path(source.environment_path), target)
-        task = BranchTask(source.task_id, source.branch_group_id, source.snapshot_id, source.candidate_id, "open", str(target), source.prefix_messages, None, source.remaining_steps, source.time_limit_seconds, source.family, source.scenario_id, source.difficulty, source.seed, {**source.metadata, "training_regret": comparison.decision_regret})
+        task = BranchTask(source.task_id, source.branch_group_id, source.snapshot_id, source.candidate_id, "open", target.relative_to(output_root).as_posix(), source.prefix_messages, None, source.remaining_steps, source.time_limit_seconds, source.family, source.scenario_id, source.difficulty, source.seed, {**source.metadata, "training_regret": comparison.decision_regret})
         write_json(target / "branch.json", task.to_dict()); selected.append(task)
     write_jsonl(output_root / "manifest.jsonl", [x.to_dict() for x in selected])
     write_json(output_root / "metadata.json", {"format_version": "1.0", "mode": "open", "task_count": len(selected)})

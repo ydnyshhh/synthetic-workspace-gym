@@ -1,0 +1,34 @@
+{
+  "branch_group_id": "cf-group-137d1945b2a0529c",
+  "candidate_id": "candidate-6b35d51726a70776",
+  "difficulty": 1,
+  "environment_path": "environments/swg-cf-d956e5c22cca675e",
+  "family": "script_repair",
+  "forced_action": null,
+  "format_version": "1.0",
+  "metadata": {
+    "candidate_type": "original",
+    "privileged": false,
+    "selector_labels": [
+      "policy:every_step"
+    ],
+    "training_regret": 1.0
+  },
+  "mode": "open",
+  "prefix_messages": [
+    {
+      "content": "Repair the provided Python workspace so that the hidden tests pass.",
+      "role": "user"
+    },
+    {
+      "content": "Continue solving the task from the current workspace state. The workspace already includes all earlier edits. Do not repeat completed work unless verification requires it. Use the remaining tool budget efficiently. Submit when the required artifact or repair is complete.",
+      "role": "user"
+    }
+  ],
+  "remaining_steps": 8,
+  "scenario_id": "csv_schema_drift",
+  "seed": 23,
+  "snapshot_id": "snapshot-5108cff80376667d",
+  "task_id": "swg-cf-d956e5c22cca675e",
+  "time_limit_seconds": 60
+}

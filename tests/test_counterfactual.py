@@ -8,7 +8,7 @@ import pytest
 from synthetic_workspace_gym.counterfactual.analysis import aggregate_outcomes
 from synthetic_workspace_gym.counterfactual.candidates import generate_candidates
 from synthetic_workspace_gym.counterfactual.compiler import compile_pack
-from synthetic_workspace_gym.counterfactual.exports import export_training_data
+from synthetic_workspace_gym.counterfactual.exports import export_rl_taskset, export_training_data
 from synthetic_workspace_gym.counterfactual.replay import replay_branch
 from synthetic_workspace_gym.counterfactual.runner import read_branch_manifest
 from synthetic_workspace_gym.counterfactual.schemas import BranchOutcome, BranchTask, CandidateAction, CounterfactualSnapshot, stable_id
@@ -18,6 +18,10 @@ from synthetic_workspace_gym.generators.registry import get_generator
 from synthetic_workspace_gym.agents.base import BaseAgent
 from synthetic_workspace_gym.agents.scripted import ScriptedBaselineAgent
 from synthetic_workspace_gym.runtime.runner import EpisodeRunner
+from synthetic_workspace_gym.prime.clients import ScriptedPrimeClient
+from synthetic_workspace_gym.prime.rollout import run_prime_branch_rollout
+from synthetic_workspace_gym.verifiers.env import SyntheticWorkspaceVerifiersEnv
+from synthetic_workspace_gym.verifiers.rollouts import run_verifiers_rollout
 from synthetic_workspace_gym.schemas import ToolState
 from synthetic_workspace_gym.runtime.environment import load_environment
 from synthetic_workspace_gym.schemas import Action, ActionType
@@ -153,3 +157,68 @@ def test_failed_check_selects_actual_next_before_action_even_at_snapshot_limit(t
     assert branch.metadata["phase"] == "before"
     assert branch.metadata["previous_event_type"] == "failed_public_check"
     assert branch.original_action == {"tool": "read_file", "args": {"path": "task.json"}}
+
+def test_actual_evaluator_positive_regret_preference_and_rl_reload(tmp_path: Path) -> None:
+    generator = get_generator("script_repair")
+    spec = generator.sample_spec(difficulty=1, seed=23, scenario_id="csv_schema_drift")
+    bundle = generator.generate_instance(spec, tmp_path / "generated")
+    env = load_environment(bundle.root)
+    collector = SnapshotCollector(tmp_path / "snapshots", NamedSnapshotPolicy("every_step"), max_snapshots=1)
+    original_action = Action(ActionType.SUBMIT, {"path_or_answer": "done"})
+    context = SnapshotContext("trajectory", None, env.manifest, env.visible_root, env.root, 0, 8, .1, original_action, None, None, [{"role": "user", "content": env.manifest.instruction}], [], "before")
+    saved = collector.maybe_capture(context)
+    assert saved is not None
+    snapshot_root = Path(saved.metadata["snapshot_root"])
+    group = stable_id("cf-group", saved.snapshot_id)
+    original = CandidateAction(stable_id("candidate", group, "original"), group, saved.snapshot_id, "original", saved.original_action, "trajectory")
+    path, content = next(iter(env.manifest.reference_solution["files"].items()))
+    corrected = CandidateAction(stable_id("candidate", group, "corrected"), group, saved.snapshot_id, "reference_guided", {"tool": "write_file", "args": {"path": path, "content": content}}, "reference_solution", privileged=True)
+    compile_pack([(saved, original, snapshot_root), (saved, corrected, snapshot_root)], tmp_path / "pack", "forced")
+    tasks_list = read_branch_manifest(tmp_path / "pack" / "manifest.jsonl")
+    outcomes = [replay_branch(task, ScriptedBaselineAgent(), tmp_path / "run", 0).outcome for task in tasks_list]
+    comparison = aggregate_outcomes(outcomes)[0]
+    assert comparison.original_mean_return == 0.0
+    assert comparison.best_mean_return == 1.0
+    assert comparison.decision_regret == 1.0
+    assert comparison.recoverable
+    tasks = {task.task_id: task for task in tasks_list}
+    preference = export_training_data([comparison], tasks, tmp_path / "preference.jsonl", "preference", min_margin=.2)
+    assert len(preference) == 1
+    exported = export_rl_taskset([comparison], tasks, tmp_path / "rl-pack", min_regret=.2)
+    assert len(exported) == 1
+    reloaded = read_branch_manifest(tmp_path / "rl-pack" / "manifest.jsonl")
+    assert reloaded[0].mode == "open"
+    assert Path(reloaded[0].environment_path).exists()
+
+
+def test_aggregate_requires_explicit_original() -> None:
+    with pytest.raises(ValueError, match="exactly one original"):
+        aggregate_outcomes([outcome("alternative", 1.0)])
+
+class _RecordingPrimeClient(ScriptedPrimeClient):
+    def __init__(self) -> None:
+        super().__init__([{"tool": "submit", "args": {"path_or_answer": "done"}}])
+        self.seen_messages = None
+        self.seen_metadata = None
+
+    def complete(self, messages, tools, metadata=None):
+        self.seen_messages = [dict(message) for message in messages]
+        self.seen_metadata = dict(metadata or {})
+        return super().complete(messages, tools, metadata)
+
+
+def test_prime_and_verifiers_execute_branch_prefix_and_forced_action(tmp_path: Path) -> None:
+    manifest = Path(__file__).parents[1] / "examples" / "counterfactual" / "demo-pack" / "manifest.jsonl"
+    task = next(row for row in read_branch_manifest(manifest) if row.metadata["candidate_type"] == "run_public_check")
+    client = _RecordingPrimeClient()
+    result = run_prime_branch_rollout(manifest, task_id=task.task_id, client=client, output_dir=tmp_path / "prime")
+    assert result["branch_mode"] == "forced"
+    assert client.seen_messages is not None
+    assert any(message.get("metadata", {}).get("forced") for message in client.seen_messages)
+    assert client.seen_metadata["counterfactual"]["candidate_id"] == task.candidate_id
+
+    verifiers_client = _RecordingPrimeClient()
+    verifiers_env = SyntheticWorkspaceVerifiersEnv(branch_manifest_path=manifest, branch_task_id=task.task_id)
+    verifiers_result = run_verifiers_rollout(verifiers_env, verifiers_client, output_dir=tmp_path / "verifiers")
+    assert verifiers_result["verifiers_compatible"]
+    assert any(message.get("metadata", {}).get("forced") for message in verifiers_client.seen_messages)
