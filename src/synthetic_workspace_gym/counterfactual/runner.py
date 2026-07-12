@@ -12,8 +12,17 @@ from .schemas import BranchOutcome, BranchTask
 
 
 def read_branch_manifest(path: Path) -> list[BranchTask]:
-    return [BranchTask.from_dict(json.loads(line)) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
-
+    manifest_path = path.resolve()
+    tasks = []
+    for line in manifest_path.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        task = BranchTask.from_dict(json.loads(line))
+        environment_path = Path(task.environment_path)
+        if not environment_path.is_absolute():
+            task.environment_path = str((manifest_path.parent / environment_path).resolve())
+        tasks.append(task)
+    return tasks
 
 def run_branches(tasks: list[BranchTask], agent_factory: callable, rollouts_per_branch: int, output_root: Path) -> list[BranchOutcome]:
     outcomes = []

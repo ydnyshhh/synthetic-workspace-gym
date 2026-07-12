@@ -23,6 +23,10 @@ class ScriptedBaselineAgent(BaseAgent):
         self.smoke_test_ran = False
         self.submitted = False
 
+    def restore_context(self, messages):
+        super().restore_context(messages)
+        seen = [message.get("tool_call") for message in messages if message.get("role") == "assistant"]
+        self.plan = [action for action in self.plan if {"tool": action.action_type.value, "args": action.arguments} not in seen or (action.action_type == ActionType.READ_FILE and str(action.arguments.get("path")) not in self.file_cache)]
     def act(self, observation: ToolObservation | dict[str, object], tool_state: ToolState) -> Action:
         self.consume_observation(observation)
         if self.plan:

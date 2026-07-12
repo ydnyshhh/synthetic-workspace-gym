@@ -45,7 +45,7 @@ Use `--format sft`, `critic`, or `rl-taskset` for the other outputs. RL export w
 
 ## Artifacts
 
-Snapshots contain `snapshot.json`, `branch_state.json`, a rewritten `manifest.json`, `visible/`, trusted-only `hidden/`, and `trajectory_prefix.jsonl`. Branch packs contain `metadata.json`, `manifest.jsonl`, and one independently loadable environment per task. Runs contain `outcomes.jsonl`, `comparisons.jsonl`, `summary.json`, and isolated rollout directories with trajectory, final workspace, evaluator result, diff, and outcome.
+Snapshots contain `snapshot.json`, `branch_state.json`, a rewritten `manifest.json`, `visible/`, trusted-only `hidden/`, and `trajectory_prefix.jsonl`. Action-value selectors compile only before-action states. Signals observed after an action (such as a failed check or score drop) are carried to the next before-action snapshot, whose `original_action` is the policy's actual next choice. Branch packs contain `metadata.json`, `manifest.jsonl`, and one independently loadable environment per task. Manifest environment paths are POSIX-relative to the pack and resolved by the loader, so packs can be moved across working directories and operating systems. Runs contain `outcomes.jsonl`, `comparisons.jsonl`, `summary.json`, and isolated rollout directories with trajectory, final workspace, evaluator result, diff, and outcome.
 
 For candidate `a` at branch group `b`, SWG reports `Q_hat(b,a)` as mean final reward. Counterfactual delta is `Q_hat(b,a) - Q_hat(b,original)` and decision regret is `max_a Q_hat(b,a) - Q_hat(b,original)`. Recoverability means at least one tested candidate reaches the configured threshold. These are intervention estimates under the chosen continuation distribution, not policy-independent causal facts.
 
@@ -56,6 +56,8 @@ Hidden evaluator assets are copied only for trusted execution and never placed u
 One continuation does not establish causality. Stochastic policies require repeated continuations, matched budgets, and variance-aware interpretation. Privileged candidate sources must remain labeled and should normally be excluded from training exports. Intermediate evaluator results are selection metadata only and must never be model-visible. Results depend on the continuation policy and candidate coverage.
 
 ## Prime and Verifiers direction
+
+Local deterministic agents rehydrate their caches from exact stored tool messages without replaying tool effects. This validates local continuation mechanics, but it is not a substitute for an LLM client consuming the message prefix directly.
 
 Each branch environment uses the existing SWG `manifest.json` layout and filesystem loader, so it can be mounted as an environment path today. Hosted execution still needs packaging or Hub resolution for `branch_manifest_path`, plus thin Prime/Verifiers adapters that load `prefix_messages`, execute forced actions before the first sampled turn, and preserve forced-action metadata. No Prime RL changes are required: the `rl-taskset` export is an open-action manifest suitable for an environment loader argument.
 

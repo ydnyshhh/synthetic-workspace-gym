@@ -40,10 +40,8 @@ class BeforeSubmitSelector:
 class AfterFailedCheckSelector:
     name = "after_failed_check"
     def select(self, snapshots: list[CounterfactualSnapshot]) -> list[Selection]:
-        return [Selection(x.snapshot_id, self.name, .9, "public check returned a failure") for x in snapshots
-                if x.metadata.get("phase") == "after" and (x.original_action or {}).get("tool") in {"run_shell", "run_python"}
-                and x.metadata.get("action_success") is False]
-
+        return [Selection(x.snapshot_id, self.name, .9, "state after a failed public check, before the policy's next action") for x in snapshots
+                if x.metadata.get("phase") == "before" and x.metadata.get("previous_event_type") == "failed_public_check"]
 
 class RepeatedActionSelector:
     name = "repeated_action"
@@ -56,7 +54,7 @@ class PostSolutionSelector:
     name = "post_solution"
     def select(self, snapshots: list[CounterfactualSnapshot]) -> list[Selection]:
         for x in snapshots:
-            if x.evaluator_score is not None and x.evaluator_score >= 1.0:
+            if x.metadata.get("phase") == "before" and x.metadata.get("previous_event_type") == "evaluator_perfect":
                 return [Selection(x.snapshot_id, self.name, 1.0, "workspace first reached evaluator-perfect")]
         return []
 
@@ -64,13 +62,7 @@ class PostSolutionSelector:
 class ScoreDropSelector:
     name = "score_drop"
     def select(self, snapshots: list[CounterfactualSnapshot]) -> list[Selection]:
-        selected, prior = [], None
-        for x in sorted(snapshots, key=lambda item: item.step_index):
-            if prior is not None and x.evaluator_score is not None and x.evaluator_score < prior:
-                selected.append(Selection(x.snapshot_id, self.name, 1.0, "trusted evaluator score decreased"))
-            if x.evaluator_score is not None:
-                prior = x.evaluator_score
-        return selected
-
+        return [Selection(x.snapshot_id, self.name, 1.0, "previous action decreased trusted evaluator score") for x in snapshots
+                if x.metadata.get("phase") == "before" and x.metadata.get("previous_event_type") == "score_drop"]
 
 SELECTORS = {x.name: x for x in (BeforeFirstWriteSelector(), BeforeSubmitSelector(), AfterFailedCheckSelector(), RepeatedActionSelector(), PostSolutionSelector(), ScoreDropSelector())}

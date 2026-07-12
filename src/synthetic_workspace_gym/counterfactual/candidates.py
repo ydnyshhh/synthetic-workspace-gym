@@ -28,9 +28,7 @@ def run_public_check_candidate(snapshot: CounterfactualSnapshot, manifest: Envir
     entrypoint = _visible_task(root).get("entrypoint")
     if not entrypoint:
         return None
-    tool = "run_python" if str(entrypoint).strip().startswith("python ") else "run_shell"
-    args = {"command_or_script" if tool == "run_python" else "command": entrypoint}
-    return _candidate(snapshot, "run_public_check", {"tool": tool, "args": args}, "visible_task", rationale="run the documented public check")
+    return _candidate(snapshot, "run_public_check", {"tool": "run_shell", "args": {"command": entrypoint}}, "visible_task", rationale="run the documented public check exactly as declared")
 
 
 def read_relevant_file_candidate(snapshot: CounterfactualSnapshot, manifest: EnvironmentManifest, root: Path) -> CandidateAction | None:

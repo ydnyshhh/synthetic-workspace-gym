@@ -27,13 +27,17 @@ class CounterfactualRecord:
         return cls(**{key: value for key, value in payload.items() if key in names})
 
 
-def _action_valid(action: dict[str, Any] | None) -> bool:
-    return action is None or (
+def _required_action_valid(action: dict[str, Any] | None) -> bool:
+    return (
         isinstance(action, dict)
         and isinstance(action.get("tool"), str)
         and bool(action["tool"])
         and isinstance(action.get("args", {}), dict)
     )
+
+
+def _optional_action_valid(action: dict[str, Any] | None) -> bool:
+    return action is None or _required_action_valid(action)
 
 
 @dataclass(slots=True)
@@ -68,7 +72,7 @@ class CounterfactualSnapshot(CounterfactualRecord):
             raise ValueError("step_index and remaining_steps must be non-negative")
         if not self.snapshot_id:
             raise ValueError("snapshot_id is required")
-        if not _action_valid(self.original_action) or not _action_valid(self.previous_action):
+        if not _optional_action_valid(self.original_action) or not _optional_action_valid(self.previous_action):
             raise ValueError("actions must contain tool and args")
 
 
@@ -85,7 +89,7 @@ class CandidateAction(CounterfactualRecord):
     metadata: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
-        if self.candidate_type != "skip_repeated_action" and not _action_valid(self.action):
+        if self.candidate_type != "skip_repeated_action" and not _required_action_valid(self.action):
             raise ValueError("candidate action must contain tool and args")
 
 
@@ -112,7 +116,7 @@ class BranchTask(CounterfactualRecord):
             raise ValueError("mode must be 'forced' or 'open'")
         if self.remaining_steps <= 0:
             raise ValueError("remaining_steps must be positive")
-        if self.mode == "forced" and not _action_valid(self.forced_action):
+        if self.mode == "forced" and not _required_action_valid(self.forced_action):
             raise ValueError("forced mode requires a valid forced_action")
         if self.mode == "open" and self.forced_action is not None:
             raise ValueError("open mode cannot have a forced_action")

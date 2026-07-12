@@ -26,8 +26,8 @@ class ReplayResult:
 def replay_branch(task: BranchTask, agent: BaseAgent, output_root: Path, rollout_index: int = 0) -> ReplayResult:
     environment = load_environment(Path(task.environment_path))
     rollout_id = stable_id("rollout", task.task_id, rollout_index, agent.name)
-    root = output_root / "rollouts" / rollout_id
-    workspace = root / "active_workspace"
+    root = (output_root / "rollouts" / rollout_id).resolve()
+    workspace = (root / "active_workspace").resolve()
     if root.exists(): shutil.rmtree(root)
     shutil.copytree(environment.visible_root, workspace)
     executor = WorkspaceToolExecutor(workspace, environment.manifest.tool_permissions)
@@ -45,6 +45,7 @@ def replay_branch(task: BranchTask, agent: BaseAgent, output_root: Path, rollout
         submitted = forced.action_type == ActionType.SUBMIT
     messages.append(task.prefix_messages[-1])
     agent.reset(environment.manifest, {"instruction": environment.manifest.instruction, "branch": True, "prefix_messages": messages})
+    agent.restore_context(messages)
     while not submitted and steps < task.remaining_steps and time.perf_counter() - started < (task.time_limit_seconds or 60):
         state = ToolState(steps, task.remaining_steps - steps, environment.manifest.tool_permissions.enabled_tools(), submitted=submitted)
         action = agent.act(observation, state)

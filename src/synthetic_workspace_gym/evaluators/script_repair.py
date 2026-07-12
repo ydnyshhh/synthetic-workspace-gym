@@ -15,6 +15,8 @@ from synthetic_workspace_gym.utils.io import read_json
 class ScriptRepairEvaluator(BaseEvaluator):
     def evaluate(self, workspace_path: Path, manifest: EnvironmentManifest, hidden_root: Path) -> EvaluatorResult:
         started = time.perf_counter()
+        workspace_path = workspace_path.resolve()
+        hidden_root = hidden_root.resolve()
         config = read_json(hidden_root / "evaluator_config.json")
         runner_path = (hidden_root / config["runner"]).resolve()
         try:

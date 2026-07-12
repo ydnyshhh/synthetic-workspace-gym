@@ -30,6 +30,21 @@ class BaseAgent(ABC):
         self.directory_cache = {}
         self.task = None
 
+    def restore_context(self, messages: list[dict[str, Any]]) -> None:
+        """Rehydrate deterministic-agent state without replaying tool side effects."""
+        pending: Action | None = None
+        for message in messages:
+            call = message.get("tool_call") if message.get("role") == "assistant" else None
+            if isinstance(call, dict) and call.get("tool"):
+                pending = Action(ActionType(call["tool"]), dict(call.get("args", {})))
+                self.last_action = pending
+            elif message.get("role") == "tool" and pending is not None:
+                try:
+                    self.consume_observation(ToolObservation(True, "restored", content=str(message.get("content", ""))))
+                except (json.JSONDecodeError, TypeError):
+                    self.file_cache.pop(str(pending.arguments.get("path", "")), None)
+                pending = None
+        self.last_action = None
     @abstractmethod
     def act(self, observation: ToolObservation | dict[str, object], tool_state: ToolState) -> Action:
         raise NotImplementedError

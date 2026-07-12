@@ -44,6 +44,7 @@ class EpisodeRunner:
             copytree(environment.visible_root, workspace)
             executor = WorkspaceToolExecutor(workspace, environment.manifest.tool_permissions)
             trajectory: list[TrajectoryEvent] = []
+            model_messages: list[dict[str, Any]] = [{"role": "user", "content": environment.manifest.instruction}]
             initial_snapshot = snapshot_texts(workspace)
             initial_observation = {
                 "instruction": environment.manifest.instruction,
@@ -55,6 +56,8 @@ class EpisodeRunner:
             recent_files: list[str] = []
             touched_files: set[str] = set()
             last_exit_code: int | None = None
+            pending_branch_metadata: dict[str, Any] = {}
+            last_intermediate_score: float | None = None
 
             for step_index in range(environment.manifest.max_steps):
                 elapsed = time.perf_counter() - started
@@ -77,12 +80,17 @@ class EpisodeRunner:
                         episode_id, episode_id, environment.manifest, workspace, environment.root,
                         step_index, environment.manifest.max_steps - step_index, elapsed, action,
                         _event_action(previous_action), _observation_text(observation),
-                        _messages(environment.manifest.instruction, trajectory), trajectory, "before",
+                        list(model_messages), trajectory, "before", metadata=dict(pending_branch_metadata),
                     ))
+                    pending_branch_metadata.clear()
                 observation = executor.execute(action, remaining_time_seconds=remaining_time_seconds)
                 recent_files = observation.touched_files
                 touched_files.update(observation.touched_files)
                 last_exit_code = observation.exit_code
+                model_messages.extend([
+                    {"role": "assistant", "tool_call": {"tool": action.action_type.value, "args": action.arguments}},
+                    {"role": "tool", "name": action.action_type.value, "content": _observation_text(observation)},
+                ])
                 trajectory.append(
                     TrajectoryEvent(
                         step_index=step_index,
@@ -103,11 +111,23 @@ class EpisodeRunner:
                     intermediate = None
                     if self.snapshot_collector.evaluate_intermediate and action.action_type in {ActionType.WRITE_FILE, ActionType.APPEND_FILE, ActionType.RUN_SHELL, ActionType.RUN_PYTHON, ActionType.SUBMIT}:
                         intermediate = evaluator.evaluate(workspace, environment.manifest, environment.hidden_root)
+                    event_type = None
+                    if action.action_type in {ActionType.RUN_SHELL, ActionType.RUN_PYTHON} and not observation.success:
+                        event_type = "failed_public_check"
+                    if intermediate is not None:
+                        if intermediate.score >= 1.0 and (last_intermediate_score is None or last_intermediate_score < 1.0):
+                            event_type = "evaluator_perfect"
+                        elif last_intermediate_score is not None and intermediate.score < last_intermediate_score:
+                            event_type = "score_drop"
+                        pending_branch_metadata["score_delta"] = None if last_intermediate_score is None else intermediate.score - last_intermediate_score
+                        last_intermediate_score = intermediate.score
+                    if event_type:
+                        pending_branch_metadata.update({"previous_event_type": event_type, "previous_action": {"tool": action.action_type.value, "args": action.arguments}, "previous_observation": _observation_text(observation)})
                     self.snapshot_collector.maybe_capture(SnapshotContext(
                         episode_id, episode_id, environment.manifest, workspace, environment.root,
                         step_index + 1, environment.manifest.max_steps - step_index - 1,
                         time.perf_counter() - started, action, _event_action(previous_action),
-                        _observation_text(observation), _messages(environment.manifest.instruction, trajectory),
+                        _observation_text(observation), list(model_messages),
                         trajectory, "after", intermediate, observation.success,
                     ))
                 if action.action_type == ActionType.SUBMIT:

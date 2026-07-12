@@ -26,7 +26,7 @@ def compile_branch(snapshot: CounterfactualSnapshot, candidate: CandidateAction,
     _validate_action(forced, manifest, env_root)
     messages = list(snapshot.trajectory_prefix) + [{"role": "user", "content": CONTINUATION_INSTRUCTION}]
     task = BranchTask(task_id, candidate.branch_group_id, snapshot.snapshot_id, candidate.candidate_id, mode,
-        str(env_root), messages, forced, snapshot.remaining_steps, _remaining_time(snapshot, manifest), snapshot.family,
+        env_root.relative_to(output_root).as_posix(), messages, forced, snapshot.remaining_steps, _remaining_time(snapshot, manifest), snapshot.family,
         snapshot.scenario_id, snapshot.difficulty, snapshot.seed,
         {"candidate_type": candidate.candidate_type, "privileged": candidate.privileged, "selector_labels": snapshot.selector_labels})
     write_json(env_root / "branch.json", task.to_dict()); write_json(env_root / "prefix_messages.json", messages)

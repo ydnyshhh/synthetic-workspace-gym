@@ -33,6 +33,7 @@ class SnapshotContext:
     phase: str
     evaluator_result: EvaluatorResult | None = None
     action_success: bool | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(slots=True)
@@ -55,10 +56,10 @@ class NamedSnapshotPolicy:
         selected = (
             self.name == "every_step"
             or self.name == "selected"
-            or (self.name == "writes" and action_type in MUTATIONS)
-            or (self.name == "checks" and action_type in CHECKS)
-            or (self.name == "submits" and action_type == ActionType.SUBMIT)
-            or (self.name == "writes_checks_submit" and action_type in MUTATIONS | CHECKS | {ActionType.SUBMIT})
+            or (self.name == "writes" and context.phase == "before" and action_type in MUTATIONS)
+            or (self.name == "checks" and context.phase == "before" and action_type in CHECKS)
+            or (self.name == "submits" and context.phase == "before" and action_type == ActionType.SUBMIT)
+            or (self.name == "writes_checks_submit" and context.phase == "before" and action_type in MUTATIONS | CHECKS | {ActionType.SUBMIT})
         )
         return SnapshotDecision(selected, [f"policy:{self.name}"] if selected else [])
 
@@ -69,13 +70,20 @@ class SnapshotCollector:
     policy: SnapshotPolicy = field(default_factory=NamedSnapshotPolicy)
     max_snapshots: int = 3
     evaluate_intermediate: bool = False
+    max_signal_snapshots: int = 2
     snapshots: list[CounterfactualSnapshot] = field(default_factory=list, init=False)
     _keys: set[tuple[str, int, str]] = field(default_factory=set, init=False)
+    _signal_count: int = field(default=0, init=False)
 
     def maybe_capture(self, context: SnapshotContext) -> CounterfactualSnapshot | None:
         decision = self.policy.should_snapshot(context)
-        if not decision.selected or len(self.snapshots) >= self.max_snapshots:
+        if context.phase == "before" and context.metadata.get("previous_event_type"):
+            decision = SnapshotDecision(True, [f"signal:{context.metadata['previous_event_type']}"])
+        is_signal = context.phase == "before" and bool(context.metadata.get("previous_event_type"))
+        if not decision.selected or (len(self.snapshots) >= self.max_snapshots and (not is_signal or self._signal_count >= self.max_signal_snapshots)):
             return None
+        if is_signal:
+            self._signal_count += 1
         key = (context.trajectory_id, context.step_index, context.phase)
         if key in self._keys:
             return None
@@ -121,7 +129,7 @@ class SnapshotCollector:
             evaluator_score=evaluator.score if evaluator else None,
             evaluator_subscores=evaluator.subscores if evaluator else {},
             evaluator_failure_labels=evaluator.failure_labels if evaluator else [], selector_labels=labels,
-            metadata={"snapshot_root": str(root), "phase": context.phase, "action_success": context.action_success},
+            metadata={"snapshot_root": str(root), "phase": context.phase, "action_success": context.action_success, **context.metadata},
         )
         write_json(root / "snapshot.json", snapshot.to_dict())
         self.snapshots.append(snapshot)

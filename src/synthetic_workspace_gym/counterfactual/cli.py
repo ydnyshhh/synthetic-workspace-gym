@@ -21,7 +21,7 @@ from .snapshots import NamedSnapshotPolicy, SnapshotCollector, load_snapshot
 def configure_parser(subparsers: argparse._SubParsersAction) -> None:
     counterfactual = subparsers.add_parser("counterfactual", help="Counterfactual trajectory branching commands")
     cf = counterfactual.add_subparsers(dest="counterfactual_command", required=True)
-    collect = cf.add_parser("collect"); collect.add_argument("--environment", type=Path, required=True); collect.add_argument("--agent", choices=["scripted", "heuristic"], default="scripted"); collect.add_argument("--snapshot-policy", choices=["none", "every_step", "writes", "checks", "submits", "writes_checks_submit", "selected"], default="writes_checks_submit"); collect.add_argument("--max-snapshots", type=int, default=3); collect.add_argument("--intermediate-evaluation", action="store_true"); collect.add_argument("--output-dir", type=Path, required=True)
+    collect = cf.add_parser("collect"); collect.add_argument("--environment", type=Path, required=True); collect.add_argument("--agent", choices=["scripted", "heuristic"], default="scripted"); collect.add_argument("--snapshot-policy", choices=["none", "every_step", "writes", "checks", "submits", "writes_checks_submit", "selected"], default="writes_checks_submit"); collect.add_argument("--max-snapshots", type=int, default=3); collect.add_argument("--max-signal-snapshots", type=int, default=2); collect.add_argument("--intermediate-evaluation", action="store_true"); collect.add_argument("--output-dir", type=Path, required=True)
     build = cf.add_parser("build"); build.add_argument("--snapshots", type=Path, required=True); build.add_argument("--selectors", default="before_first_write,before_submit"); build.add_argument("--candidates", default="original,submit,run_public_check,read_relevant_file"); build.add_argument("--mode", choices=["forced", "open"], default="forced"); build.add_argument("--max-branch-points", type=int, default=2); build.add_argument("--max-candidates", type=int, default=4); build.add_argument("--output-dir", type=Path, required=True)
     run = cf.add_parser("run"); run.add_argument("--manifest", type=Path, required=True); run.add_argument("--client", choices=["scripted", "heuristic"], default="scripted"); run.add_argument("--rollouts-per-branch", type=int, default=1); run.add_argument("--output-dir", type=Path, required=True)
     analyze = cf.add_parser("analyze"); analyze.add_argument("--outcomes", type=Path, required=True); analyze.add_argument("--recoverable-threshold", type=float, default=.95); analyze.add_argument("--optimality-tolerance", type=float, default=.05); analyze.add_argument("--output", type=Path, required=True)
@@ -32,7 +32,7 @@ def configure_parser(subparsers: argparse._SubParsersAction) -> None:
 def dispatch(args: argparse.Namespace, get_agent) -> int:
     command = args.counterfactual_command
     if command == "collect":
-        collector = SnapshotCollector(args.output_dir / "snapshots", NamedSnapshotPolicy(args.snapshot_policy), args.max_snapshots, args.intermediate_evaluation)
+        collector = SnapshotCollector(args.output_dir / "snapshots", NamedSnapshotPolicy(args.snapshot_policy), args.max_snapshots, args.intermediate_evaluation, args.max_signal_snapshots)
         summary = EpisodeRunner(args.output_dir / "episodes", collector).run_episode(load_environment(args.environment), get_agent(args.agent))
         print(json.dumps({"episode": summary.to_dict(), "snapshots": [x.to_dict() for x in collector.snapshots]}, indent=2)); return 0
     if command == "build":

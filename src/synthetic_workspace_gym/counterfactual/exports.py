@@ -24,7 +24,7 @@ def export_training_data(comparisons: list[BranchComparison], tasks: dict[str, B
         elif format == "preference":
             for rejected_id in ranking[1:]:
                 rejected = by_candidate.get(rejected_id); rejected_stats = comparison.candidate_statistics[rejected_id]
-                if rejected and best_task.forced_action and rejected.forced_action and best_stats["mean"] - rejected_stats["mean"] >= min_margin:
+                if rejected and not (exclude_privileged and rejected.metadata.get("privileged")) and best_task.forced_action and rejected.forced_action and best_stats["mean"] - rejected_stats["mean"] >= min_margin:
                     records.append({"task_id": best_task.task_id, "state_id": comparison.snapshot_id, "messages": best_task.prefix_messages, "chosen": best_task.forced_action, "rejected": rejected.forced_action, "chosen_return": best_stats["mean"], "rejected_return": rejected_stats["mean"], "return_margin": best_stats["mean"] - rejected_stats["mean"]})
         elif format == "critic":
             for candidate_id, stats in comparison.candidate_statistics.items():
