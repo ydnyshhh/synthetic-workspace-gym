@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass
+from typing import TYPE_CHECKING, Any
 from pathlib import Path
 from shutil import copytree
 
@@ -15,6 +16,10 @@ from synthetic_workspace_gym.evaluators.registry import get_evaluator
 from synthetic_workspace_gym.runtime.environment import LoadedEnvironment
 from synthetic_workspace_gym.runtime.tools import WorkspaceToolExecutor
 from synthetic_workspace_gym.schemas import ActionType, EpisodeSummary, ToolObservation, ToolState, TrajectoryEvent, utc_timestamp
+if TYPE_CHECKING:
+    from synthetic_workspace_gym.counterfactual.snapshots import SnapshotCollector
+
+
 from synthetic_workspace_gym.utils.scratch import scratch_directory
 
 
@@ -22,6 +27,7 @@ from synthetic_workspace_gym.utils.scratch import scratch_directory
 class EpisodeRunner:
     output_root: Path
 
+    snapshot_collector: "SnapshotCollector | None" = None
     def run_episode(self, environment: LoadedEnvironment, agent: BaseAgent) -> EpisodeSummary:
         evaluator = get_evaluator(
             environment.manifest.family,
@@ -64,6 +70,15 @@ class EpisodeRunner:
                     submitted=submitted,
                 )
                 action = agent.act(observation, state)
+                previous_action = trajectory[-1] if trajectory else None
+                if self.snapshot_collector is not None:
+                    from synthetic_workspace_gym.counterfactual.snapshots import SnapshotContext
+                    self.snapshot_collector.maybe_capture(SnapshotContext(
+                        episode_id, episode_id, environment.manifest, workspace, environment.root,
+                        step_index, environment.manifest.max_steps - step_index, elapsed, action,
+                        _event_action(previous_action), _observation_text(observation),
+                        _messages(environment.manifest.instruction, trajectory), trajectory, "before",
+                    ))
                 observation = executor.execute(action, remaining_time_seconds=remaining_time_seconds)
                 recent_files = observation.touched_files
                 touched_files.update(observation.touched_files)
@@ -83,6 +98,18 @@ class EpisodeRunner:
                         success=observation.success,
                     )
                 )
+                if self.snapshot_collector is not None:
+                    from synthetic_workspace_gym.counterfactual.snapshots import SnapshotContext
+                    intermediate = None
+                    if self.snapshot_collector.evaluate_intermediate and action.action_type in {ActionType.WRITE_FILE, ActionType.APPEND_FILE, ActionType.RUN_SHELL, ActionType.RUN_PYTHON, ActionType.SUBMIT}:
+                        intermediate = evaluator.evaluate(workspace, environment.manifest, environment.hidden_root)
+                    self.snapshot_collector.maybe_capture(SnapshotContext(
+                        episode_id, episode_id, environment.manifest, workspace, environment.root,
+                        step_index + 1, environment.manifest.max_steps - step_index - 1,
+                        time.perf_counter() - started, action, _event_action(previous_action),
+                        _observation_text(observation), _messages(environment.manifest.instruction, trajectory),
+                        trajectory, "after", intermediate, observation.success,
+                    ))
                 if action.action_type == ActionType.SUBMIT:
                     submitted = True
                     break
@@ -112,3 +139,29 @@ class EpisodeRunner:
                 final_diff=final_diff,
             )
             return summary
+
+
+def _event_action(event: TrajectoryEvent | None):
+    if event is None:
+        return None
+    from synthetic_workspace_gym.schemas import Action
+    return Action(event.action_type, dict(event.action_arguments))
+
+
+def _observation_text(observation: ToolObservation | dict[str, object]) -> str:
+    if isinstance(observation, dict):
+        return str(observation)
+    return "\n".join(value for value in (observation.message, observation.content or "", observation.stdout, observation.stderr) if value)
+
+
+def _messages(instruction: str, trajectory: list[TrajectoryEvent]) -> list[dict[str, Any]]:
+    messages: list[dict[str, Any]] = [{"role": "user", "content": instruction}]
+    for event in trajectory:
+        messages.append({"role": "assistant", "tool_call": {"tool": event.action_type.value, "args": event.action_arguments}})
+        content = event.observation_summary
+        if event.stdout:
+            content += f"\nstdout:\n{event.stdout}"
+        if event.stderr:
+            content += f"\nstderr:\n{event.stderr}"
+        messages.append({"role": "tool", "name": event.action_type.value, "content": content})
+    return messages

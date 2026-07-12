@@ -1,0 +1,1 @@
+{"action":{"args":{"path":"README.md"},"tool":"read_file"},"messages":[{"content":"Repair the workspace and submit the target.","role":"user"}],"q_target":1.0,"recoverability_target":true,"return_std":0.0,"rollout_count":1,"state_id":"snapshot-demo","success_probability":1.0}

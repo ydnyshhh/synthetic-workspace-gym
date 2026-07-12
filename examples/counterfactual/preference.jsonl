@@ -1,0 +1,1 @@
+{"chosen":{"args":{"path":"README.md"},"tool":"read_file"},"chosen_return":1.0,"messages":[{"content":"Repair the workspace and submit the target.","role":"user"}],"rejected":{"args":{"path_or_answer":"done"},"tool":"submit"},"rejected_return":0.4,"return_margin":0.6,"state_id":"snapshot-demo","task_id":"swg-cf-demo"}

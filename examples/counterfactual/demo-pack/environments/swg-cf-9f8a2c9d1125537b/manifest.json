@@ -1,0 +1,92 @@
+{
+  "difficulty": 1,
+  "env_id": "script_repair-d1-s7-b03cafce",
+  "evaluator_entrypoint": "synthetic_workspace_gym.evaluators.script_repair:ScriptRepairEvaluator",
+  "family": "script_repair",
+  "hidden_files": [
+    "evaluator_config.json",
+    "expected_region_report.json",
+    "run_hidden_tests.py",
+    "solution_files.json"
+  ],
+  "hidden_root": "hidden",
+  "instruction": "Repair the provided Python workspace so that the hidden tests pass.",
+  "max_steps": 12,
+  "metadata": {
+    "bug_labels": [
+      "missing_rows_bug"
+    ],
+    "complexity_profile": {
+      "bug_subtlety": 1,
+      "dependency_depth": 1,
+      "distractor_count": 0,
+      "execution_required": false,
+      "file_count": 3,
+      "output_constraint_strength": 2,
+      "reasoning_hops": 1,
+      "transformation_count": 1
+    },
+    "scenario_id": "csv_schema_drift",
+    "scenario_profile": {
+      "bug_scope": "cross_file",
+      "failure_mode": "semantic_and_formatting",
+      "repair_surface": "parser_interface",
+      "smoke_test_quality": "partially_informative"
+    },
+    "scenario_selection": {
+      "requested_scenario_id": "csv_schema_drift",
+      "selection_mode": "explicit"
+    },
+    "task_descriptor": {
+      "entrypoint": "python run_example.py",
+      "family": "script_repair",
+      "hints": [
+        "The CSV headers and the parser must agree on the account identifier column.",
+        "Cancelled rows should be excluded from the final report, not dropped before parsing.",
+        "The final report is sorted by region, not by aggregate size."
+      ],
+      "repair_contract": [
+        "Load every row keyed by the visible `account_id` column; do not look for `customer_id`.",
+        "Normalize `region` with `strip().lower()` before reporting.",
+        "Exclude rows whose normalized status is `cancelled` in the report step.",
+        "Return report rows sorted lexicographically by lowercase `region`."
+      ],
+      "scenario_id": "csv_schema_drift",
+      "target_files": [
+        "src/repair_target/parser.py"
+      ]
+    }
+  },
+  "reference_solution": {
+    "bug_labels": [
+      "missing_rows_bug"
+    ],
+    "files": {
+      "src/repair_target/parser.py": "from __future__ import annotations\n\nimport csv\nfrom pathlib import Path\n\n\ndef load_orders(path: Path) -> list[dict[str, object]]:\n    with Path(path).open(\"r\", encoding=\"utf-8\", newline=\"\") as handle:\n        reader = csv.DictReader(handle)\n        rows = []\n        for row in reader:\n            if not row.get(\"account_id\"):\n                continue\n            rows.append(\n                {\n                    \"account_id\": row[\"account_id\"],\n                    \"region\": str(row[\"region\"]).strip().lower(),\n                    \"status\": str(row[\"status\"]).strip().lower(),\n                    \"amount\": round(float(row[\"amount\"]), 2),\n                }\n            )\n    return rows\n"
+    },
+    "scenario_id": "csv_schema_drift"
+  },
+  "seed": 7,
+  "time_limit_seconds": 60,
+  "tool_permissions": {
+    "append_file": true,
+    "list_directory": true,
+    "python_timeout_seconds": 10,
+    "read_file": true,
+    "run_python": true,
+    "run_shell": true,
+    "shell_timeout_seconds": 10,
+    "submit": true,
+    "write_file": true
+  },
+  "visible_files": [
+    "README.md",
+    "data/orders.csv",
+    "run_example.py",
+    "src/repair_target/__init__.py",
+    "src/repair_target/parser.py",
+    "src/repair_target/report.py",
+    "task.json"
+  ],
+  "workspace_root": "visible"
+}

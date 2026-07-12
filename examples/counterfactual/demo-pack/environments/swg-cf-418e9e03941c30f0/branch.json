@@ -1,0 +1,94 @@
+{
+  "branch_group_id": "cf-group-5ea922694a495508",
+  "candidate_id": "candidate-a620612bc9095249",
+  "difficulty": 1,
+  "environment_path": "examples\\counterfactual\\demo-pack\\environments\\swg-cf-418e9e03941c30f0",
+  "family": "script_repair",
+  "forced_action": {
+    "args": {
+      "path_or_answer": "done"
+    },
+    "tool": "submit"
+  },
+  "format_version": "1.0",
+  "metadata": {
+    "candidate_type": "submit",
+    "privileged": false,
+    "selector_labels": [
+      "policy:writes_checks_submit"
+    ]
+  },
+  "mode": "forced",
+  "prefix_messages": [
+    {
+      "content": "Repair the provided Python workspace so that the hidden tests pass.",
+      "role": "user"
+    },
+    {
+      "role": "assistant",
+      "tool_call": {
+        "args": {
+          "path": "."
+        },
+        "tool": "list_directory"
+      }
+    },
+    {
+      "content": "Listed .",
+      "name": "list_directory",
+      "role": "tool"
+    },
+    {
+      "role": "assistant",
+      "tool_call": {
+        "args": {
+          "path": "README.md"
+        },
+        "tool": "read_file"
+      }
+    },
+    {
+      "content": "Read README.md",
+      "name": "read_file",
+      "role": "tool"
+    },
+    {
+      "role": "assistant",
+      "tool_call": {
+        "args": {
+          "path": "task.json"
+        },
+        "tool": "read_file"
+      }
+    },
+    {
+      "content": "Read task.json",
+      "name": "read_file",
+      "role": "tool"
+    },
+    {
+      "role": "assistant",
+      "tool_call": {
+        "args": {
+          "command": "python run_example.py"
+        },
+        "tool": "run_shell"
+      }
+    },
+    {
+      "content": "Ran shell command: python run_example.py\nstdout:\n[]\n",
+      "name": "run_shell",
+      "role": "tool"
+    },
+    {
+      "content": "Continue solving the task from the current workspace state. The workspace already includes all earlier edits. Do not repeat completed work unless verification requires it. Use the remaining tool budget efficiently. Submit when the required artifact or repair is complete.",
+      "role": "user"
+    }
+  ],
+  "remaining_steps": 8,
+  "scenario_id": "csv_schema_drift",
+  "seed": 7,
+  "snapshot_id": "snapshot-2719cb9cf81024d3",
+  "task_id": "swg-cf-418e9e03941c30f0",
+  "time_limit_seconds": 59
+}

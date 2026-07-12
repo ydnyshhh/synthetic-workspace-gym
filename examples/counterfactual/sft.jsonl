@@ -1,0 +1,1 @@
+{"messages":[{"content":"Repair the workspace and submit the target.","role":"user"}],"privileged":false,"source":"counterfactual_branch","target_action":{"args":{"path":"README.md"},"tool":"read_file"},"target_return":1.0,"task_id":"swg-cf-demo"}

@@ -1,0 +1,9 @@
+{
+  "bug_labels": [
+    "missing_rows_bug"
+  ],
+  "files": {
+    "src/repair_target/parser.py": "from __future__ import annotations\n\nimport csv\nfrom pathlib import Path\n\n\ndef load_orders(path: Path) -> list[dict[str, object]]:\n    with Path(path).open(\"r\", encoding=\"utf-8\", newline=\"\") as handle:\n        reader = csv.DictReader(handle)\n        rows = []\n        for row in reader:\n            if not row.get(\"account_id\"):\n                continue\n            rows.append(\n                {\n                    \"account_id\": row[\"account_id\"],\n                    \"region\": str(row[\"region\"]).strip().lower(),\n                    \"status\": str(row[\"status\"]).strip().lower(),\n                    \"amount\": round(float(row[\"amount\"]), 2),\n                }\n            )\n    return rows\n"
+  },
+  "scenario_id": "csv_schema_drift"
+}

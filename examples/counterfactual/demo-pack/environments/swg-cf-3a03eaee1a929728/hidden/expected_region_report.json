@@ -1,0 +1,17 @@
+[
+  {
+    "region": "east",
+    "row_count": 1,
+    "total_amount": 85.0
+  },
+  {
+    "region": "north",
+    "row_count": 2,
+    "total_amount": 210.0
+  },
+  {
+    "region": "west",
+    "row_count": 1,
+    "total_amount": 95.5
+  }
+]

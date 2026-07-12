@@ -189,6 +189,8 @@ def build_parser() -> argparse.ArgumentParser:
     verifiers_export = verifiers_subparsers.add_parser("export-registry", help="Write SWG verifiers registry metadata")
     verifiers_export.add_argument("--output", type=Path, required=True)
 
+    from synthetic_workspace_gym.counterfactual.cli import configure_parser
+    configure_parser(subparsers)
     return parser
 
 
@@ -703,6 +705,9 @@ def main() -> int:
             return command_verifiers_smoke_test(args)
         if args.verifiers_command == "export-registry":
             return command_verifiers_export_registry(args)
+    if args.command == "counterfactual":
+        from synthetic_workspace_gym.counterfactual.cli import dispatch
+        return dispatch(args, get_agent)
     raise SystemExit(f"Unsupported command: {args.command}")
 
 
