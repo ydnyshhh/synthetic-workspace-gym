@@ -12,6 +12,7 @@ from .analysis import aggregate_outcomes
 from .candidates import generate_candidates
 from .compiler import compile_pack
 from .exports import export_rl_taskset, export_training_data, read_comparisons
+from .hosted import package_hosted_branch_pack
 from .runner import read_branch_manifest, run_branches
 from .schemas import BranchOutcome, CounterfactualSnapshot
 from .selectors import SELECTORS
@@ -26,6 +27,7 @@ def configure_parser(subparsers: argparse._SubParsersAction) -> None:
     run = cf.add_parser("run"); run.add_argument("--manifest", type=Path, required=True); run.add_argument("--client", choices=["scripted", "heuristic"], default="scripted"); run.add_argument("--rollouts-per-branch", type=int, default=1); run.add_argument("--output-dir", type=Path, required=True)
     analyze = cf.add_parser("analyze"); analyze.add_argument("--outcomes", type=Path, required=True); analyze.add_argument("--recoverable-threshold", type=float, default=.95); analyze.add_argument("--optimality-tolerance", type=float, default=.05); analyze.add_argument("--output", type=Path, required=True)
     export = cf.add_parser("export"); export.add_argument("--comparisons", type=Path, required=True); export.add_argument("--branch-manifest", type=Path, required=True); export.add_argument("--format", choices=["sft", "preference", "critic", "rl-taskset"], required=True); export.add_argument("--min-margin", type=float, default=.2); export.add_argument("--min-regret", type=float, default=.2); export.add_argument("--include-privileged", action="store_true", help="Include targets derived from privileged reference data (excluded by default)"); export.add_argument("--output", type=Path, required=True)
+    package = cf.add_parser("package-hosted", help="Generate a self-contained Environment Hub package from a branch pack"); package.add_argument("--branch-pack", type=Path, required=True); package.add_argument("--output-dir", type=Path, required=True); package.add_argument("--package-name", required=True); package.add_argument("--swg-ref", required=True); package.add_argument("--pack-id"); package.add_argument("--version", default="0.1.0"); package.add_argument("--force", action="store_true")
     inspect = cf.add_parser("inspect"); inspect.add_argument("--comparisons", type=Path, required=True); inspect.add_argument("--comparison-id", required=True)
 
 
@@ -54,6 +56,12 @@ def dispatch(args: argparse.Namespace, get_agent) -> int:
     if command == "analyze":
         outcomes = [BranchOutcome.from_dict(json.loads(line)) for line in args.outcomes.read_text(encoding="utf-8").splitlines() if line.strip()]
         comparisons = aggregate_outcomes(outcomes, args.recoverable_threshold, args.optimality_tolerance); write_jsonl(args.output, [x.to_dict() for x in comparisons]); print(json.dumps({"comparison_count": len(comparisons)}, indent=2)); return 0
+    if command == "package-hosted":
+        result = package_hosted_branch_pack(
+            args.branch_pack, args.output_dir, args.package_name, args.swg_ref,
+            pack_id=args.pack_id, version=args.version, force=args.force,
+        )
+        print(json.dumps(result.to_dict(), indent=2)); return 0
     comparisons = read_comparisons(args.comparisons)
     if command == "inspect":
         item = next(x for x in comparisons if x.branch_group_id == args.comparison_id); print(json.dumps(item.to_dict(), indent=2)); return 0

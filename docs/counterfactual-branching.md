@@ -43,6 +43,23 @@ uv run swg counterfactual export \
 
 Use `--format sft`, `critic`, or `rl-taskset` for the other outputs. RL export writes open-action environments immediately before states whose regret passes `--min-regret`.
 
+## Hosted package generation
+
+Generate one immutable Environment Hub package per counterfactual experiment:
+
+```bash
+uv run swg counterfactual package-hosted \
+  --branch-pack artifacts/pilot-pack \
+  --output-dir dist/swg-counterfactual-pilot \
+  --package-name swg-counterfactual-pilot \
+  --pack-id swg-cf-pilot-2026-07-13 \
+  --swg-ref df0e0462de3c2c006ba4a4db69785e60ec8cccc4
+```
+
+The command validates every manifest row, rejects paths outside the pack and missing hidden evaluator assets, copies the unchanged pack under the generated Python package, computes a deterministic SHA-256 over every pack path and file, runs a local native-Verifiers smoke test, builds the wheel, and verifies that every pack file is present in it. The generated wrapper injects `pack_id` and `pack_sha256` into hosted branch metadata so rollout state remains tied to the immutable input pack.
+
+The generated directory contains `environment.py`, `pyproject.toml`, `README.md`, and `src/<package_module>/branch_pack/`. Use `--force` only when intentionally replacing an existing generated directory. Real packs contain trusted assets under `hidden/`; publish them privately and use a new package version and pack ID for corrections instead of updating a collected experiment in place.
+
 ## Artifacts
 
 Snapshots contain `snapshot.json`, `branch_state.json`, a rewritten `manifest.json`, `visible/`, trusted-only `hidden/`, and `trajectory_prefix.jsonl`. Action-value selectors compile only before-action states. Signals observed after an action (such as a failed check or score drop) are carried to the next before-action snapshot, whose `original_action` is the policy's actual next choice. Branch packs contain `metadata.json`, `manifest.jsonl`, and one independently loadable environment per task. Manifest environment paths are POSIX-relative to the pack and resolved by the loader, so packs can be moved across working directories and operating systems. Runs contain `outcomes.jsonl`, `comparisons.jsonl`, `summary.json`, and isolated rollout directories with trajectory, final workspace, evaluator result, diff, and outcome.
