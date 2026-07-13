@@ -10,7 +10,14 @@ import test_support  # noqa: F401
 from test_support import workspace_tempdir
 
 import synthetic_workspace_gym as swg
-from synthetic_workspace_gym.hub import HUB_SYSTEM_PROMPT, SyntheticWorkspaceHubEnv, load_environment
+from synthetic_workspace_gym.hub import (
+    HUB_SYSTEM_PROMPT,
+    SyntheticWorkspaceHubEnv,
+    _to_verifiers_branch_messages,
+    _to_verifiers_tool_exchange,
+    load_environment,
+)
+from synthetic_workspace_gym.counterfactual.runner import read_branch_manifest
 from synthetic_workspace_gym.verifiers.compat import is_verifiers_available
 from synthetic_workspace_gym.verifiers.env import SyntheticWorkspaceVerifiersEnv
 
@@ -46,6 +53,73 @@ class HubEnvironmentTests(unittest.TestCase):
         self.assertIn("abc", content)
         self.assertIn("Observation truncated by SWG", content)
         self.assertIn("3 characters omitted", content)
+
+    @unittest.skipUnless(is_verifiers_available(), "verifiers is unavailable")
+    def test_real_branch_messages_normalize_for_native_verifiers(self) -> None:
+        from verifiers.utils.message_utils import normalize_messages
+
+        manifest = (
+            Path(__file__).parents[1]
+            / "examples"
+            / "counterfactual"
+            / "demo-pack"
+            / "manifest.jsonl"
+        )
+        task = read_branch_manifest(manifest)[0]
+        restored = normalize_messages(_to_verifiers_branch_messages(task.prefix_messages))
+        tool_messages = [message for message in restored if message.role == "tool"]
+        self.assertTrue(tool_messages)
+        self.assertTrue(all(bool(message.tool_call_id) for message in tool_messages))
+
+        forced = _to_verifiers_tool_exchange(
+            task.forced_action or {}, "forced observation",
+            "counterfactual-forced-action", metadata={"forced": True},
+        )
+        normalized_forced = normalize_messages(forced)
+        self.assertEqual(normalized_forced[0].tool_calls[0].id, "counterfactual-forced-action")
+        self.assertEqual(normalized_forced[1].tool_call_id, "counterfactual-forced-action")
+
+        with self.assertRaisesRegex(ValueError, "no preceding tool call"):
+            _to_verifiers_branch_messages([{"role": "tool", "content": "orphaned"}])
+        with self.assertRaisesRegex(ValueError, "unmatched tool call"):
+            _to_verifiers_branch_messages([
+                {"role": "assistant", "tool_call": {"tool": "read_file", "args": {"path": "README.md"}}}
+            ])
+
+    @unittest.skipUnless(is_verifiers_available(), "verifiers is unavailable")
+    def test_native_hub_setup_normalizes_restored_and_forced_messages(self) -> None:
+        async def run_setup() -> None:
+            manifest = (
+                Path(__file__).parents[1]
+                / "examples"
+                / "counterfactual"
+                / "demo-pack"
+                / "manifest.jsonl"
+            )
+            task = read_branch_manifest(manifest)[0]
+            with workspace_tempdir() as tmp_dir:
+                env = load_environment(
+                    branch_manifest_path=str(manifest),
+                    branch_task_id=task.task_id,
+                    branch_mode="forced",
+                    output_dir=str(Path(tmp_dir) / "runtime"),
+                )
+                self.assertIsInstance(env, SyntheticWorkspaceHubEnv)
+                row = dict(env.get_dataset()[0])
+                state = {"input": row, "trajectory_id": "native-branch-message-test"}
+                await env.setup_state(state)
+                try:
+                    tool_messages = [message for message in state["prompt"] if message.role == "tool"]
+                    self.assertTrue(tool_messages)
+                    self.assertTrue(all(bool(message.tool_call_id) for message in tool_messages))
+                    self.assertTrue(any(
+                        message.tool_call_id == "counterfactual-forced-action"
+                        for message in tool_messages
+                    ))
+                finally:
+                    state["swg_env"].close()
+
+        asyncio.run(run_setup())
 
     def test_load_environment_accepts_fixed_task_args(self) -> None:
         env = load_environment(

@@ -13,6 +13,10 @@ from synthetic_workspace_gym.splits.schemas import VALID_SPLITS, normalize_split
 from synthetic_workspace_gym.verifiers.compat import vf
 from synthetic_workspace_gym.verifiers.dataset import SWGVerifiersDataset
 from synthetic_workspace_gym.verifiers.env import SYSTEM_PROMPT, SyntheticWorkspaceVerifiersEnv
+from synthetic_workspace_gym.verifiers.messages import (
+    to_verifiers_branch_messages as _to_verifiers_branch_messages,
+    to_verifiers_tool_exchange as _to_verifiers_tool_exchange,
+)
 from synthetic_workspace_gym.verifiers.parser import SWGToolCallParser
 from synthetic_workspace_gym.verifiers.rewards import compute_reward, normalize_reward_payload, to_verifiers_info
 
@@ -266,7 +270,9 @@ if _native_hub_available():
             state["swg_target_files"] = _target_files(observation)
             prefix_messages = row.get("prefix_messages")
             if isinstance(prefix_messages, list):
-                prompt = [dict(message) for message in prefix_messages]
+                prompt = _to_verifiers_branch_messages(
+                    [dict(message) for message in prefix_messages]
+                )
                 if not prompt or prompt[0].get("role") != "system":
                     prompt.insert(0, {"role": "system", "content": HUB_SYSTEM_PROMPT})
             else:
@@ -279,15 +285,16 @@ if _native_hub_available():
             state["swg_forced_action"] = forced_action
             if isinstance(forced_action, dict):
                 forced_content, forced_done = _execute_forced_swg_action(state, forced_action)
-                prompt.extend([
-                    {"role": "assistant", "content": json.dumps(forced_action, sort_keys=True), "metadata": {"forced": True}},
-                    {"role": "tool", "content": forced_content, "metadata": {"forced": True}},
-                ])
+                forced_call_id = "counterfactual-forced-action"
+                forced_messages = _to_verifiers_tool_exchange(
+                    forced_action, forced_content, forced_call_id,
+                    metadata={"forced": True},
+                )
+                prompt.extend(forced_messages)
                 state["swg_forced_action_result"] = {"observation": forced_content, "done": forced_done}
                 if forced_done:
                     state["final_env_response"] = normalize_messages(
-                        [{"role": "tool", "content": forced_content, "metadata": {"forced": True}}],
-                        field_name="swg.forced_response",
+                        [forced_messages[1]], field_name="swg.forced_response",
                     )
             state["prompt"] = normalize_messages(prompt, field_name="swg.prompt")
             tool_schemas = observation.get("tool_schemas")
