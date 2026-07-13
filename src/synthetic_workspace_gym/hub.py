@@ -76,6 +76,9 @@ def load_environment(
     reward_mode: str = "score",
     output_dir: str | None = None,
     env_id: str = DEFAULT_ENV_ID,
+    branch_manifest_path: str | None = None,
+    branch_task_id: str | None = None,
+    branch_mode: str | None = None,
 ) -> object:
     """Load SWG as a Prime Intellect / Verifiers Environment Hub package.
 
@@ -85,24 +88,20 @@ def load_environment(
     the Prime dashboard or CLI.
     """
 
-    rows = _build_rows(
-        split=split,
-        family=family,
-        scenario=scenario,
-        difficulty=difficulty,
-        seed=seed,
-        families=families,
-        difficulties=difficulties,
-        seeds=seeds,
-        split_manifest_path=split_manifest_path,
-        include_splits=include_splits,
-        exclude_splits=exclude_splits,
-        task_id=task_id,
-        max_examples=max_examples,
-        sample_strategy=sample_strategy,
-        shuffle=shuffle,
-        shuffle_seed=shuffle_seed,
-    )
+    if branch_manifest_path is not None:
+        rows = _build_branch_rows(
+            branch_manifest_path=branch_manifest_path, branch_task_id=branch_task_id,
+            branch_mode=branch_mode, max_examples=max_examples, sample_strategy=sample_strategy,
+            shuffle=shuffle, shuffle_seed=shuffle_seed,
+        )
+    else:
+        rows = _build_rows(
+            split=split, family=family, scenario=scenario, difficulty=difficulty, seed=seed,
+            families=families, difficulties=difficulties, seeds=seeds,
+            split_manifest_path=split_manifest_path, include_splits=include_splits,
+            exclude_splits=exclude_splits, task_id=task_id, max_examples=max_examples,
+            sample_strategy=sample_strategy, shuffle=shuffle, shuffle_seed=shuffle_seed,
+        )
     env_args = {
         "split": split,
         "family": family,
@@ -128,6 +127,9 @@ def load_environment(
         "docker_image": docker_image,
         "reward_mode": reward_mode,
         "output_dir": output_dir,
+        "branch_manifest_path": branch_manifest_path,
+        "branch_task_id": branch_task_id,
+        "branch_mode": branch_mode,
     }
 
     if _native_hub_available():
@@ -155,9 +157,12 @@ def load_environment(
         sandbox_backend=sandbox_backend,
         docker_image=docker_image,
         reward_mode=reward_mode,
-        max_turns=max_turns,
-        time_limit_seconds=time_limit_seconds,
+        max_turns=int(first.get("remaining_steps") or max_turns),
+        time_limit_seconds=int(first.get("time_limit_seconds") or time_limit_seconds) if (first.get("time_limit_seconds") or time_limit_seconds) is not None else None,
         output_dir=output_dir,
+        branch_manifest_path=branch_manifest_path,
+        branch_task_id=branch_task_id,
+        branch_mode=branch_mode,
     )
 
 
@@ -238,8 +243,8 @@ if _native_hub_available():
                 scenario=row.get("scenario"),
                 difficulty=int(row.get("difficulty") or 3),
                 seed=int(row.get("seed") or 0),
-                max_steps=self.max_tool_steps,
-                time_limit_seconds=self.time_limit_seconds,
+                max_steps=int(row.get("remaining_steps") or self.max_tool_steps),
+                time_limit_seconds=int(row.get("time_limit_seconds") or self.time_limit_seconds),
                 workspace_root=row.get("environment_path"),
                 output_dir=output_dir,
                 sandbox_backend=self.sandbox_backend,
@@ -259,13 +264,32 @@ if _native_hub_available():
             state["swg_required_output_path"] = _required_output_path(observation)
             state["swg_entrypoint"] = _entrypoint(observation)
             state["swg_target_files"] = _target_files(observation)
-            state["prompt"] = normalize_messages(
-                [
+            prefix_messages = row.get("prefix_messages")
+            if isinstance(prefix_messages, list):
+                prompt = [dict(message) for message in prefix_messages]
+                if not prompt or prompt[0].get("role") != "system":
+                    prompt.insert(0, {"role": "system", "content": HUB_SYSTEM_PROMPT})
+            else:
+                prompt = [
                     {"role": "system", "content": HUB_SYSTEM_PROMPT},
                     {"role": "user", "content": _task_user_prompt(row, observation)},
-                ],
-                field_name="swg.prompt",
-            )
+                ]
+            state["swg_branch"] = _branch_metadata(row)
+            forced_action = row.get("forced_action") if row.get("branch_mode") == "forced" else None
+            state["swg_forced_action"] = forced_action
+            if isinstance(forced_action, dict):
+                forced_content, forced_done = _execute_forced_swg_action(state, forced_action)
+                prompt.extend([
+                    {"role": "assistant", "content": json.dumps(forced_action, sort_keys=True), "metadata": {"forced": True}},
+                    {"role": "tool", "content": forced_content, "metadata": {"forced": True}},
+                ])
+                state["swg_forced_action_result"] = {"observation": forced_content, "done": forced_done}
+                if forced_done:
+                    state["final_env_response"] = normalize_messages(
+                        [{"role": "tool", "content": forced_content, "metadata": {"forced": True}}],
+                        field_name="swg.forced_response",
+                    )
+            state["prompt"] = normalize_messages(prompt, field_name="swg.prompt")
             tool_schemas = observation.get("tool_schemas")
             if isinstance(tool_schemas, list) and tool_schemas:
                 state["tool_defs"] = self._normalize_tool_defs(tool_schemas) or []
@@ -344,6 +368,46 @@ async def swg_reward(state: Any, **kwargs: Any) -> float:
         return 0.0
     normalized = normalize_reward_payload(payload)
     return compute_reward(normalized, mode=str(state.get("swg_reward_mode") or "score"))
+
+
+def _build_branch_rows(
+    *,
+    branch_manifest_path: str,
+    branch_task_id: str | None,
+    branch_mode: str | None,
+    max_examples: int,
+    sample_strategy: str,
+    shuffle: bool | str,
+    shuffle_seed: int,
+) -> list[dict[str, Any]]:
+    from synthetic_workspace_gym.counterfactual.runner import read_branch_manifest
+
+    tasks = read_branch_manifest(Path(branch_manifest_path))
+    if branch_task_id is not None:
+        tasks = [task for task in tasks if task.task_id == branch_task_id]
+    rows = []
+    for task in tasks:
+        mode = branch_mode or task.mode
+        if mode not in {"forced", "open"}:
+            raise ValueError("branch_mode must be 'forced' or 'open'")
+        if mode == "forced" and task.forced_action is None:
+            raise ValueError(f"branch task {task.task_id!r} has no forced action")
+        rows.append(_with_prompt({
+            "task_id": task.task_id, "environment_path": task.environment_path,
+            "prefix_messages": task.prefix_messages,
+            "forced_action": task.forced_action if mode == "forced" else None,
+            "branch_mode": mode, "remaining_steps": task.remaining_steps,
+            "time_limit_seconds": task.time_limit_seconds,
+            "branch_group_id": task.branch_group_id, "snapshot_id": task.snapshot_id,
+            "candidate_id": task.candidate_id, "family": task.family,
+            "scenario": task.scenario_id, "difficulty": task.difficulty, "seed": task.seed,
+            "metadata": dict(task.metadata), "question": "Continue the counterfactual branch from the restored state.",
+        }))
+    rows = _sample_rows(rows, max_examples=max_examples, sample_strategy=sample_strategy,
+                        shuffle=_coerce_bool(shuffle), shuffle_seed=shuffle_seed)
+    if not rows:
+        raise ValueError(f"SWG branch manifest produced no task rows for branch_task_id={branch_task_id!r}.")
+    return rows
 
 
 def _build_rows(
@@ -509,6 +573,21 @@ def _task_metadata(row: dict[str, Any]) -> dict[str, object]:
         "difficulty": row.get("difficulty"),
         "seed": row.get("seed"),
         "environment_path": row.get("environment_path"),
+        **_branch_metadata(row),
+    }
+
+
+def _branch_metadata(row: dict[str, Any]) -> dict[str, object]:
+    if row.get("branch_group_id") is None:
+        return {}
+    return {
+        **dict(row.get("metadata") or {}),
+        "counterfactual": True,
+        "branch_group_id": row.get("branch_group_id"),
+        "snapshot_id": row.get("snapshot_id"),
+        "candidate_id": row.get("candidate_id"),
+        "branch_mode": row.get("branch_mode"),
+        "remaining_steps": row.get("remaining_steps"),
     }
 
 
@@ -593,6 +672,18 @@ def _text_action_or_none(content: object) -> dict[str, object] | None:
     if action.get("parse_error"):
         return None
     return action
+
+
+def _execute_forced_swg_action(state: Any, action: dict[str, object]) -> tuple[str, bool]:
+    result = state["swg_env"].step(action)
+    content = _truncate_observation(
+        str(result.get("observation", "")), int(state.get("swg_max_observation_chars") or 0),
+    )
+    info = dict(result.get("info", {}) or {})
+    if info.get("reward_payload") is not None:
+        state["swg_reward_payload"] = info["reward_payload"]
+        state["swg_verifiers_info"] = to_verifiers_info(normalize_reward_payload(info["reward_payload"]))
+    return content, bool(result.get("done", False))
 
 
 def _execute_swg_action(state: Any, action: dict[str, object]) -> tuple[str, bool]:

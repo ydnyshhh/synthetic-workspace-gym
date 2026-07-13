@@ -143,6 +143,9 @@ class BranchOutcome(CounterfactualRecord):
     final_workspace_path: str | None = None
     trajectory_path: str | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
+    rollout_seed: int | None = None
+    sampling_seed: int | None = None
+    pair_id: str | None = None
 
 
 @dataclass(slots=True)

@@ -14,9 +14,11 @@
   "metadata": {
     "candidate_type": "original",
     "privileged": false,
+    "root_trajectory_id": "positive-demo",
     "selector_labels": [
       "policy:every_step"
-    ]
+    ],
+    "source": "trajectory"
   },
   "mode": "forced",
   "prefix_messages": [

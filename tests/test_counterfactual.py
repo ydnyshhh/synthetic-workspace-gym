@@ -8,6 +8,7 @@ import pytest
 from synthetic_workspace_gym.counterfactual.analysis import aggregate_outcomes
 from synthetic_workspace_gym.counterfactual.candidates import generate_candidates
 from synthetic_workspace_gym.counterfactual.compiler import compile_pack
+from synthetic_workspace_gym.counterfactual.cli import select_branch_snapshot_ids
 from synthetic_workspace_gym.counterfactual.exports import export_rl_taskset, export_training_data
 from synthetic_workspace_gym.counterfactual.replay import replay_branch
 from synthetic_workspace_gym.counterfactual.runner import read_branch_manifest
@@ -24,6 +25,7 @@ from synthetic_workspace_gym.verifiers.env import SyntheticWorkspaceVerifiersEnv
 from synthetic_workspace_gym.verifiers.rollouts import run_verifiers_rollout
 from synthetic_workspace_gym.schemas import ToolState
 from synthetic_workspace_gym.runtime.environment import load_environment
+from synthetic_workspace_gym.hub import _build_branch_rows, load_environment as load_hub_environment
 from synthetic_workspace_gym.schemas import Action, ActionType
 
 
@@ -32,8 +34,8 @@ def snapshot(**overrides) -> CounterfactualSnapshot:
     data.update(overrides); return CounterfactualSnapshot(**data)
 
 
-def outcome(candidate: str, reward: float, index: int = 0, kind: str = "other") -> BranchOutcome:
-    return BranchOutcome(f"r-{candidate}-{index}", f"t-{candidate}", "g", candidate, "s", "model", index, reward, reward, reward >= .95, step_count=2, metadata={"candidate_type": kind})
+def outcome(candidate: str, reward: float, index: int = 0, kind: str = "other", **kwargs) -> BranchOutcome:
+    return BranchOutcome(f"r-{candidate}-{index}", f"t-{candidate}", "g", candidate, "s", "model", index, reward, reward, reward >= .95, step_count=2, metadata={"candidate_type": kind}, **kwargs)
 
 
 def test_schema_roundtrip_and_invariants() -> None:
@@ -53,14 +55,37 @@ def test_selectors() -> None:
     assert ScoreDropSelector().select([submit, drop])
 
 
+def test_selectors_run_independently_for_each_trajectory() -> None:
+    first = snapshot(snapshot_id="trajectory-1-first", trajectory_id="trajectory-1")
+    second = snapshot(snapshot_id="trajectory-2-first", trajectory_id="trajectory-2")
+    assert select_branch_snapshot_ids([first, second], ["before_first_write"], 1) == [
+        "trajectory-1-first", "trajectory-2-first",
+    ]
+
+
 def test_analysis_and_preference_export(tmp_path: Path) -> None:
     rows = [outcome("original", .2, kind="original"), outcome("better", .9), outcome("better", 1., 1)]
     comparison = aggregate_outcomes(rows, recoverable_threshold=.9)[0]
     assert comparison.decision_regret == pytest.approx(.75); assert comparison.recoverable
+    difference = comparison.metadata["difference_statistics"]["better"]
+    assert difference["method"] == "independent_bootstrap"
+    assert difference["paired_count"] == 0.0
     common = dict(branch_group_id="g", snapshot_id="s", mode="forced", environment_path="env", prefix_messages=[], remaining_steps=2, time_limit_seconds=10, family="f", scenario_id=None, difficulty=1, seed=1)
     tasks = {"a": BranchTask("a", candidate_id="original", forced_action={"tool": "submit", "args": {}}, metadata={"candidate_type": "original"}, **common), "b": BranchTask("b", candidate_id="better", forced_action={"tool": "read_file", "args": {"path": "README.md"}}, metadata={"candidate_type": "read_relevant_file"}, **common)}
     records = export_training_data([comparison], tasks, tmp_path / "preference.jsonl", "preference", min_margin=.2)
     assert len(records) == 1 and records[0]["state_id"] == "s"
+    assert records[0]["chosen_source"] == "unknown"
+    assert records[0]["chosen_privileged"] is False
+
+
+def test_analysis_pairs_only_explicit_pair_ids() -> None:
+    rows = [
+        outcome("original", .2, kind="original", pair_id="pair-0"),
+        outcome("better", .9, pair_id="pair-0"),
+    ]
+    difference = aggregate_outcomes(rows)[0].metadata["difference_statistics"]["better"]
+    assert difference["method"] == "paired_bootstrap"
+    assert difference["paired_count"] == 1.0
 
 
 def test_snapshot_candidate_compile_pipeline(tmp_path: Path) -> None:
@@ -182,8 +207,23 @@ def test_actual_evaluator_positive_regret_preference_and_rl_reload(tmp_path: Pat
     assert comparison.decision_regret == 1.0
     assert comparison.recoverable
     tasks = {task.task_id: task for task in tasks_list}
-    preference = export_training_data([comparison], tasks, tmp_path / "preference.jsonl", "preference", min_margin=.2)
+    excluded = export_training_data([comparison], tasks, tmp_path / "excluded.jsonl", "preference", min_margin=.2)
+    assert excluded == []
+    preference = export_training_data(
+        [comparison], tasks, tmp_path / "preference.jsonl", "preference",
+        min_margin=.2, exclude_privileged=False,
+    )
     assert len(preference) == 1
+    assert preference[0]["chosen_source"] == "reference_solution"
+    assert preference[0]["chosen_privileged"] is True
+    assert preference[0]["rejected_source"] == "trajectory"
+    assert preference[0]["rejected_privileged"] is False
+    critics = export_training_data(
+        [comparison], tasks, tmp_path / "critic.jsonl", "critic",
+        exclude_privileged=False,
+    )
+    privileged_critic = next(record for record in critics if record["privileged"])
+    assert privileged_critic["action_source"] == "reference_solution"
     exported = export_rl_taskset([comparison], tasks, tmp_path / "rl-pack", min_regret=.2)
     assert len(exported) == 1
     reloaded = read_branch_manifest(tmp_path / "rl-pack" / "manifest.jsonl")
@@ -219,6 +259,35 @@ def test_prime_and_verifiers_execute_branch_prefix_and_forced_action(tmp_path: P
 
     verifiers_client = _RecordingPrimeClient()
     verifiers_env = SyntheticWorkspaceVerifiersEnv(branch_manifest_path=manifest, branch_task_id=task.task_id)
+    reset = verifiers_env.reset()
+    assert reset["forced_action_result"] is not None
+    assert any(message.get("metadata", {}).get("forced") for message in reset["messages"])
+    assert reset["branch_metadata"]["candidate_id"] == task.candidate_id
     verifiers_result = run_verifiers_rollout(verifiers_env, verifiers_client, output_dir=tmp_path / "verifiers")
     assert verifiers_result["verifiers_compatible"]
     assert any(message.get("metadata", {}).get("forced") for message in verifiers_client.seen_messages)
+
+
+def test_hub_branch_manifest_rows_preserve_intervention_contract(monkeypatch: pytest.MonkeyPatch) -> None:
+    manifest = Path(__file__).parents[1] / "examples" / "counterfactual" / "demo-pack" / "manifest.jsonl"
+    task = read_branch_manifest(manifest)[0]
+    rows = _build_branch_rows(
+        branch_manifest_path=str(manifest), branch_task_id=task.task_id,
+        branch_mode="forced", max_examples=-1, sample_strategy="first",
+        shuffle=False, shuffle_seed=0,
+    )
+    assert len(rows) == 1
+    row = rows[0]
+    assert row["prefix_messages"] == task.prefix_messages
+    assert row["forced_action"] == task.forced_action
+    assert row["remaining_steps"] == task.remaining_steps
+    assert row["branch_group_id"] == task.branch_group_id
+
+    monkeypatch.setattr("synthetic_workspace_gym.hub._native_hub_available", lambda: False)
+    hosted_env = load_hub_environment(
+        branch_manifest_path=str(manifest), branch_task_id=task.task_id, branch_mode="forced",
+    )
+    hosted_reset = hosted_env.reset()
+    assert hosted_reset["forced_action_result"] is not None
+    assert hosted_reset["branch_metadata"]["branch_group_id"] == task.branch_group_id
+    hosted_env.close()

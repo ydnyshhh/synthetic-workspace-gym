@@ -47,7 +47,7 @@ def main() -> None:
     comparison = comparisons[0]
     write_json(output / "summary.json", {"original_return": comparison.original_mean_return, "best_return": comparison.best_mean_return, "decision_regret": comparison.decision_regret, "recoverable": comparison.recoverable})
     tasks = {task.task_id: task for task in tasks_list}
-    export_training_data(comparisons, tasks, output / "preference.jsonl", "preference", min_margin=.2)
+    export_training_data(comparisons, tasks, output / "preference.jsonl", "preference", min_margin=.2, exclude_privileged=False)
     export_rl_taskset(comparisons, tasks, output / "rl-pack", min_regret=.2)
 
 

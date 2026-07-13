@@ -15,9 +15,11 @@
   "metadata": {
     "candidate_type": "reference_guided",
     "privileged": true,
+    "root_trajectory_id": "positive-demo",
     "selector_labels": [
       "policy:every_step"
-    ]
+    ],
+    "source": "reference_solution"
   },
   "mode": "forced",
   "prefix_messages": [

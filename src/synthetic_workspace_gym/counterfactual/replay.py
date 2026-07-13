@@ -32,7 +32,7 @@ def replay_branch(task: BranchTask, agent: BaseAgent, output_root: Path, rollout
     shutil.copytree(environment.visible_root, workspace)
     executor = WorkspaceToolExecutor(workspace, environment.manifest.tool_permissions)
     initial = snapshot_texts(workspace); started = time.perf_counter()
-    messages = list(task.prefix_messages[:-1])
+    messages = list(task.prefix_messages)
     trajectory: list[dict[str, Any]] = []
     observation: ToolObservation | dict[str, object] = {"instruction": environment.manifest.instruction, "branch": True}
     steps = 0; submitted = False
@@ -43,7 +43,6 @@ def replay_branch(task: BranchTask, agent: BaseAgent, output_root: Path, rollout
         messages.extend([{"role": "assistant", "tool_call": task.forced_action, "metadata": {"forced": True}}, {"role": "tool", "name": forced.action_type.value, "content": _observation_text(observation), "metadata": {"forced": True}}])
         trajectory.append(_event(forced, observation, True))
         submitted = forced.action_type == ActionType.SUBMIT
-    messages.append(task.prefix_messages[-1])
     agent.reset(environment.manifest, {"instruction": environment.manifest.instruction, "branch": True, "prefix_messages": messages})
     agent.restore_context(messages)
     while not submitted and steps < task.remaining_steps and time.perf_counter() - started < (task.time_limit_seconds or 60):
@@ -61,7 +60,9 @@ def replay_branch(task: BranchTask, agent: BaseAgent, output_root: Path, rollout
     outcome = BranchOutcome(rollout_id, task.task_id, task.branch_group_id, task.candidate_id, task.snapshot_id,
         agent.name, rollout_index, result.score, result.score, result.success, result.subscores, result.failure_labels,
         result.diagnostics, steps, submitted, time.perf_counter() - started, str(final_workspace), str(root / "trajectory.jsonl"),
-        {**task.metadata, "mode": task.mode, "forced_action_steps": 1 if task.mode == "forced" else 0})
+        {**task.metadata, "mode": task.mode, "forced_action_steps": 1 if task.mode == "forced" else 0},
+        rollout_seed=task.metadata.get("rollout_seed"), sampling_seed=task.metadata.get("sampling_seed"),
+        pair_id=task.metadata.get("pair_id"))
     write_json(root / "branch_outcome.json", outcome.to_dict())
     return ReplayResult(outcome, messages)
 

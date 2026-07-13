@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib
+import json
 from pathlib import Path
 from typing import Any
 
@@ -52,7 +53,10 @@ class SyntheticWorkspaceVerifiersEnv:
             self.branch_task = matches[0]
             family, scenario, difficulty, seed = self.branch_task.family, self.branch_task.scenario_id, self.branch_task.difficulty, self.branch_task.seed
             environment_path = self.branch_task.environment_path
-            max_turns = max_turns or self.branch_task.remaining_steps
+            if max_turns is None:
+                max_turns = self.branch_task.remaining_steps
+            if time_limit_seconds is None:
+                time_limit_seconds = self.branch_task.time_limit_seconds
             self.branch_mode = branch_mode or self.branch_task.mode
         self.family = family
         self.scenario = scenario
@@ -82,13 +86,43 @@ class SyntheticWorkspaceVerifiersEnv:
     def reset(self) -> dict[str, Any]:
         observation = self._prime_env.reset()
         self._last_reset = dict(observation)
+        messages = self._branch_messages()
+        forced_action = self.branch_task.forced_action if self.branch_task and self.branch_mode == "forced" else None
+        forced_result = None
+        if forced_action is not None:
+            forced_result = self.step(forced_action)
+            messages.extend([
+                {"role": "assistant", "content": json.dumps(forced_action, sort_keys=True), "metadata": {"forced": True}},
+                {"role": "tool", "content": str(forced_result["observation"]), "metadata": {"forced": True}},
+            ])
+        continuation = {}
+        if forced_result is not None:
+            continuation = {
+                "observation": forced_result["observation"], "reward": forced_result["reward"],
+                "done": forced_result["done"], "info": forced_result["info"],
+            }
         return {
             **observation,
+            **continuation,
             "system_prompt": self.system_prompt,
             "tools": self.tools,
             "task": self.task,
-            "messages": self._branch_messages(),
-            "forced_action": self.branch_task.forced_action if self.branch_task and self.branch_mode == "forced" else None,
+            "messages": messages,
+            "forced_action": forced_action,
+            "forced_action_result": forced_result,
+            "branch_metadata": self._branch_metadata(),
+        }
+
+    def _branch_metadata(self) -> dict[str, Any]:
+        if self.branch_task is None:
+            return {}
+        return {
+            **self.branch_task.metadata, "counterfactual": True,
+            "branch_task_id": self.branch_task.task_id,
+            "branch_group_id": self.branch_task.branch_group_id,
+            "snapshot_id": self.branch_task.snapshot_id,
+            "candidate_id": self.branch_task.candidate_id,
+            "branch_mode": self.branch_mode,
         }
 
     def _branch_messages(self) -> list[dict[str, Any]]:

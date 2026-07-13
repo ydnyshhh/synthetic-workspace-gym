@@ -13,7 +13,7 @@ from .candidates import generate_candidates
 from .compiler import compile_pack
 from .exports import export_rl_taskset, export_training_data, read_comparisons
 from .runner import read_branch_manifest, run_branches
-from .schemas import BranchOutcome
+from .schemas import BranchOutcome, CounterfactualSnapshot
 from .selectors import SELECTORS
 from .snapshots import NamedSnapshotPolicy, SnapshotCollector, load_snapshot
 
@@ -25,7 +25,7 @@ def configure_parser(subparsers: argparse._SubParsersAction) -> None:
     build = cf.add_parser("build"); build.add_argument("--snapshots", type=Path, required=True); build.add_argument("--selectors", default="before_first_write,before_submit"); build.add_argument("--candidates", default="original,submit,run_public_check,read_relevant_file"); build.add_argument("--mode", choices=["forced", "open"], default="forced"); build.add_argument("--max-branch-points", type=int, default=2, help="Maximum selected states per trajectory"); build.add_argument("--max-branch-points-total", type=int); build.add_argument("--max-candidates", type=int, default=4); build.add_argument("--output-dir", type=Path, required=True)
     run = cf.add_parser("run"); run.add_argument("--manifest", type=Path, required=True); run.add_argument("--client", choices=["scripted", "heuristic"], default="scripted"); run.add_argument("--rollouts-per-branch", type=int, default=1); run.add_argument("--output-dir", type=Path, required=True)
     analyze = cf.add_parser("analyze"); analyze.add_argument("--outcomes", type=Path, required=True); analyze.add_argument("--recoverable-threshold", type=float, default=.95); analyze.add_argument("--optimality-tolerance", type=float, default=.05); analyze.add_argument("--output", type=Path, required=True)
-    export = cf.add_parser("export"); export.add_argument("--comparisons", type=Path, required=True); export.add_argument("--branch-manifest", type=Path, required=True); export.add_argument("--format", choices=["sft", "preference", "critic", "rl-taskset"], required=True); export.add_argument("--min-margin", type=float, default=.2); export.add_argument("--min-regret", type=float, default=.2); export.add_argument("--exclude-privileged", action="store_true"); export.add_argument("--output", type=Path, required=True)
+    export = cf.add_parser("export"); export.add_argument("--comparisons", type=Path, required=True); export.add_argument("--branch-manifest", type=Path, required=True); export.add_argument("--format", choices=["sft", "preference", "critic", "rl-taskset"], required=True); export.add_argument("--min-margin", type=float, default=.2); export.add_argument("--min-regret", type=float, default=.2); export.add_argument("--include-privileged", action="store_true", help="Include targets derived from privileged reference data (excluded by default)"); export.add_argument("--output", type=Path, required=True)
     inspect = cf.add_parser("inspect"); inspect.add_argument("--comparisons", type=Path, required=True); inspect.add_argument("--comparison-id", required=True)
 
 
@@ -38,21 +38,11 @@ def dispatch(args: argparse.Namespace, get_agent) -> int:
     if command == "build":
         roots = sorted({path.parent for path in args.snapshots.rglob("snapshot.json")})
         snapshots = [(load_snapshot(root), root) for root in roots]
-        selected_ids = []
-        for name in _csv(args.selectors):
-            if name not in SELECTORS: raise ValueError(f"unknown selector: {name}")
-            selected_ids.extend(x.snapshot_id for x in SELECTORS[name].select([s for s, _ in snapshots]))
+        selected_set = set(select_branch_snapshot_ids(
+            [snapshot for snapshot, _ in snapshots], _csv(args.selectors),
+            args.max_branch_points, args.max_branch_points_total,
+        ))
         items = []
-        selected_set = set()
-        per_trajectory_counts = {}
-        for selected_id in dict.fromkeys(selected_ids):
-            selected_snapshot = next(s for s, _ in snapshots if s.snapshot_id == selected_id)
-            count = per_trajectory_counts.get(selected_snapshot.trajectory_id, 0)
-            if count < args.max_branch_points:
-                selected_set.add(selected_id)
-                per_trajectory_counts[selected_snapshot.trajectory_id] = count + 1
-            if args.max_branch_points_total is not None and len(selected_set) >= args.max_branch_points_total:
-                break
         for snapshot, root in [(s, r) for s, r in snapshots if s.snapshot_id in selected_set]:
             manifest = load_environment(root).manifest
             for candidate in generate_candidates(snapshot, manifest, root, _csv(args.candidates), args.max_candidates):
@@ -69,8 +59,30 @@ def dispatch(args: argparse.Namespace, get_agent) -> int:
         item = next(x for x in comparisons if x.branch_group_id == args.comparison_id); print(json.dumps(item.to_dict(), indent=2)); return 0
     tasks_list = read_branch_manifest(args.branch_manifest); tasks = {x.task_id: x for x in tasks_list}
     if args.format == "rl-taskset": records = export_rl_taskset(comparisons, tasks, args.output, args.min_regret)
-    else: records = export_training_data(comparisons, tasks, args.output, args.format, args.min_margin, exclude_privileged=args.exclude_privileged)
+    else: records = export_training_data(comparisons, tasks, args.output, args.format, args.min_margin, exclude_privileged=not args.include_privileged)
     print(json.dumps({"record_count": len(records), "output": str(args.output)}, indent=2)); return 0
+
+
+def select_branch_snapshot_ids(
+    snapshots: list[CounterfactualSnapshot],
+    selector_names: list[str],
+    max_branch_points: int,
+    max_branch_points_total: int | None = None,
+) -> list[str]:
+    by_trajectory: dict[str, list[CounterfactualSnapshot]] = {}
+    for snapshot in snapshots:
+        by_trajectory.setdefault(str(snapshot.trajectory_id), []).append(snapshot)
+    selected: list[str] = []
+    for trajectory_snapshots in by_trajectory.values():
+        trajectory_ids: list[str] = []
+        for name in selector_names:
+            if name not in SELECTORS:
+                raise ValueError(f"unknown selector: {name}")
+            trajectory_ids.extend(item.snapshot_id for item in SELECTORS[name].select(trajectory_snapshots))
+        selected.extend(list(dict.fromkeys(trajectory_ids))[:max_branch_points])
+        if max_branch_points_total is not None and len(selected) >= max_branch_points_total:
+            return selected[:max_branch_points_total]
+    return selected
 
 
 def _csv(value: str) -> list[str]:

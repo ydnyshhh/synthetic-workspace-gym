@@ -9,9 +9,11 @@
   "metadata": {
     "candidate_type": "original",
     "privileged": false,
+    "root_trajectory_id": "positive-demo",
     "selector_labels": [
       "policy:every_step"
     ],
+    "source": "trajectory",
     "training_regret": 1.0
   },
   "mode": "open",
