@@ -1,0 +1,47 @@
+name: Hosted counterfactual security
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  unit-and-native-verifiers:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - run: uv sync --all-extras
+      - name: Unit, counterfactual, and native Verifiers tests
+        run: uv run --with pytest pytest -q
+
+  hosted-wheel-and-leakage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - run: uv sync --all-extras
+      - name: Build isolated SWG runtime
+        run: docker build -f docker/Dockerfile.swg-runtime -t synthetic-workspace-gym-runtime:latest .
+      - name: Generate, build, inspect, and smoke-test installed hosted wheel
+        shell: bash
+        run: |
+          swg_ref="$(git rev-parse HEAD)"
+          uv run swg counterfactual package-hosted \
+            --branch-pack examples/counterfactual/demo-pack \
+            --output-dir .tmp-tests/ci-hosted-pack \
+            --package-name swg-counterfactual-ci \
+            --swg-ref "$swg_ref"
+      - name: Adversarial hidden-file leakage test
+        run: uv run --with pytest pytest -q tests/test_counterfactual_hosted.py -k "adversarial_probe or mount_policy or fails_closed"

@@ -111,6 +111,8 @@ class PrimeReActAgent:
         return {"initial_observation": initial_observation, "messages": messages, "transcript_events": events, "tool_calls": tool_calls, "observations": observations, "final_step": final_step, "reward_payload": final_reward_payload, "turn_count": len(tool_calls), "stopped_reason": stopped_reason, "branch_metadata": dict(branch_metadata or {})}
     def _model_metadata(self, initial_observation: dict[str, Any], env: SyntheticWorkspacePrimeEnv) -> dict[str, Any]:
         metadata = dict(initial_observation.get("metadata", {}) or {})
+        for sensitive_key in ("environment_path", "workspace_path", "hidden_root", "evaluator_entrypoint"):
+            metadata.pop(sensitive_key, None)
         if isinstance(self.client, HeuristicReferenceClient):
             metadata["reference_solution"] = dict(env.manifest.reference_solution)
         return metadata

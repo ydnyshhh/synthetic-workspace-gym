@@ -116,6 +116,17 @@ class HubEnvironmentTests(unittest.TestCase):
                         message.tool_call_id == "counterfactual-forced-action"
                         for message in tool_messages
                     ))
+                    self.assertEqual(state["swg_forced_prefix_length"], 2)
+                    self.assertEqual(state["swg_policy_start_message_index"], len(state["prompt"]))
+                    self.assertEqual(
+                        state["swg_loss_mask_metadata"],
+                        {
+                            "exclude_restored_messages": True,
+                            "exclude_forced_messages": True,
+                            "forced_tool_call_id": "counterfactual-forced-action",
+                        },
+                    )
+                    self.assertEqual(state.get("trajectory", []), [])
                 finally:
                     state["swg_env"].close()
 

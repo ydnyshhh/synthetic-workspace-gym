@@ -94,3 +94,14 @@ uv run python examples/counterfactual/positive_demo.py
 It intentionally uses a privileged known-good patch to validate the analysis pipeline: original return `0.0`, corrected return `1.0`, regret `1.0`, and `recoverable=true`. It is a pipeline demonstration, not a claim about model capability.
 
 Recommended first real experiment: 40 roots, two branch points, four candidates, and four continuations (`1,280` branch continuations). Primary reporting should include the share of states with regret above `0.20`, recoverability, original-action optimality, candidate-type value, and family/difficulty breakdowns.
+
+
+## Hosted isolation and provenance boundary
+
+Hosted counterfactual packages fail closed unless sandbox_backend is set to docker. The generated loader rejects local and unknown backends because the host process must retain the branch manifest, evaluator entrypoint, and installed hidden assets while untrusted tool processes receive only the active visible workspace. Evaluator processes separately receive the hidden directory as a read-only mount.
+
+[Prime-hosted evaluations](https://docs.primeintellect.ai/tutorials-environments/hosted-evaluations) run the environment itself in a Prime-managed sandbox, and [Prime Sandboxes](https://docs.primeintellect.ai/sandboxes/overview) are remote disposable Docker environments. Prime's public documentation does not guarantee Docker-in-Docker inside a hosted environment, so SWG does not silently assume it. A hosted deployment must provide either the supported SWG Docker backend or a future explicitly integrated Prime-native sandbox backend.
+
+Every hosted load must also provide wheel_sha256, the exact SHA-256 reported by package-result.json. The generated runtime manifest attaches that value alongside pack_id, pack_sha256, source_swg_commit, and hosted_package_version to each branch row and rollout state. The wheel hash is a detached attestation because a wheel cannot contain its own final cryptographic hash.
+
+The packaging pipeline builds the wheel first, creates a clean temporary virtual environment, installs the wheel and its exact Git-pinned SWG dependency, imports the installed package, verifies local execution is refused, and loads representative forced non-terminal, forced terminal, and open branches when present.

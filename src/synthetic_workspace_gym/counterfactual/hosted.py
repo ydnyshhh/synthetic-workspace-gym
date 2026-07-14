@@ -33,6 +33,7 @@ class HostedPackageResult:
     pack_id: str
     pack_sha256: str
     source_swg_commit: str
+    hosted_package_version: str
     task_count: int
     mode: str
     wheel_path: str
@@ -54,6 +55,8 @@ def package_hosted_branch_pack(
     build_wheel: bool = True,
     smoke_test: bool = True,
 ) -> HostedPackageResult:
+    if smoke_test and not build_wheel:
+        raise ValueError("installed-wheel smoke testing requires build_wheel=True")
     source = branch_pack.resolve()
     output = output_dir.resolve()
     module_name = _validate_package_identity(package_name, version, swg_ref)
@@ -61,7 +64,10 @@ def package_hosted_branch_pack(
     tasks = validate_branch_pack(source)
     pack_sha256 = hash_branch_pack(source)
     created_at = utc_timestamp()
-    resolved_pack_id = pack_id or f"{package_name}-{created_at[:10].replace('-', '')}"
+    resolved_pack_id = (
+        pack_id
+        or f"{package_name}-{created_at[:10].replace('-', '')}-{pack_sha256[:12]}"
+    )
     if not resolved_pack_id.strip():
         raise ValueError("pack_id must not be empty")
 
@@ -78,6 +84,7 @@ def package_hosted_branch_pack(
         "pack_sha256": pack_sha256,
         "pack_hash_algorithm": "sha256-path-and-content-v1",
         "source_swg_commit": swg_ref,
+        "hosted_package_version": version,
         "task_count": len(tasks),
         "mode": mode,
         "created_at": created_at,
@@ -94,15 +101,14 @@ def package_hosted_branch_pack(
         metadata=metadata,
     )
 
-    if smoke_test:
-        _smoke_generated_environment(output, module_name, tasks[0].task_id)
-
     wheel = Path()
     wheel_sha256 = ""
     if build_wheel:
         wheel = _build_wheel(output)
         inspect_hosted_wheel(wheel, copied_pack, module_name)
         wheel_sha256 = _hash_file(wheel)
+        if smoke_test:
+            _smoke_installed_wheel(wheel, module_name, tasks)
 
     result = HostedPackageResult(
         output_dir=str(output),
@@ -111,6 +117,7 @@ def package_hosted_branch_pack(
         pack_id=resolved_pack_id,
         pack_sha256=pack_sha256,
         source_swg_commit=swg_ref,
+        hosted_package_version=version,
         task_count=len(tasks),
         mode=mode,
         wheel_path=str(wheel) if wheel else "",
@@ -188,6 +195,7 @@ def inspect_hosted_wheel(wheel_path: Path, copied_pack: Path, module_name: str) 
         f"{module_name}/__init__.py",
         f"{module_name}/hosted_metadata.json",
         f"{module_name}/hosted_manifest.jsonl",
+        f"{module_name}/environment.py",
     })
     with zipfile.ZipFile(wheel_path) as archive:
         names = set(archive.namelist())
@@ -275,6 +283,8 @@ def _write_hosted_manifest(copied_pack: Path, output: Path, metadata: dict[str, 
             "pack_id": metadata["pack_id"],
             "pack_sha256": metadata["pack_sha256"],
             "source_swg_commit": metadata["source_swg_commit"],
+            "hosted_package_version": metadata["hosted_package_version"],
+            "wheel_sha256": "",
         }
         rows.append(row)
     write_jsonl(output, rows)
@@ -321,36 +331,85 @@ PACKAGE_ROOT = Path(__file__).resolve().parent
 HOSTED_METADATA = json.loads((PACKAGE_ROOT / "hosted_metadata.json").read_text(encoding="utf-8"))
 PACK_ID = str(HOSTED_METADATA["pack_id"])
 PACK_SHA256 = str(HOSTED_METADATA["pack_sha256"])
+HOSTED_PACKAGE_VERSION = str(HOSTED_METADATA["hosted_package_version"])
 '''
     environment_source = f'''from __future__ import annotations
 
+import json
+import re
+import tempfile
+from pathlib import Path
+
 from synthetic_workspace_gym import load_environment as load_swg_environment
-from {module_name} import PACK_ID, PACK_SHA256, PACKAGE_ROOT
+from {module_name} import HOSTED_PACKAGE_VERSION, PACK_ID, PACK_SHA256, PACKAGE_ROOT
 
 BRANCH_MANIFEST = PACKAGE_ROOT / "hosted_manifest.jsonl"
+_SHA256_RE = re.compile(r"^[0-9a-fA-F]{{64}}$")
+
+
+def _runtime_manifest(wheel_sha256: str) -> Path:
+    rows = []
+    for line in BRANCH_MANIFEST.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        row = json.loads(line)
+        relative_environment = Path(*Path(str(row["environment_path"])).parts)
+        row["environment_path"] = str((PACKAGE_ROOT / relative_environment).resolve())
+        row["metadata"] = {{
+            **dict(row.get("metadata") or {{}}),
+            "pack_id": PACK_ID,
+            "pack_sha256": PACK_SHA256,
+            "wheel_sha256": wheel_sha256.lower(),
+            "source_swg_commit": str(row.get("metadata", {{}}).get("source_swg_commit", "")),
+            "hosted_package_version": HOSTED_PACKAGE_VERSION,
+        }}
+        rows.append(row)
+    handle = tempfile.NamedTemporaryFile(
+        mode="w", encoding="utf-8", prefix="swg-hosted-manifest-", suffix=".jsonl", delete=False,
+    )
+    with handle:
+        for row in rows:
+            handle.write(json.dumps(row, sort_keys=True, separators=(",", ":")) + "\\n")
+    return Path(handle.name)
 
 
 def load_environment(
     branch_task_id: str | None = None,
     branch_mode: str | None = None,
     max_examples: int = -1,
+    sandbox_backend: str = "docker",
+    wheel_sha256: str | None = None,
     sample_strategy: str = "first",
     shuffle: bool = False,
     shuffle_seed: int = 0,
     **kwargs,
 ):
+    if sandbox_backend != "docker":
+        raise ValueError(
+            "Hosted counterfactual packs require isolated Docker tool execution; "
+            "local or unknown backends could expose trusted evaluator assets installed on the host."
+        )
+    if not isinstance(wheel_sha256, str) or not _SHA256_RE.fullmatch(wheel_sha256):
+        raise ValueError(
+            "wheel_sha256 must be the exact 64-character SHA-256 of the installed hosted wheel."
+        )
     if "branch_manifest_path" in kwargs:
         raise TypeError("This generated environment owns branch_manifest_path.")
-    return load_swg_environment(
-        branch_manifest_path=str(BRANCH_MANIFEST),
-        branch_task_id=branch_task_id,
-        branch_mode=branch_mode,
-        max_examples=max_examples,
-        sample_strategy=sample_strategy,
-        shuffle=shuffle,
-        shuffle_seed=shuffle_seed,
-        **kwargs,
-    )
+    runtime_manifest = _runtime_manifest(wheel_sha256)
+    try:
+        return load_swg_environment(
+            branch_manifest_path=str(runtime_manifest),
+            branch_task_id=branch_task_id,
+            branch_mode=branch_mode,
+            max_examples=max_examples,
+            sandbox_backend=sandbox_backend,
+            sample_strategy=sample_strategy,
+            shuffle=shuffle,
+            shuffle_seed=shuffle_seed,
+            **kwargs,
+        )
+    finally:
+        runtime_manifest.unlink(missing_ok=True)
 '''
     pyproject = f'''[build-system]
 requires = ["hatchling>=1.27.0"]
@@ -391,60 +450,133 @@ prime env push --visibility PRIVATE
 Do not update an environment version after collecting results; generate a new package version and pack ID.
 '''
     (package_root / "__init__.py").write_text(init_source, encoding="utf-8")
-    (output / "environment.py").write_text(environment_source, encoding="utf-8")
+    (package_root / "environment.py").write_text(environment_source, encoding="utf-8")
+    (output / "environment.py").write_text(
+        f"from {module_name}.environment import load_environment\n\n__all__ = [\"load_environment\"]\n",
+        encoding="utf-8",
+    )
     (output / "pyproject.toml").write_text(pyproject, encoding="utf-8")
     (output / "README.md").write_text(readme, encoding="utf-8")
 
 
-def _smoke_generated_environment(output: Path, module_name: str, task_id: str) -> None:
-    module_key = f"_swg_hosted_smoke_{module_name}"
-    old_path = list(sys.path)
-    sys.path.insert(0, str(output / "src"))
-    sys.modules.pop(module_name, None)
-    try:
-        spec = importlib.util.spec_from_file_location(module_key, output / "environment.py")
-        if spec is None or spec.loader is None:
-            raise RuntimeError("could not import generated environment.py")
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
-        with tempfile.TemporaryDirectory(prefix="swg-hosted-smoke-") as temp_dir:
-            env = module.load_environment(
-                branch_task_id=task_id,
-                max_examples=1,
-                output_dir=str(Path(temp_dir) / "runtime"),
+
+
+def _representative_task_ids(tasks: list[BranchTask]) -> list[str]:
+    selectors = (
+        lambda task: task.mode == "forced" and bool(task.forced_action) and task.forced_action.get("tool") != "submit",
+        lambda task: task.mode == "forced" and bool(task.forced_action) and task.forced_action.get("tool") == "submit",
+        lambda task: task.mode == "open",
+    )
+    selected: list[str] = []
+    for selector in selectors:
+        match = next((task.task_id for task in tasks if selector(task)), None)
+        if match is not None and match not in selected:
+            selected.append(match)
+    if not selected:
+        selected.append(tasks[0].task_id)
+    return selected
+
+
+def _smoke_installed_wheel(wheel: Path, module_name: str, tasks: list[BranchTask]) -> None:
+    uv = shutil.which("uv")
+    if uv is None:
+        raise RuntimeError("uv is required to smoke-test an installed hosted wheel")
+    wheel_sha256 = _hash_file(wheel)
+    representative_ids = _representative_task_ids(tasks)
+    docker_smoke = False
+    if shutil.which("docker") is not None:
+        try:
+            docker_smoke = subprocess.run(
+                ["docker", "image", "inspect", "synthetic-workspace-gym-runtime:latest"],
+                check=False, capture_output=True, text=True, timeout=10,
+            ).returncode == 0
+        except (OSError, subprocess.TimeoutExpired):
+            docker_smoke = False
+    with tempfile.TemporaryDirectory(prefix="swg-hosted-wheel-smoke-") as temp_dir:
+        root = Path(temp_dir)
+        venv = root / "venv"
+        command = [uv, "venv", "--python", sys.executable, str(venv)]
+        completed = subprocess.run(command, check=False, capture_output=True, text=True)
+        if completed.returncode != 0:
+            raise RuntimeError(
+                f"installed-wheel smoke setup failed: {' '.join(command)}\n"
+                f"{completed.stdout}\n{completed.stderr}"
             )
-            if hasattr(env, "setup_state") and hasattr(env, "get_dataset"):
-                async def setup() -> None:
-                    row = dict(env.get_dataset()[0])
-                    state = {"input": row, "trajectory_id": "hosted-package-smoke"}
-                    await env.setup_state(state)
-                    try:
-                        if not state.get("prompt"):
-                            raise RuntimeError("native Verifiers smoke test produced no prompt")
-                        provenance = dict(state.get("swg_branch") or {})
-                        if provenance.get("pack_id") != module.PACK_ID:
-                            raise RuntimeError("native Verifiers smoke test lost pack_id provenance")
-                        if provenance.get("pack_sha256") != module.PACK_SHA256:
-                            raise RuntimeError("native Verifiers smoke test lost pack_sha256 provenance")
-                    finally:
-                        state["swg_env"].close()
-                asyncio.run(setup())
-            else:
-                reset = env.reset()
-                try:
-                    if not reset.get("messages"):
-                        raise RuntimeError("fallback hosted smoke test produced no messages")
-                    provenance = dict(reset.get("branch_metadata") or {})
-                    if provenance.get("pack_id") != module.PACK_ID:
-                        raise RuntimeError("fallback hosted smoke test lost pack_id provenance")
-                    if provenance.get("pack_sha256") != module.PACK_SHA256:
-                        raise RuntimeError("fallback hosted smoke test lost pack_sha256 provenance")
-                finally:
-                    env.close()
-    finally:
-        sys.path[:] = old_path
-        sys.modules.pop(module_name, None)
-        sys.modules.pop(module_key, None)
+        venv_python = venv / ("Scripts/python.exe" if sys.platform == "win32" else "bin/python")
+        install = subprocess.run(
+            [uv, "pip", "install", "--python", str(venv_python), str(wheel)],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        if install.returncode != 0:
+            raise RuntimeError(
+                "installed-wheel dependency installation failed; the pinned SWG reference "
+                f"or generated wheel is not installable:\n{install.stdout}\n{install.stderr}"
+            )
+        smoke_source = f"""
+import asyncio
+import json
+from pathlib import Path
+from {module_name}.environment import load_environment
+
+try:
+    load_environment(sandbox_backend="local", wheel_sha256={wheel_sha256!r})
+except ValueError as exc:
+    assert "isolated Docker" in str(exc)
+else:
+    raise AssertionError("hosted package accepted local tool execution")
+
+for task_id in json.loads({json.dumps(representative_ids)!r}):
+    env = load_environment(
+        branch_task_id=task_id,
+        max_examples=1,
+        sandbox_backend="docker",
+        wheel_sha256={wheel_sha256!r},
+    )
+    rows = env.get_dataset()
+    row = dict(rows[0])
+    assert row["task_id"] == task_id
+    assert Path(row["environment_path"]).is_dir()
+    metadata = dict(row.get("metadata") or {{}})
+    assert metadata["wheel_sha256"] == {wheel_sha256!r}
+    assert metadata["pack_id"]
+    assert metadata["pack_sha256"]
+    assert metadata["source_swg_commit"]
+    assert metadata["hosted_package_version"]
+
+    if {docker_smoke!r}:
+        async def exercise_installed_task():
+            state = {{"input": row, "trajectory_id": f"installed-smoke-{{task_id}}"}}
+            await env.setup_state(state)
+            try:
+                forced = row.get("branch_mode") == "forced"
+                assert state["swg_env"]._step_count == (1 if forced else 0)
+                assert state.get("trajectory", []) == []
+                assert state["swg_policy_start_message_index"] == len(state["prompt"])
+                if forced:
+                    assert state["swg_forced_prefix_length"] == 2
+                    assert state["swg_loss_mask_metadata"]["exclude_forced_messages"] is True
+                    terminal = row.get("forced_action", {{}}).get("tool") == "submit"
+                    assert ("final_env_response" in state) is terminal
+                    if terminal:
+                        assert state["swg_reward_payload"] is not None
+                else:
+                    assert state["swg_forced_prefix_length"] == 0
+            finally:
+                state["swg_env"].close()
+        asyncio.run(exercise_installed_task())
+"""
+        smoke = subprocess.run(
+            [str(venv_python), "-c", smoke_source],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        if smoke.returncode != 0:
+            raise RuntimeError(
+                f"installed hosted wheel smoke test failed:\n{smoke.stdout}\n{smoke.stderr}"
+            )
 
 
 def _build_wheel(output: Path) -> Path:

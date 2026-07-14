@@ -273,5 +273,22 @@ class PrimeRolloutTests(unittest.TestCase):
         self.assertEqual(third["tool"], "submit")
 
 
+
+
+    def test_model_metadata_excludes_host_paths_and_evaluator_details(self) -> None:
+        agent = PrimeReActAgent(ScriptedPrimeClient([]))
+        metadata = agent._model_metadata(
+            {
+                "metadata": {
+                    "environment_path": "/host/package/branch_pack/environment",
+                    "workspace_path": "/host/runtime/active",
+                    "hidden_root": "/host/package/hidden",
+                    "evaluator_entrypoint": "/host/evaluator.py",
+                    "pack_id": "pack-1",
+                }
+            },
+            object(),
+        )
+        self.assertEqual(metadata, {"pack_id": "pack-1"})
 if __name__ == "__main__":
     unittest.main()

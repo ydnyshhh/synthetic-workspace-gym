@@ -291,11 +291,25 @@ if _native_hub_available():
                     metadata={"forced": True},
                 )
                 prompt.extend(forced_messages)
+                state["swg_forced_prefix_length"] = len(forced_messages)
+                state["swg_policy_start_message_index"] = len(prompt)
+                state["swg_loss_mask_metadata"] = {
+                    "exclude_restored_messages": True,
+                    "exclude_forced_messages": True,
+                    "forced_tool_call_id": forced_call_id,
+                }
                 state["swg_forced_action_result"] = {"observation": forced_content, "done": forced_done}
                 if forced_done:
                     state["final_env_response"] = normalize_messages(
                         [forced_messages[1]], field_name="swg.forced_response",
                     )
+            state.setdefault("swg_forced_prefix_length", 0)
+            state.setdefault("swg_policy_start_message_index", len(prompt))
+            state.setdefault("swg_loss_mask_metadata", {
+                "exclude_restored_messages": True,
+                "exclude_forced_messages": False,
+                "forced_tool_call_id": None,
+            })
             state["prompt"] = normalize_messages(prompt, field_name="swg.prompt")
             tool_schemas = observation.get("tool_schemas")
             if isinstance(tool_schemas, list) and tool_schemas:
