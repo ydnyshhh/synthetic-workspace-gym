@@ -29,6 +29,16 @@ class BeforeFirstWriteSelector:
                 return [Selection(item.snapshot_id, self.name, 1.0, "state immediately before the first write")]
         return []
 
+class BeforeFirstActionSelector:
+    name = "before_first_action"
+    def select(self, snapshots: list[CounterfactualSnapshot]) -> list[Selection]:
+        rows = [x for x in snapshots if x.metadata.get("phase") == "before" and x.original_action]
+        if not rows:
+            return []
+        item = min(rows, key=lambda x: x.step_index)
+        return [Selection(item.snapshot_id, self.name, .5, "initial policy decision")]
+
+
 
 class BeforeSubmitSelector:
     name = "before_submit"
@@ -65,4 +75,4 @@ class ScoreDropSelector:
         return [Selection(x.snapshot_id, self.name, 1.0, "previous action decreased trusted evaluator score") for x in snapshots
                 if x.metadata.get("phase") == "before" and x.metadata.get("previous_event_type") == "score_drop"]
 
-SELECTORS = {x.name: x for x in (BeforeFirstWriteSelector(), BeforeSubmitSelector(), AfterFailedCheckSelector(), RepeatedActionSelector(), PostSolutionSelector(), ScoreDropSelector())}
+SELECTORS = {x.name: x for x in (BeforeFirstWriteSelector(), BeforeFirstActionSelector(), BeforeSubmitSelector(), AfterFailedCheckSelector(), RepeatedActionSelector(), PostSolutionSelector(), ScoreDropSelector())}

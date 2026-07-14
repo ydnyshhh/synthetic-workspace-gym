@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from synthetic_workspace_gym.counterfactual.analysis import aggregate_outcomes
+from synthetic_workspace_gym.counterfactual.analysis import aggregate_outcomes, summarize_primary_metrics
 from synthetic_workspace_gym.counterfactual.candidates import generate_candidates
 from synthetic_workspace_gym.counterfactual.compiler import compile_pack
 from synthetic_workspace_gym.counterfactual.cli import select_branch_snapshot_ids
@@ -13,8 +13,9 @@ from synthetic_workspace_gym.counterfactual.exports import export_rl_taskset, ex
 from synthetic_workspace_gym.counterfactual.replay import replay_branch
 from synthetic_workspace_gym.counterfactual.runner import read_branch_manifest
 from synthetic_workspace_gym.counterfactual.schemas import BranchOutcome, BranchTask, CandidateAction, CounterfactualSnapshot, stable_id
-from synthetic_workspace_gym.counterfactual.selectors import AfterFailedCheckSelector, BeforeFirstWriteSelector, BeforeSubmitSelector, RepeatedActionSelector, ScoreDropSelector
+from synthetic_workspace_gym.counterfactual.selectors import AfterFailedCheckSelector, BeforeFirstActionSelector, BeforeFirstWriteSelector, BeforeSubmitSelector, RepeatedActionSelector, ScoreDropSelector
 from synthetic_workspace_gym.counterfactual.snapshots import NamedSnapshotPolicy, SnapshotCollector, SnapshotContext, load_snapshot
+from synthetic_workspace_gym.counterfactual.trace_import import classify_root, extract_actions
 from synthetic_workspace_gym.generators.registry import get_generator
 from synthetic_workspace_gym.agents.base import BaseAgent
 from synthetic_workspace_gym.agents.scripted import ScriptedBaselineAgent
@@ -291,3 +292,39 @@ def test_hub_branch_manifest_rows_preserve_intervention_contract(monkeypatch: py
     assert hosted_reset["forced_action_result"] is not None
     assert hosted_reset["branch_metadata"]["branch_group_id"] == task.branch_group_id
     hosted_env.close()
+
+
+def test_prime_trace_classification_and_initial_selector() -> None:
+    sample = {
+        "reward": 0.0,
+        "info": {"is_truncated": False, "metrics": {"num_turns": 25}},
+        "completion": [
+            {"role": "assistant", "tool_calls": [json.dumps({"name": "run_shell", "arguments": {"command": "python run_example.py"}})]},
+            {"role": "tool", "content": "error: public check failed"},
+            {"role": "assistant", "tool_calls": [json.dumps({"name": "read_file", "arguments": {"path": "task.json"}})]},
+            {"role": "assistant", "tool_calls": [json.dumps({"name": "read_file", "arguments": {"path": "task.json"}})]},
+            {"role": "assistant", "tool_calls": [json.dumps({"name": "read_file", "arguments": {"path": "task.json"}})]},
+        ],
+    }
+    actions = extract_actions(sample)
+    labels = classify_root(sample, actions)
+    assert {"failed_hidden_evaluation", "max_turn_termination", "tool_loop_failure", "failed_public_check"} <= set(labels)
+    first = snapshot(snapshot_id="first", step_index=0)
+    later = snapshot(snapshot_id="later", step_index=1)
+    assert BeforeFirstActionSelector().select([later, first])[0].snapshot_id == "first"
+
+
+def test_primary_decision_quality_metrics() -> None:
+    original = outcome("original", .2, kind="original")
+    alternate = outcome("alternate", .8, kind="read_relevant_file")
+    alternate.step_count = 4
+    for row in (original, alternate):
+        row.metadata["root_failure_types"] = ["failed_public_check"]
+    comparisons = aggregate_outcomes([original, alternate], recoverable_threshold=.8)
+    summary = summarize_primary_metrics(comparisons, recoverable_threshold=.8)
+    assert summary["strict_alternate_win_rate"] == 1.0
+    assert summary["strict_original_win_rate"] == 0.0
+    assert summary["tie_rate"] == 0.0
+    assert summary["alternate_only_recoverability"] == 1.0
+    assert summary["regret_conditional_on_root_failure_type"]["failed_public_check"]["mean"] == pytest.approx(.6)
+    assert summary["value_per_additional_tool_step"]["mean"] == pytest.approx(.3)

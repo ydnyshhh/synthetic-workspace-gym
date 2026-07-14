@@ -71,6 +71,7 @@ class SnapshotCollector:
     max_snapshots: int = 3
     evaluate_intermediate: bool = False
     max_signal_snapshots: int = 2
+    base_metadata: dict[str, Any] = field(default_factory=dict)
     snapshots: list[CounterfactualSnapshot] = field(default_factory=list, init=False)
     _keys: set[tuple[str, int, str]] = field(default_factory=set, init=False)
     _signal_count: int = field(default=0, init=False)
@@ -129,7 +130,7 @@ class SnapshotCollector:
             evaluator_score=evaluator.score if evaluator else None,
             evaluator_subscores=evaluator.subscores if evaluator else {},
             evaluator_failure_labels=evaluator.failure_labels if evaluator else [], selector_labels=labels,
-            metadata={"snapshot_root": str(root), "phase": context.phase, "action_success": context.action_success, **context.metadata},
+            metadata={"snapshot_root": str(root), "phase": context.phase, "action_success": context.action_success, **self.base_metadata, **context.metadata},
         )
         write_json(root / "snapshot.json", snapshot.to_dict())
         self.snapshots.append(snapshot)

@@ -30,7 +30,11 @@ def compile_branch(snapshot: CounterfactualSnapshot, candidate: CandidateAction,
         snapshot.scenario_id, snapshot.difficulty, snapshot.seed,
         {"candidate_type": candidate.candidate_type, "source": candidate.source,
          "privileged": candidate.privileged, "selector_labels": snapshot.selector_labels,
-         "root_trajectory_id": snapshot.trajectory_id})
+         "root_trajectory_id": snapshot.trajectory_id,
+         **{key: snapshot.metadata[key] for key in (
+             "source_model", "source_evaluation_id", "source_example_id", "source_trace_id",
+             "root_reward", "root_failure_types",
+         ) if key in snapshot.metadata}})
     write_json(env_root / "branch.json", task.to_dict()); write_json(env_root / "prefix_messages.json", messages)
     load_environment(env_root)
     return task

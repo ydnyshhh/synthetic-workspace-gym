@@ -8,11 +8,12 @@ from synthetic_workspace_gym.runtime.environment import load_environment
 from synthetic_workspace_gym.runtime.runner import EpisodeRunner
 from synthetic_workspace_gym.utils.io import read_json, write_json, write_jsonl
 
-from .analysis import aggregate_outcomes
+from .analysis import aggregate_outcomes, summarize_primary_metrics
 from .candidates import generate_candidates
 from .compiler import compile_pack
 from .exports import export_rl_taskset, export_training_data, read_comparisons
 from .hosted import package_hosted_branch_pack
+from .trace_import import import_prime_roots
 from .runner import read_branch_manifest, run_branches
 from .schemas import BranchOutcome, CounterfactualSnapshot
 from .selectors import SELECTORS
@@ -26,8 +27,16 @@ def configure_parser(subparsers: argparse._SubParsersAction) -> None:
     build = cf.add_parser("build"); build.add_argument("--snapshots", type=Path, required=True); build.add_argument("--selectors", default="before_first_write,before_submit"); build.add_argument("--candidates", default="original,submit,run_public_check,read_relevant_file"); build.add_argument("--mode", choices=["forced", "open"], default="forced"); build.add_argument("--max-branch-points", type=int, default=2, help="Maximum selected states per trajectory"); build.add_argument("--max-branch-points-total", type=int); build.add_argument("--max-candidates", type=int, default=4); build.add_argument("--output-dir", type=Path, required=True)
     run = cf.add_parser("run"); run.add_argument("--manifest", type=Path, required=True); run.add_argument("--client", choices=["scripted", "heuristic"], default="scripted"); run.add_argument("--rollouts-per-branch", type=int, default=1); run.add_argument("--output-dir", type=Path, required=True)
     analyze = cf.add_parser("analyze"); analyze.add_argument("--outcomes", type=Path, required=True); analyze.add_argument("--recoverable-threshold", type=float, default=.95); analyze.add_argument("--optimality-tolerance", type=float, default=.05); analyze.add_argument("--output", type=Path, required=True)
+    analyze.add_argument("--summary-output", type=Path)
     export = cf.add_parser("export"); export.add_argument("--comparisons", type=Path, required=True); export.add_argument("--branch-manifest", type=Path, required=True); export.add_argument("--format", choices=["sft", "preference", "critic", "rl-taskset"], required=True); export.add_argument("--min-margin", type=float, default=.2); export.add_argument("--min-regret", type=float, default=.2); export.add_argument("--include-privileged", action="store_true", help="Include targets derived from privileged reference data (excluded by default)"); export.add_argument("--output", type=Path, required=True)
     package = cf.add_parser("package-hosted", help="Generate a self-contained Environment Hub package from a branch pack"); package.add_argument("--branch-pack", type=Path, required=True); package.add_argument("--output-dir", type=Path, required=True); package.add_argument("--package-name", required=True); package.add_argument("--swg-ref", required=True); package.add_argument("--pack-id"); package.add_argument("--version", default="0.1.0"); package.add_argument("--force", action="store_true")
+    import_prime = cf.add_parser("import-prime-roots", help="Regenerate and replay selected Prime evaluation samples")
+    import_prime.add_argument("--samples", type=Path, required=True)
+    import_prime.add_argument("--example-id", type=int, action="append", required=True)
+    import_prime.add_argument("--evaluation-id")
+    import_prime.add_argument("--source-model", default="Qwen/Qwen3.5-0.8B")
+    import_prime.add_argument("--max-turns", type=int, default=25)
+    import_prime.add_argument("--output-dir", type=Path, required=True)
     inspect = cf.add_parser("inspect"); inspect.add_argument("--comparisons", type=Path, required=True); inspect.add_argument("--comparison-id", required=True)
 
 
@@ -55,7 +64,21 @@ def dispatch(args: argparse.Namespace, get_agent) -> int:
         outcomes = run_branches(read_branch_manifest(args.manifest), lambda: get_agent(args.client), args.rollouts_per_branch, args.output_dir); print(json.dumps({"outcome_count": len(outcomes)}, indent=2)); return 0
     if command == "analyze":
         outcomes = [BranchOutcome.from_dict(json.loads(line)) for line in args.outcomes.read_text(encoding="utf-8").splitlines() if line.strip()]
-        comparisons = aggregate_outcomes(outcomes, args.recoverable_threshold, args.optimality_tolerance); write_jsonl(args.output, [x.to_dict() for x in comparisons]); print(json.dumps({"comparison_count": len(comparisons)}, indent=2)); return 0
+        comparisons = aggregate_outcomes(outcomes, args.recoverable_threshold, args.optimality_tolerance)
+        write_jsonl(args.output, [x.to_dict() for x in comparisons])
+        summary = summarize_primary_metrics(comparisons, args.recoverable_threshold, args.optimality_tolerance)
+        if args.summary_output:
+            write_json(args.summary_output, summary)
+        print(json.dumps({"comparison_count": len(comparisons), "primary_metrics": summary}, indent=2))
+        return 0
+    if command == "import-prime-roots":
+        roots = import_prime_roots(
+            args.samples, args.example_id, args.output_dir,
+            evaluation_id=args.evaluation_id, source_model=args.source_model,
+            max_turns=args.max_turns,
+        )
+        print(json.dumps({"root_count": len(roots), "roots": [root.to_dict() for root in roots]}, indent=2))
+        return 0
     if command == "package-hosted":
         result = package_hosted_branch_pack(
             args.branch_pack, args.output_dir, args.package_name, args.swg_ref,

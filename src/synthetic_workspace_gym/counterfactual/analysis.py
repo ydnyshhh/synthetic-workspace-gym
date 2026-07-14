@@ -48,6 +48,10 @@ def aggregate_outcomes(outcomes: list[BranchOutcome], recoverable_threshold: flo
             {"candidate_ranking": ranked, "difference_statistics": differences,
              "paired_difference_statistics": differences,
              "root_trajectory_ids": sorted({str(row.metadata.get("root_trajectory_id")) for row in rows if row.metadata.get("root_trajectory_id")}),
+             "candidate_types": {row.candidate_id: row.metadata.get("candidate_type") for row in rows},
+             "root_failure_types": sorted({str(label) for row in rows for label in row.metadata.get("root_failure_types", [])}),
+             "root_rewards": sorted({float(row.metadata["root_reward"]) for row in rows if "root_reward" in row.metadata}),
+
              "confidence_note": "Explicit pair_id values use a paired bootstrap; otherwise probability uses an independent two-sample bootstrap."},
         ))
     return result
@@ -105,3 +109,71 @@ def _labels(rows: list[BranchOutcome], stats: dict[str, dict[str, float]], origi
     if check_means and max(check_means) > original_mean + tolerance: labels.append("verification_failure")
     if submit_means and max(submit_means) >= best - tolerance and max(submit_means) > original_mean + tolerance: labels.append("budget_allocation_failure")
     return labels
+
+
+def summarize_primary_metrics(
+    comparisons: list[BranchComparison], recoverable_threshold: float = .95,
+    optimality_tolerance: float = .05,
+) -> dict[str, Any]:
+    """Aggregate decision-quality metrics across branch groups."""
+    if not comparisons:
+        return {"group_count": 0}
+    strict_original = 0
+    strict_alternate = 0
+    ties = 0
+    alternate_recoverable = 0
+    original_optimal = 0
+    negative_costs: list[float] = []
+    harmful_costs: list[float] = []
+    recovery_costs: list[float] = []
+    value_per_step: list[float] = []
+    conditional: dict[str, list[float]] = {}
+    for comparison in comparisons:
+        stats = comparison.candidate_statistics
+        original = stats[comparison.original_candidate_id]
+        alternatives = [value for candidate_id, value in stats.items() if candidate_id != comparison.original_candidate_id]
+        best_alternate = max(alternatives, key=lambda value: value["mean"])
+        if original["mean"] > best_alternate["mean"]:
+            strict_original += 1
+        elif best_alternate["mean"] > original["mean"]:
+            strict_alternate += 1
+        else:
+            ties += 1
+        alternate_recoverable += int(best_alternate["mean"] >= recoverable_threshold)
+        original_optimal += int(original["mean"] >= comparison.best_mean_return - optimality_tolerance)
+        for candidate in alternatives:
+            delta_return = candidate["mean"] - original["mean"]
+            delta_steps = candidate["mean_steps"] - original["mean_steps"]
+            cost = max(0.0, -delta_return)
+            negative_costs.append(cost)
+            if cost > 0:
+                harmful_costs.append(cost)
+            if original["mean"] < recoverable_threshold <= candidate["mean"]:
+                recovery_costs.append(delta_steps)
+            if delta_steps > 0:
+                value_per_step.append(delta_return / delta_steps)
+        for label in comparison.metadata.get("root_failure_types", ["unclassified"]):
+            conditional.setdefault(str(label), []).append(comparison.decision_regret)
+    count = len(comparisons)
+    def mean(values: list[float]) -> float | None:
+        return statistics.fmean(values) if values else None
+    return {
+        "group_count": count,
+        "mean_decision_regret": statistics.fmean(item.decision_regret for item in comparisons),
+        "strict_original_win_rate": strict_original / count,
+        "strict_alternate_win_rate": strict_alternate / count,
+        "tie_rate": ties / count,
+        "alternate_only_recoverability": alternate_recoverable / count,
+        "original_action_optimality": original_optimal / count,
+        "negative_intervention_cost": {
+            "mean_all_alternates": mean(negative_costs),
+            "mean_harmful_only": mean(harmful_costs),
+            "harmful_intervention_count": len(harmful_costs),
+        },
+        "recovery_tool_cost": {"mean_additional_steps": mean(recovery_costs), "recovery_count": len(recovery_costs)},
+        "value_per_additional_tool_step": {"mean": mean(value_per_step), "comparison_count": len(value_per_step)},
+        "regret_conditional_on_root_failure_type": {
+            label: {"mean": statistics.fmean(values), "count": len(values)}
+            for label, values in sorted(conditional.items())
+        },
+    }
