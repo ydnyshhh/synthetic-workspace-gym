@@ -67,6 +67,10 @@ def test_package_hosted_generates_self_contained_smoke_package() -> None:
         assert metadata["pack_sha256"] == result.pack_sha256
         assert metadata["source_swg_commit"] == SWG_REF
         assert "visibility PRIVATE" in (output / "README.md").read_text(encoding="utf-8")
+        init_source = (output / "src" / "swg_counterfactual_pilot" / "__init__.py").read_text(
+            encoding="utf-8"
+        )
+        assert "from .environment import load_environment" in init_source
 
 
 def test_hosted_pack_rejects_path_escape_and_missing_hidden_assets() -> None:

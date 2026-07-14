@@ -332,6 +332,10 @@ HOSTED_METADATA = json.loads((PACKAGE_ROOT / "hosted_metadata.json").read_text(e
 PACK_ID = str(HOSTED_METADATA["pack_id"])
 PACK_SHA256 = str(HOSTED_METADATA["pack_sha256"])
 HOSTED_PACKAGE_VERSION = str(HOSTED_METADATA["hosted_package_version"])
+
+from .environment import load_environment
+
+__all__ = ["load_environment"]
 '''
     environment_source = f'''from __future__ import annotations
 
@@ -452,7 +456,7 @@ Do not update an environment version after collecting results; generate a new pa
     (package_root / "__init__.py").write_text(init_source, encoding="utf-8")
     (package_root / "environment.py").write_text(environment_source, encoding="utf-8")
     (output / "environment.py").write_text(
-        f"from {module_name}.environment import load_environment\n\n__all__ = [\"load_environment\"]\n",
+        f"from {module_name} import load_environment\n\n__all__ = [\"load_environment\"]\n",
         encoding="utf-8",
     )
     (output / "pyproject.toml").write_text(pyproject, encoding="utf-8")
@@ -518,7 +522,7 @@ def _smoke_installed_wheel(wheel: Path, module_name: str, tasks: list[BranchTask
 import asyncio
 import json
 from pathlib import Path
-from {module_name}.environment import load_environment
+from {module_name} import load_environment
 
 try:
     load_environment(sandbox_backend="local", wheel_sha256={wheel_sha256!r})
