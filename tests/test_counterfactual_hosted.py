@@ -71,6 +71,10 @@ def test_package_hosted_generates_self_contained_smoke_package() -> None:
             encoding="utf-8"
         )
         assert "from .environment import load_environment" in init_source
+        environment_source = (
+            output / "src" / "swg_counterfactual_pilot" / "environment.py"
+        ).read_text(encoding="utf-8")
+        assert "runtime_manifest.unlink" not in environment_source
 
 
 def test_hosted_pack_rejects_path_escape_and_missing_hidden_assets() -> None:

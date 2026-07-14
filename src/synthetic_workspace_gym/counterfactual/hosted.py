@@ -400,20 +400,17 @@ def load_environment(
     if "branch_manifest_path" in kwargs:
         raise TypeError("This generated environment owns branch_manifest_path.")
     runtime_manifest = _runtime_manifest(wheel_sha256)
-    try:
-        return load_swg_environment(
-            branch_manifest_path=str(runtime_manifest),
-            branch_task_id=branch_task_id,
-            branch_mode=branch_mode,
-            max_examples=max_examples,
-            sandbox_backend=sandbox_backend,
-            sample_strategy=sample_strategy,
-            shuffle=shuffle,
-            shuffle_seed=shuffle_seed,
-            **kwargs,
-        )
-    finally:
-        runtime_manifest.unlink(missing_ok=True)
+    return load_swg_environment(
+        branch_manifest_path=str(runtime_manifest),
+        branch_task_id=branch_task_id,
+        branch_mode=branch_mode,
+        max_examples=max_examples,
+        sandbox_backend=sandbox_backend,
+        sample_strategy=sample_strategy,
+        shuffle=shuffle,
+        shuffle_seed=shuffle_seed,
+        **kwargs,
+    )
 '''
     pyproject = f'''[build-system]
 requires = ["hatchling>=1.27.0"]
@@ -538,6 +535,7 @@ for task_id in json.loads({json.dumps(representative_ids)!r}):
         sandbox_backend="docker",
         wheel_sha256={wheel_sha256!r},
     )
+    assert Path(env.env_args["branch_manifest_path"]).is_file()
     rows = env.get_dataset()
     row = dict(rows[0])
     assert row["task_id"] == task_id
