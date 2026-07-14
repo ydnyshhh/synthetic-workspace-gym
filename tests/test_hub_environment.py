@@ -117,6 +117,8 @@ class HubEnvironmentTests(unittest.TestCase):
                         for message in tool_messages
                     ))
                     self.assertEqual(state["swg_forced_prefix_length"], 2)
+                    self.assertTrue(state["swg_forced_action_result"]["success"])
+                    self.assertTrue(state["swg_forced_action_result"]["info"]["success"])
                     self.assertEqual(state["swg_policy_start_message_index"], len(state["prompt"]))
                     self.assertEqual(
                         state["swg_loss_mask_metadata"],

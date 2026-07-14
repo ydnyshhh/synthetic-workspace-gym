@@ -29,7 +29,7 @@ def verify_workspace_in_sandbox(
             extra_docker_args=[
                 *config.extra_docker_args,
                 "--mount",
-                f"type=bind,src={tmp_path.resolve()},dst=/environment,ro",
+                f"type=bind,src={tmp_path.resolve()},dst=/environment,readonly",
             ],
         )
         backend = build_sandbox_backend(command_config)

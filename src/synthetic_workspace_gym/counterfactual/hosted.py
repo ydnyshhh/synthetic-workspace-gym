@@ -555,9 +555,13 @@ for task_id in json.loads({json.dumps(representative_ids)!r}):
                 assert state.get("trajectory", []) == []
                 assert state["swg_policy_start_message_index"] == len(state["prompt"])
                 if forced:
+                    forced_result = dict(state["swg_forced_action_result"])
+                    assert "Tool execution failed" not in str(forced_result.get("observation", ""))
+                    terminal = row.get("forced_action", {{}}).get("tool") == "submit"
+                    if not terminal:
+                        assert forced_result["success"] is True
                     assert state["swg_forced_prefix_length"] == 2
                     assert state["swg_loss_mask_metadata"]["exclude_forced_messages"] is True
-                    terminal = row.get("forced_action", {{}}).get("tool") == "submit"
                     assert ("final_env_response" in state) is terminal
                     if terminal:
                         assert state["swg_reward_payload"] is not None

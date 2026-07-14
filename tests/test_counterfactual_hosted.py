@@ -254,7 +254,17 @@ def test_tool_sandbox_mount_policy_excludes_host_package_and_hidden_assets() -> 
         assert str(workspace.resolve()) in rendered
         assert str(hidden.resolve()) not in rendered
         assert "dst=/hidden" not in rendered
+        assert ",rw" not in rendered
         assert "synthetic_workspace_gym.sandbox.evaluator_entrypoint" not in rendered
+
+        evaluator_command = backend._docker_command(
+            SandboxCommand(argv=["python", "evaluator.py"], mode="evaluator"),
+            workspace.resolve(),
+            hidden.resolve(),
+        )
+        evaluator_rendered = "\n".join(evaluator_command)
+        assert f"src={hidden.resolve()},dst=/hidden,readonly" in evaluator_rendered
+        assert ",ro" not in evaluator_rendered
 
 
 def _docker_runtime_available() -> bool:

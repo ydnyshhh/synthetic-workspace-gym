@@ -86,7 +86,7 @@ class DockerSandboxBackend:
             "--workdir",
             command.cwd or self.config.workdir,
             "--mount",
-            f"type=bind,src={workspace_path},dst={self.config.workdir},rw",
+            f"type=bind,src={workspace_path},dst={self.config.workdir}",
             "--tmpfs",
             f"/tmp:size={self.config.tmpfs_size}",
             "--tmpfs",
@@ -99,7 +99,7 @@ class DockerSandboxBackend:
             docker_command.extend(
                 [
                     "--mount",
-                    f"type=bind,src={Path(hidden_path).resolve()},dst={self.config.hidden_dir},ro",
+                    f"type=bind,src={Path(hidden_path).resolve()},dst={self.config.hidden_dir},readonly",
                 ]
             )
         for key, value in command.env.items():

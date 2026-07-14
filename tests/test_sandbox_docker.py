@@ -70,9 +70,8 @@ class DockerSandboxTests(unittest.TestCase):
                 SandboxCommand(argv=["python", "-c", "from pathlib import Path; Path('x.txt').write_text('ok')"]),
                 workspace,
             )
-
-        self.assertTrue(result.success)
-        self.assertTrue((workspace / "x.txt").exists())
+            self.assertTrue(result.success)
+            self.assertTrue((workspace / "x.txt").exists())
 
     def test_hidden_not_mounted_in_tool_mode_and_mounted_in_evaluator_mode(self) -> None:
         with workspace_tempdir() as tmp_dir:

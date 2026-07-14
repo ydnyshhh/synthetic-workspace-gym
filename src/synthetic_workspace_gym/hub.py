@@ -284,7 +284,7 @@ if _native_hub_available():
             forced_action = row.get("forced_action") if row.get("branch_mode") == "forced" else None
             state["swg_forced_action"] = forced_action
             if isinstance(forced_action, dict):
-                forced_content, forced_done = _execute_forced_swg_action(state, forced_action)
+                forced_content, forced_done, forced_info = _execute_forced_swg_action(state, forced_action)
                 forced_call_id = "counterfactual-forced-action"
                 forced_messages = _to_verifiers_tool_exchange(
                     forced_action, forced_content, forced_call_id,
@@ -298,7 +298,12 @@ if _native_hub_available():
                     "exclude_forced_messages": True,
                     "forced_tool_call_id": forced_call_id,
                 }
-                state["swg_forced_action_result"] = {"observation": forced_content, "done": forced_done}
+                state["swg_forced_action_result"] = {
+                    "observation": forced_content,
+                    "done": forced_done,
+                    "info": forced_info,
+                    "success": bool(forced_info.get("success", forced_info.get("reward_payload") is not None)),
+                }
                 if forced_done:
                     state["final_env_response"] = normalize_messages(
                         [forced_messages[1]], field_name="swg.forced_response",
@@ -695,7 +700,9 @@ def _text_action_or_none(content: object) -> dict[str, object] | None:
     return action
 
 
-def _execute_forced_swg_action(state: Any, action: dict[str, object]) -> tuple[str, bool]:
+def _execute_forced_swg_action(
+    state: Any, action: dict[str, object],
+) -> tuple[str, bool, dict[str, object]]:
     result = state["swg_env"].step(action)
     content = _truncate_observation(
         str(result.get("observation", "")), int(state.get("swg_max_observation_chars") or 0),
@@ -704,7 +711,7 @@ def _execute_forced_swg_action(state: Any, action: dict[str, object]) -> tuple[s
     if info.get("reward_payload") is not None:
         state["swg_reward_payload"] = info["reward_payload"]
         state["swg_verifiers_info"] = to_verifiers_info(normalize_reward_payload(info["reward_payload"]))
-    return content, bool(result.get("done", False))
+    return content, bool(result.get("done", False)), info
 
 
 def _execute_swg_action(state: Any, action: dict[str, object]) -> tuple[str, bool]:
