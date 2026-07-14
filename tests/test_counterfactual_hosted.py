@@ -310,12 +310,15 @@ for root in (pathlib.Path("/workspace"), pathlib.Path("/usr/local/lib")):
                 output.append(path.read_text(errors="ignore"))
     except Exception as exc:
         output.append(f"scan_failed:{type(exc).__name__}")
-find = subprocess.run(
-    ["find", "/workspace", "/usr/local/lib", "-type", "f", "-path", "*/hidden/*"],
-    capture_output=True,
-    text=True,
-)
-output.append(find.stdout)
+try:
+    find = subprocess.run(
+        ["find", "/workspace", "/usr/local/lib", "-type", "f", "-path", "*/hidden/*"],
+        capture_output=True,
+        text=True,
+    )
+    output.append(find.stdout)
+except Exception as exc:
+    output.append(f"find_failed:{type(exc).__name__}")
 output.append(os.environ.get("PYTHONPATH", ""))
 print("\\n".join(output))
 """.strip()
