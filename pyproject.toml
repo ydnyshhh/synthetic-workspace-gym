@@ -14,12 +14,14 @@ tags = ["agent", "workspace", "tool-use", "train", "eval"]
 dependencies = [
     "harnesses==0.1.1",
     "verifiers==0.1.15.dev187",
+    "prime-sandboxes>=0.2.26,<0.3",
 ]
 
 [project.optional-dependencies]
 verifiers = [
     "harnesses==0.1.1",
     "verifiers==0.1.15.dev187",
+    "prime-sandboxes>=0.2.26,<0.3",
 ]
 
 [project.scripts]

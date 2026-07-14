@@ -73,7 +73,7 @@ class SyntheticWorkspacePrimeEnv:
         runtime_home = self._runtime_root() / "runtime-home" / environment.manifest.env_id
         sandbox_tool_backend = (
             build_sandbox_backend(self.sandbox_config)
-            if self.sandbox_config.backend == "docker"
+            if self.sandbox_config.backend != "local"
             else None
         )
         self._executor = WorkspaceToolExecutor(
@@ -189,7 +189,7 @@ class SyntheticWorkspacePrimeEnv:
         environment, _ = self._require_active()
         if self._active_workspace is None:
             raise RuntimeError("Environment has no active workspace. Call reset() first.")
-        if self.sandbox_config.backend == "docker":
+        if self.sandbox_config.backend != "local":
             payload = verify_workspace_in_sandbox(environment.root, self._active_workspace, self.sandbox_config)
             payload["env_id"] = environment.manifest.env_id
             return payload
@@ -203,6 +203,11 @@ class SyntheticWorkspacePrimeEnv:
         return payload
 
     def close(self) -> None:
+        executor = self._executor
+        if executor is not None and executor.sandbox_backend is not None:
+            close = getattr(executor.sandbox_backend, "close", None)
+            if callable(close):
+                close()
         self._environment = None
         self._active_workspace = None
         self._executor = None

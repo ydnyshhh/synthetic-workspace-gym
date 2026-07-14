@@ -229,6 +229,9 @@ def test_generated_hosted_loader_fails_closed_and_attests_wheel() -> None:
             assert metadata["hosted_package_version"] == "0.1.0"
             assert Path(row["environment_path"]).is_dir()
 
+        prime_env = module.load_environment(wheel_sha256=wheel_sha256)
+        assert prime_env.env_args["sandbox_backend"] == "prime"
+
         assert result.pack_id.endswith(f"-{result.pack_sha256[:12]}")
 
 

@@ -6,6 +6,7 @@ from typing import Any
 from synthetic_workspace_gym.sandbox.base import SandboxBackend
 from synthetic_workspace_gym.sandbox.docker import DockerSandboxBackend
 from synthetic_workspace_gym.sandbox.local import LocalSandboxBackend
+from synthetic_workspace_gym.sandbox.prime import PrimeSandboxBackend
 from synthetic_workspace_gym.sandbox.schemas import SandboxConfig
 
 
@@ -14,6 +15,8 @@ def build_sandbox_backend(config: SandboxConfig) -> SandboxBackend:
         return LocalSandboxBackend(config)
     if config.backend == "docker":
         return DockerSandboxBackend(config)
+    if config.backend == "prime":
+        return PrimeSandboxBackend(config)
     raise ValueError(f"Unsupported sandbox backend: {config.backend}")
 
 

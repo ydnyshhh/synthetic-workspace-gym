@@ -381,16 +381,16 @@ def load_environment(
     branch_task_id: str | None = None,
     branch_mode: str | None = None,
     max_examples: int = -1,
-    sandbox_backend: str = "docker",
+    sandbox_backend: str = "prime",
     wheel_sha256: str | None = None,
     sample_strategy: str = "first",
     shuffle: bool = False,
     shuffle_seed: int = 0,
     **kwargs,
 ):
-    if sandbox_backend != "docker":
+    if sandbox_backend not in {"docker", "prime"}:
         raise ValueError(
-            "Hosted counterfactual packs require isolated Docker tool execution; "
+            "Hosted counterfactual packs require isolated Docker or Prime sandbox tool execution; "
             "local or unknown backends could expose trusted evaluator assets installed on the host."
         )
     if not isinstance(wheel_sha256, str) or not _SHA256_RE.fullmatch(wheel_sha256):
@@ -524,7 +524,7 @@ from {module_name} import load_environment
 try:
     load_environment(sandbox_backend="local", wheel_sha256={wheel_sha256!r})
 except ValueError as exc:
-    assert "isolated Docker" in str(exc)
+    assert "isolated Docker or Prime" in str(exc)
 else:
     raise AssertionError("hosted package accepted local tool execution")
 

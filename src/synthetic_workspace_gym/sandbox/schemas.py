@@ -6,7 +6,7 @@ from typing import Any, Literal
 
 @dataclass(slots=True)
 class SandboxConfig:
-    backend: Literal["local", "docker"] = "local"
+    backend: Literal["local", "docker", "prime"] = "local"
     image: str = "synthetic-workspace-gym-runtime:latest"
     network_enabled: bool = False
     memory_limit: str = "1g"

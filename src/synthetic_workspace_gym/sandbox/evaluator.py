@@ -48,7 +48,12 @@ def verify_workspace_in_sandbox(
             mode="evaluator",
             timeout_seconds=config.timeout_seconds,
         )
-        result = backend.run(command, Path(workspace_path), hidden_path=environment.hidden_root)
+        try:
+            result = backend.run(command, Path(workspace_path), hidden_path=environment.hidden_root)
+        finally:
+            close = getattr(backend, "close", None)
+            if callable(close):
+                close()
     if not result.success:
         return {
             "reward": 0.0,

@@ -2657,12 +2657,14 @@ version = "0.1.15"
 source = { editable = "." }
 dependencies = [
     { name = "harnesses" },
+    { name = "prime-sandboxes" },
     { name = "verifiers" },
 ]
 
 [package.optional-dependencies]
 verifiers = [
     { name = "harnesses" },
+    { name = "prime-sandboxes" },
     { name = "verifiers" },
 ]
 
@@ -2670,6 +2672,8 @@ verifiers = [
 requires-dist = [
     { name = "harnesses", specifier = "==0.1.1" },
     { name = "harnesses", marker = "extra == 'verifiers'", specifier = "==0.1.1" },
+    { name = "prime-sandboxes", specifier = ">=0.2.26,<0.3" },
+    { name = "prime-sandboxes", marker = "extra == 'verifiers'", specifier = ">=0.2.26,<0.3" },
     { name = "verifiers", specifier = "==0.1.15.dev187" },
     { name = "verifiers", marker = "extra == 'verifiers'", specifier = "==0.1.15.dev187" },
 ]
