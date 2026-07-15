@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 import random
 import threading
@@ -255,7 +256,10 @@ if _native_hub_available():
                 sandbox_config=sandbox_config,
                 docker_image=self.docker_image,
             )
-            observation = env.reset()
+            # Prime sandbox setup performs synchronous network and archive I/O.
+            # Running it on the Verifiers event-loop thread prevents worker
+            # heartbeats and causes the router to kill otherwise healthy tasks.
+            observation = await asyncio.to_thread(env.reset)
             state["swg_env"] = env
             state["swg_reset"] = observation
             state["swg_task"] = _task_metadata(row)
@@ -284,7 +288,9 @@ if _native_hub_available():
             forced_action = row.get("forced_action") if row.get("branch_mode") == "forced" else None
             state["swg_forced_action"] = forced_action
             if isinstance(forced_action, dict):
-                forced_content, forced_done, forced_info = _execute_forced_swg_action(state, forced_action)
+                forced_content, forced_done, forced_info = await asyncio.to_thread(
+                    _execute_forced_swg_action, state, forced_action
+                )
                 forced_call_id = "counterfactual-forced-action"
                 forced_messages = _to_verifiers_tool_exchange(
                     forced_action, forced_content, forced_call_id,
@@ -349,7 +355,7 @@ if _native_hub_available():
                         ],
                         field_name="swg.format_correction",
                     )
-                content, done = _execute_swg_action(state, action)
+                content, done = await asyncio.to_thread(_execute_swg_action, state, action)
                 response = normalize_messages(
                     [{"role": "user", "content": f"Observation:\n{content}"}],
                     field_name="swg.text_tool_response",
@@ -360,7 +366,9 @@ if _native_hub_available():
 
             tool_messages = []
             for tool_call in tool_calls:
-                content, done = _execute_swg_action(state, _tool_call_to_action(tool_call))
+                content, done = await asyncio.to_thread(
+                    _execute_swg_action, state, _tool_call_to_action(tool_call)
+                )
                 tool_messages.append(
                     ToolMessage(
                         role="tool",
@@ -380,12 +388,12 @@ if _native_hub_available():
                 return
             try:
                 if state.get("swg_reward_payload") is None:
-                    state["swg_reward_payload"] = env.evaluate()
+                    state["swg_reward_payload"] = await asyncio.to_thread(env.evaluate)
                 payload = normalize_reward_payload(state["swg_reward_payload"])
                 state["swg_reward_payload"] = payload
                 state["swg_verifiers_info"] = to_verifiers_info(payload)
             finally:
-                env.close()
+                await asyncio.to_thread(env.close)
 
 
 async def swg_reward(state: Any, **kwargs: Any) -> float:

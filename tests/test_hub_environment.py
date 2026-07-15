@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import asyncio
+import time
 import unittest
+from unittest.mock import patch
 from importlib import util
 from pathlib import Path
 from types import SimpleNamespace
@@ -258,6 +260,57 @@ class HubEnvironmentTests(unittest.TestCase):
                 state["swg_env"].close()
 
         asyncio.run(run_turn())
+
+    @unittest.skipUnless(is_verifiers_available(), "verifiers is unavailable")
+    def test_native_hub_offloads_blocking_operations_from_event_loop(self) -> None:
+        async def run_check() -> None:
+            env = load_environment(
+                split=None,
+                family="script_repair",
+                scenario="csv_schema_drift",
+                difficulty=1,
+                seed=7,
+                max_examples=1,
+            )
+            row = dict(env.get_dataset()[0])
+            state = {"input": row, "trajectory_id": "hub-offload-test"}
+
+            def slow_reset() -> dict[str, object]:
+                time.sleep(0.08)
+                return {"message": "ready", "metadata": {}}
+
+            fake_runtime = SimpleNamespace(reset=slow_reset)
+            with patch(
+                "synthetic_workspace_gym.hub.SyntheticWorkspacePrimeEnv",
+                return_value=fake_runtime,
+            ):
+                setup_task = asyncio.create_task(env.setup_state(state))
+                await asyncio.sleep(0.01)
+                self.assertFalse(setup_task.done())
+                await setup_task
+
+            def slow_action(*_args: object) -> tuple[str, bool]:
+                time.sleep(0.08)
+                return "slow observation", False
+
+            tool_call = SimpleNamespace(
+                id="call-offload",
+                name="list_directory",
+                arguments='{"path":"."}',
+            )
+            with patch(
+                "synthetic_workspace_gym.hub._execute_swg_action",
+                side_effect=slow_action,
+            ):
+                response_task = asyncio.create_task(
+                    env.env_response([SimpleNamespace(tool_calls=[tool_call])], state)
+
+                )
+                await asyncio.sleep(0.01)
+                self.assertFalse(response_task.done())
+                await response_task
+
+        asyncio.run(run_check())
 
     @unittest.skipUnless(is_verifiers_available(), "verifiers is unavailable")
     def test_hub_environment_setup_uses_dataset_row_metadata(self) -> None:
