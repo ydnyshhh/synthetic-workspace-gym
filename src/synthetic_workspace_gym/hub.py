@@ -54,6 +54,45 @@ HUB_SYSTEM_PROMPT = (
     "Available tools are read_file, write_file, append_file, list_directory, run_shell, run_python, and submit."
 )
 
+_TRANSIENT_SANDBOX_ERROR_NAMES = {
+    "APIConnectionError",
+    "ConnectError",
+    "ConnectTimeout",
+    "DownloadTimeoutError",
+    "NetworkError",
+    "PoolTimeout",
+    "ReadError",
+    "ReadTimeout",
+    "RemoteProtocolError",
+    "UploadTimeoutError",
+    "WriteError",
+    "WriteTimeout",
+}
+
+
+def _is_transient_sandbox_failure(exc: BaseException) -> bool:
+    """Recognize remote-sandbox transport failures through wrapped cause chains."""
+    current: BaseException | None = exc
+    seen: set[int] = set()
+    while current is not None and id(current) not in seen:
+        seen.add(id(current))
+        if current.__class__.__name__ in _TRANSIENT_SANDBOX_ERROR_NAMES:
+            return True
+        if any(name in str(current) for name in _TRANSIENT_SANDBOX_ERROR_NAMES):
+            return True
+        current = current.__cause__ or current.__context__
+    return False
+
+
+async def _run_blocking_swg_operation(operation: Any, *args: Any) -> Any:
+    """Keep synchronous sandbox I/O off-loop and expose transient failures to retries."""
+    try:
+        return await asyncio.to_thread(operation, *args)
+    except Exception as exc:
+        if _is_transient_sandbox_failure(exc) and vf is not None:
+            raise vf.InfraError(f"Transient SWG sandbox infrastructure failure: {exc}") from exc
+        raise
+
 
 def load_environment(
     split: str | None = "train",
@@ -259,7 +298,7 @@ if _native_hub_available():
             # Prime sandbox setup performs synchronous network and archive I/O.
             # Running it on the Verifiers event-loop thread prevents worker
             # heartbeats and causes the router to kill otherwise healthy tasks.
-            observation = await asyncio.to_thread(env.reset)
+            observation = await _run_blocking_swg_operation(env.reset)
             state["swg_env"] = env
             state["swg_reset"] = observation
             state["swg_task"] = _task_metadata(row)
@@ -288,7 +327,7 @@ if _native_hub_available():
             forced_action = row.get("forced_action") if row.get("branch_mode") == "forced" else None
             state["swg_forced_action"] = forced_action
             if isinstance(forced_action, dict):
-                forced_content, forced_done, forced_info = await asyncio.to_thread(
+                forced_content, forced_done, forced_info = await _run_blocking_swg_operation(
                     _execute_forced_swg_action, state, forced_action
                 )
                 forced_call_id = "counterfactual-forced-action"
@@ -355,7 +394,7 @@ if _native_hub_available():
                         ],
                         field_name="swg.format_correction",
                     )
-                content, done = await asyncio.to_thread(_execute_swg_action, state, action)
+                content, done = await _run_blocking_swg_operation(_execute_swg_action, state, action)
                 response = normalize_messages(
                     [{"role": "user", "content": f"Observation:\n{content}"}],
                     field_name="swg.text_tool_response",
@@ -366,7 +405,7 @@ if _native_hub_available():
 
             tool_messages = []
             for tool_call in tool_calls:
-                content, done = await asyncio.to_thread(
+                content, done = await _run_blocking_swg_operation(
                     _execute_swg_action, state, _tool_call_to_action(tool_call)
                 )
                 tool_messages.append(
@@ -388,12 +427,12 @@ if _native_hub_available():
                 return
             try:
                 if state.get("swg_reward_payload") is None:
-                    state["swg_reward_payload"] = await asyncio.to_thread(env.evaluate)
+                    state["swg_reward_payload"] = await _run_blocking_swg_operation(env.evaluate)
                 payload = normalize_reward_payload(state["swg_reward_payload"])
                 state["swg_reward_payload"] = payload
                 state["swg_verifiers_info"] = to_verifiers_info(payload)
             finally:
-                await asyncio.to_thread(env.close)
+                await _run_blocking_swg_operation(env.close)
 
 
 async def swg_reward(state: Any, **kwargs: Any) -> float:

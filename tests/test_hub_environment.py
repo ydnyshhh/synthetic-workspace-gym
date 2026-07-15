@@ -15,6 +15,7 @@ import synthetic_workspace_gym as swg
 from synthetic_workspace_gym.hub import (
     HUB_SYSTEM_PROMPT,
     SyntheticWorkspaceHubEnv,
+    _run_blocking_swg_operation,
     _to_verifiers_branch_messages,
     _to_verifiers_tool_exchange,
     load_environment,
@@ -309,6 +310,26 @@ class HubEnvironmentTests(unittest.TestCase):
                 await asyncio.sleep(0.01)
                 self.assertFalse(response_task.done())
                 await response_task
+
+        asyncio.run(run_check())
+
+    @unittest.skipUnless(is_verifiers_available(), "verifiers is unavailable")
+    def test_native_hub_marks_prime_upload_timeout_as_retryable_infrastructure(self) -> None:
+        from synthetic_workspace_gym.verifiers.compat import vf
+
+        class UploadTimeoutError(RuntimeError):
+            pass
+
+        def fail_upload() -> None:
+            try:
+                raise UploadTimeoutError("runtime upload exceeded 300 seconds")
+            except UploadTimeoutError as exc:
+                raise RuntimeError("Prime sandbox execution failed") from exc
+
+        async def run_check() -> None:
+            with self.assertRaises(vf.InfraError) as raised:
+                await _run_blocking_swg_operation(fail_upload)
+            self.assertIsInstance(raised.exception.__cause__, RuntimeError)
 
         asyncio.run(run_check())
 
