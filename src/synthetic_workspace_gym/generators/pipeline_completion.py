@@ -6,6 +6,7 @@ from pathlib import Path
 from textwrap import dedent
 
 from synthetic_workspace_gym.generators.base import BaseGenerator, GeneratedPayload
+from synthetic_workspace_gym.generators.common import build_difficulty_realization, select_visible_hints
 from synthetic_workspace_gym.generators.pipeline_scenarios import (
     build_artifact_stitch_pipeline_scenario,
     build_quality_gate_pipeline_scenario,
@@ -61,12 +62,22 @@ class PipelineCompletionGenerator(BaseGenerator):
             )
             write_text(visible_root / "notes" / "handoff.md", str(scenario["debug_note"]))
 
+        disclosed_targets = sorted(touched_files)
+        if spec.difficulty == 5:
+            disclosed_targets = sorted(
+                path
+                for path in correct_files
+                if path == "run_pipeline.py"
+                or path.startswith("config/")
+                or (path.startswith("src/") and path.endswith(".py") and not path.endswith("/__init__.py"))
+            )
+
         task_descriptor = {
             "family": "pipeline",
             "scenario_id": scenario["scenario_id"],
             "entrypoint": "python run_pipeline.py",
             "required_output_path": scenario["required_output_path"],
-            "target_files": sorted(touched_files),
+            "target_files": disclosed_targets,
             "hints": self.visible_hints(list(scenario["hints"]), spec.difficulty),
         }
         write_text(visible_root / "README.md", self.build_readme(scenario, task_descriptor))
@@ -97,6 +108,13 @@ class PipelineCompletionGenerator(BaseGenerator):
                 "requested_scenario_id": spec.scenario_id,
                 "selection_mode": "explicit" if spec.scenario_id else "seed_modulo",
             },
+            "difficulty_realization": build_difficulty_realization(
+                spec.difficulty,
+                hint_count=len(task_descriptor["hints"]),
+                candidate_file_count=len(task_descriptor["target_files"]),
+                applied_bug_count=len(bug_labels),
+                touched_file_count=len(touched_files),
+            ),
         }
         return GeneratedPayload(
             instruction="Repair the mini-project so running the pipeline produces the required final artifact.",
@@ -106,11 +124,7 @@ class PipelineCompletionGenerator(BaseGenerator):
         )
 
     def visible_hints(self, hints: list[str], difficulty: int) -> list[str]:
-        if difficulty <= 2:
-            return hints
-        if difficulty == 3:
-            return hints[:2]
-        return hints[:1]
+        return select_visible_hints(hints, difficulty)
 
     def scenario_pool(self, rng: random.Random, spec: EnvironmentSpec) -> list[dict[str, object]]:
         return [

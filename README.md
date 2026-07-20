@@ -87,6 +87,11 @@ External difficulty is exposed as `1..5` or `easy/medium/hard`. Internally, gene
 | `execution_required` | Whether running code/shell is necessary |
 | `output_constraint_strength` | Strictness of final artifact contract |
 
+Difficulty 5 is a discovery-focused tier. It removes solution-directed hints, avoids exposing exact
+repair targets in code-repair families, and records a `difficulty_realization` metadata block with
+the concrete hint, candidate-file, operation, bug, retrieval, and staleness measurements available
+for that generated task. Difficulties 1-4 retain their existing guidance schedule and task contracts.
+
 ## Implemented Environment Families
 
 | Family | Visible workspace shape | Hidden evaluation | Typical failure modes | Difficulty scaling |

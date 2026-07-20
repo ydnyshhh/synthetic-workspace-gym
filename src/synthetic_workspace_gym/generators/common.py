@@ -71,3 +71,32 @@ def build_complexity_profile(family: EnvironmentFamily, difficulty: int) -> Comp
         base["bug_subtlety"] = 0 if difficulty <= 2 else 1
         base["execution_required"] = difficulty >= 4
     return ComplexityProfile(**base)
+
+
+def select_visible_hints(hints: list[str], difficulty: int) -> list[str]:
+    """Reduce guidance monotonically while preserving levels 1-4."""
+    if difficulty <= 2:
+        return hints
+    if difficulty == 3:
+        return hints[:2]
+    if difficulty == 4:
+        return hints[:1]
+    return []
+
+
+def build_difficulty_realization(
+    difficulty: int,
+    *,
+    hint_count: int,
+    candidate_file_count: int,
+    **metrics: object,
+) -> dict[str, object]:
+    """Describe the concrete generated challenge for audits and analysis."""
+    return {
+        "level": difficulty,
+        "guidance": "none" if hint_count == 0 else "reduced" if difficulty >= 3 else "full",
+        "hint_count": hint_count,
+        "candidate_file_count": candidate_file_count,
+        "discovery_required": difficulty == 5,
+        **metrics,
+    }

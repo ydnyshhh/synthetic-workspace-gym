@@ -66,6 +66,15 @@ class BenchmarkAnalysisTests(unittest.TestCase):
         self.assertIn("4", report["by_difficulty"])
         self.assertIn("5", report["by_difficulty"])
 
+    def test_difficulty_five_realization_is_exported(self) -> None:
+        row = next(item for item in self.build_rows() if item["difficulty"] == 5)
+        self.assertEqual(row["difficulty_guidance"], "none")
+        self.assertEqual(row["difficulty_hint_count"], 0)
+        self.assertTrue(row["difficulty_discovery_required"])
+        self.assertGreater(int(row["difficulty_candidate_file_count"]), 0)
+        self.assertGreater(int(row["difficulty_applied_bug_count"]), 0)
+        self.assertGreater(int(row["difficulty_touched_file_count"]), 0)
+
     def test_bucket_metrics_are_numerically_sane(self) -> None:
         report = build_benchmark_report(self.build_rows())
         buckets = [report["overall"]]

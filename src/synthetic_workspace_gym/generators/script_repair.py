@@ -6,6 +6,7 @@ from pathlib import Path
 from textwrap import dedent
 
 from synthetic_workspace_gym.generators.base import BaseGenerator, GeneratedPayload
+from synthetic_workspace_gym.generators.common import build_difficulty_realization, select_visible_hints
 from synthetic_workspace_gym.generators.script_repair_scenarios import (
     build_csv_schema_drift_scenario,
     build_team_roster_export_scenario,
@@ -57,11 +58,19 @@ class ScriptRepairGenerator(BaseGenerator):
         if spec.difficulty >= 4:
             write_text(visible_root / "notes" / "incident_log.md", str(scenario["debug_note"]))
 
+        disclosed_targets = sorted(touched_files)
+        if spec.difficulty == 5:
+            disclosed_targets = sorted(
+                path
+                for path in correct_files
+                if path.startswith("src/") and path.endswith(".py") and not path.endswith("/__init__.py")
+            )
+
         task_descriptor = {
             "family": "script_repair",
             "scenario_id": scenario["scenario_id"],
             "entrypoint": "python run_example.py",
-            "target_files": sorted(touched_files),
+            "target_files": disclosed_targets,
             "hints": self.visible_hints(list(scenario["hints"]), spec.difficulty),
             "repair_contract": list(scenario.get("repair_contract", [])),
         }
@@ -98,6 +107,13 @@ class ScriptRepairGenerator(BaseGenerator):
                 "requested_scenario_id": spec.scenario_id,
                 "selection_mode": "explicit" if spec.scenario_id else "seed_modulo",
             },
+            "difficulty_realization": build_difficulty_realization(
+                spec.difficulty,
+                hint_count=len(task_descriptor["hints"]),
+                candidate_file_count=len(task_descriptor["target_files"]),
+                applied_bug_count=len(applied_bug_labels),
+                touched_file_count=len(touched_files),
+            ),
         }
         return GeneratedPayload(
             instruction="Repair the provided Python workspace so that the hidden tests pass.",
@@ -107,11 +123,7 @@ class ScriptRepairGenerator(BaseGenerator):
         )
 
     def visible_hints(self, hints: list[str], difficulty: int) -> list[str]:
-        if difficulty <= 2:
-            return hints
-        if difficulty == 3:
-            return hints[:2]
-        return hints[:1]
+        return select_visible_hints(hints, difficulty)
 
     def build_readme(self, scenario: dict[str, object], task_descriptor: dict[str, object]) -> str:
         hints = "\n".join(f"- {hint}" for hint in task_descriptor["hints"])

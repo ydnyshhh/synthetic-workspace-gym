@@ -13,6 +13,7 @@ BenchmarkRow = dict[str, object]
 def episode_to_row(summary: EpisodeSummary, manifest: EnvironmentManifest) -> BenchmarkRow:
     metadata = dict(manifest.metadata)
     scenario_profile = dict(metadata.get("scenario_profile", {}))
+    difficulty_realization = dict(metadata.get("difficulty_realization", {}))
     return {
         "episode_id": summary.episode_id,
         "env_id": summary.env_id,
@@ -43,6 +44,13 @@ def episode_to_row(summary: EpisodeSummary, manifest: EnvironmentManifest) -> Be
         "input_shape": scenario_profile.get("input_shape"),
         "time_bucketing": scenario_profile.get("time_bucketing"),
         "output_style": scenario_profile.get("output_style"),
+        "difficulty_guidance": difficulty_realization.get("guidance"),
+        "difficulty_hint_count": difficulty_realization.get("hint_count"),
+        "difficulty_candidate_file_count": difficulty_realization.get("candidate_file_count"),
+        "difficulty_discovery_required": difficulty_realization.get("discovery_required"),
+        "difficulty_operation_count": difficulty_realization.get("operation_count"),
+        "difficulty_applied_bug_count": difficulty_realization.get("applied_bug_count"),
+        "difficulty_touched_file_count": difficulty_realization.get("touched_file_count"),
         "success": bool(summary.evaluation.success),
         "score": float(summary.evaluation.score),
         "failure_labels": list(summary.evaluation.failure_labels),

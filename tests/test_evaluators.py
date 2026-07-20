@@ -31,6 +31,17 @@ class EvaluatorCorrectnessTests(unittest.TestCase):
                     result = evaluator.evaluate(bundle.visible_root, bundle.manifest, bundle.hidden_root)
                     self.assertFalse(result.success)
 
+    def test_unsolved_difficulty_five_workspace_fails_for_each_family(self) -> None:
+        for family in EnvironmentFamily:
+            with self.subTest(family=family.value):
+                with workspace_tempdir() as tmp_dir:
+                    generator = get_generator(family)
+                    spec = generator.sample_spec(difficulty=5, seed=29)
+                    bundle = generator.generate_instance(spec, Path(tmp_dir))
+                    evaluator = get_evaluator(family)
+                    result = evaluator.evaluate(bundle.visible_root, bundle.manifest, bundle.hidden_root)
+                    self.assertFalse(result.success)
+
     def test_reference_solution_passes_evaluator(self) -> None:
         for family in EnvironmentFamily:
             with self.subTest(family=family.value):

@@ -7,6 +7,7 @@ from pathlib import Path
 from test_support import workspace_tempdir
 
 from synthetic_workspace_gym.generators.base import BaseGenerator, GeneratedPayload
+from synthetic_workspace_gym.generators.common import select_visible_hints
 from synthetic_workspace_gym.generators.registry import get_generator
 from synthetic_workspace_gym.schemas import EnvironmentFamily, EnvironmentSpec
 
@@ -29,6 +30,41 @@ class GeneratorValidityTests(unittest.TestCase):
                             self.assertTrue((bundle.visible_root / relative_path).exists())
                         for relative_path in bundle.manifest.hidden_files:
                             self.assertTrue((bundle.hidden_root / relative_path).exists())
+
+    def test_level_five_removes_solution_guidance_and_records_realized_complexity(self) -> None:
+        with workspace_tempdir() as tmp_dir:
+            root = Path(tmp_dir)
+            for family in EnvironmentFamily:
+                with self.subTest(family=family.value):
+                    generator = get_generator(family)
+                    bundle = generator.generate_instance(
+                        generator.sample_spec(difficulty=5, seed=29),
+                        root / family.value,
+                    )
+                    task = dict(bundle.manifest.metadata["task_descriptor"])
+                    realization = dict(bundle.manifest.metadata["difficulty_realization"])
+
+                    self.assertEqual(task["hints"], [])
+                    self.assertEqual(realization["level"], 5)
+                    self.assertEqual(realization["guidance"], "none")
+                    self.assertEqual(realization["hint_count"], 0)
+                    self.assertTrue(realization["discovery_required"])
+                    self.assertGreater(int(realization["candidate_file_count"]), 0)
+
+                    if family in {EnvironmentFamily.SCRIPT_REPAIR, EnvironmentFamily.PIPELINE}:
+                        disclosed = set(task["target_files"])
+                        actual = set(bundle.manifest.reference_solution["files"])
+                        self.assertTrue(actual.issubset(disclosed))
+                        self.assertEqual(realization["touched_file_count"], len(actual))
+                        self.assertGreaterEqual(realization["candidate_file_count"], len(actual))
+
+    def test_hint_schedule_preserves_lower_levels(self) -> None:
+        hints = ["one", "two", "three"]
+        self.assertEqual(select_visible_hints(hints, 1), hints)
+        self.assertEqual(select_visible_hints(hints, 2), hints)
+        self.assertEqual(select_visible_hints(hints, 3), hints[:2])
+        self.assertEqual(select_visible_hints(hints, 4), hints[:1])
+        self.assertEqual(select_visible_hints(hints, 5), [])
 
     def test_generator_subclasses_must_define_family(self) -> None:
         with self.assertRaises(TypeError):
@@ -76,10 +112,34 @@ class GeneratorValidityTests(unittest.TestCase):
             for family, scenario_ids in expected.items():
                 generator = get_generator(family)
                 for scenario_id in scenario_ids:
-                    spec = generator.sample_spec(difficulty=3, seed=99, scenario_id=scenario_id)
-                    bundle = generator.generate_instance(spec, root / family)
-                    self.assertEqual(str(bundle.manifest.metadata["scenario_id"]), scenario_id)
-                    self.assertEqual(bundle.manifest.metadata["scenario_selection"]["selection_mode"], "explicit")
+                    for difficulty in (3, 5):
+                        with self.subTest(
+                            family=family,
+                            scenario_id=scenario_id,
+                            difficulty=difficulty,
+                        ):
+                            spec = generator.sample_spec(
+                                difficulty=difficulty,
+                                seed=99,
+                                scenario_id=scenario_id,
+                            )
+                            bundle = generator.generate_instance(spec, root / family / f"d{difficulty}")
+                            self.assertEqual(str(bundle.manifest.metadata["scenario_id"]), scenario_id)
+                            self.assertEqual(
+                                bundle.manifest.metadata["scenario_selection"]["selection_mode"],
+                                "explicit",
+                            )
+                            if difficulty == 5:
+                                task = dict(bundle.manifest.metadata["task_descriptor"])
+                                realization = dict(bundle.manifest.metadata["difficulty_realization"])
+                                self.assertEqual(task["hints"], [])
+                                self.assertTrue(realization["discovery_required"])
+                                if family in {"script_repair", "pipeline"}:
+                                    self.assertTrue(
+                                        set(bundle.manifest.reference_solution["files"]).issubset(
+                                            set(task["target_files"])
+                                        )
+                                    )
 
     def test_retrieval_workspace_metadata_contains_retrieval_fields(self) -> None:
         with workspace_tempdir() as tmp_dir:

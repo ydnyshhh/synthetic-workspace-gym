@@ -4,6 +4,7 @@ import random
 from pathlib import Path
 
 from synthetic_workspace_gym.generators.base import BaseGenerator, GeneratedPayload
+from synthetic_workspace_gym.generators.common import build_difficulty_realization, select_visible_hints
 from synthetic_workspace_gym.generators.retrieval_workspace_scenarios import (
     build_client_adapter_sync_scenario,
     build_incident_report_bundle_scenario,
@@ -70,6 +71,15 @@ class RetrievalWorkspaceGenerator(BaseGenerator):
                 "target_path": scenario["target_path"],
                 "document_roots": scenario["document_roots"],
             },
+            "difficulty_realization": build_difficulty_realization(
+                spec.difficulty,
+                hint_count=len(task_descriptor["hints"]),
+                candidate_file_count=int(scenario["structure"]["document_count"]),
+                document_count=int(scenario["structure"]["document_count"]),
+                distractor_count=int(scenario["structure"]["distractor_count"]),
+                retrieval_hops=int(scenario["structure"]["retrieval_hops"]),
+                staleness_pattern=str(scenario["structure"]["staleness_pattern"]),
+            ),
         }
         return GeneratedPayload(
             instruction=self.build_instruction(task_descriptor),
@@ -99,11 +109,7 @@ class RetrievalWorkspaceGenerator(BaseGenerator):
         ]
 
     def visible_hints(self, hints: list[str], difficulty: int) -> list[str]:
-        if difficulty <= 2:
-            return hints
-        if difficulty == 3:
-            return hints[:2]
-        return hints[:1]
+        return select_visible_hints(hints, difficulty)
 
     def build_instruction(self, task_descriptor: dict[str, object]) -> str:
         target_path = str(task_descriptor["target_path"])

@@ -5,6 +5,7 @@ import random
 from pathlib import Path
 
 from synthetic_workspace_gym.generators.base import BaseGenerator, GeneratedPayload
+from synthetic_workspace_gym.generators.common import build_difficulty_realization, select_visible_hints
 from synthetic_workspace_gym.generators.tabular_scenarios import (
     build_channel_status_pivot_scenario,
     build_monthly_segment_report_scenario,
@@ -65,6 +66,13 @@ class TabularTransformationGenerator(BaseGenerator):
                 "workspace_root": "visible",
                 "output_path": output_path,
             },
+            "difficulty_realization": build_difficulty_realization(
+                spec.difficulty,
+                hint_count=len(task_descriptor["hints"]),
+                candidate_file_count=len(task_descriptor["input_files"]),
+                operation_count=len(task_descriptor["operations"]),
+                input_file_count=len(task_descriptor["input_files"]),
+            ),
         }
         return GeneratedPayload(
             instruction=self.build_instruction(task_descriptor),
@@ -82,11 +90,7 @@ class TabularTransformationGenerator(BaseGenerator):
         ]
 
     def visible_hints(self, hints: list[str], difficulty: int) -> list[str]:
-        if difficulty <= 2:
-            return hints
-        if difficulty == 3:
-            return hints[:2]
-        return hints[:1]
+        return select_visible_hints(hints, difficulty)
 
     def build_instruction(self, task_descriptor: dict[str, object]) -> str:
         return (
