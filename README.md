@@ -90,7 +90,12 @@ External difficulty is exposed as `1..5` or `easy/medium/hard`. Internally, gene
 Difficulty 5 is a discovery-focused tier. It removes solution-directed hints, avoids exposing exact
 repair targets in code-repair families, and records a `difficulty_realization` metadata block with
 the concrete hint, candidate-file, operation, bug, retrieval, and staleness measurements available
-for that generated task. Difficulties 1-4 retain their existing guidance schedule and task contracts.
+for that generated task. D5 also uses a deterministic 50/50 distribution in every family: even seeds
+produce hard atomic tasks, while odd seeds produce compositional tasks that join a second family skill
+with the primary task (for example retrieval-to-repair or tabular-analysis-to-retrieval). Manifests and
+task descriptors record `composition_mode`, `source_families`, `composition_depth`, and any
+`composition_evidence_paths`, so atomic and compositional results can be calibrated separately.
+Difficulties 1-4 retain their existing guidance schedule and task contracts.
 
 ## Implemented Environment Families
 
@@ -186,6 +191,7 @@ The Hub loader is split-aware and accepts JSON-friendly environment args:
 | `task_id` | `null` | Select one exact task row |
 | `max_examples` | `-1` | Limit the Verifiers dataset for smoke runs |
 | `max_turns` | `12` | Maximum model turns per rollout |
+| `max_tool_steps` | derived | Maximum executed workspace tool calls; native multi-call turns consume one step per call |
 | `sandbox_backend` | `local` | SWG sandbox backend inside the hosted environment |
 | `reward_mode` | `score` | Verifiers scalar reward mode |
 

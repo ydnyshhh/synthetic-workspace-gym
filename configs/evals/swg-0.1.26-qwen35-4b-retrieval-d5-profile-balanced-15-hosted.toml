@@ -1,0 +1,12 @@
+# Prepared only. Publish 0.1.26 before launching this hosted evaluation.
+# Five distinct seeds per retrieval D5 profile; report results by profile.
+model = "Qwen/Qwen3.5-4B"
+num_examples = 15
+rollouts_per_example = 1
+max_tokens = 32768
+temperature = 0.7
+max_concurrent = 5
+
+[[eval]]
+id = "yadnyesh/synthetic-workspace-gym@0.1.26"
+env_args = { split = "test", family = "retrieval_workspace", difficulty = 5, seeds = [100, 101, 110, 111, 120, 102, 103, 104, 105, 106, 107, 108, 109, 117, 118], max_examples = 15, composition_mode = "hard_atomic", max_turns = 25, max_tool_steps = 64 }

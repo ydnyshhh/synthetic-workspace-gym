@@ -1,0 +1,270 @@
+{
+  "monotonic_task_count": 15,
+  "schema_version": "d5-calibration-v1",
+  "seeds": [
+    100,
+    103,
+    106,
+    108,
+    109
+  ],
+  "task_count": 15,
+  "tasks": [
+    {
+      "capability_count": 9,
+      "family": "pipeline",
+      "monotonic": true,
+      "profile": "d5_a",
+      "seed": 100,
+      "semantic_dependency_depth": 2,
+      "states": {
+        "all_but_one": 0.9125,
+        "full": 1.0,
+        "one_capability": 0.9125,
+        "two_capabilities": 1.0,
+        "untouched": 0.5375
+      },
+      "task_id": "swg.calibration.pipeline.team_hours_pipeline.d5.d5_a.s100",
+      "violations": []
+    },
+    {
+      "capability_count": 9,
+      "family": "pipeline",
+      "monotonic": true,
+      "profile": "d5_b",
+      "seed": 103,
+      "semantic_dependency_depth": 3,
+      "states": {
+        "all_but_one": 0.875,
+        "full": 1.0,
+        "one_capability": 0.8125,
+        "two_capabilities": 0.875,
+        "untouched": 0.6125
+      },
+      "task_id": "swg.calibration.pipeline.team_hours_pipeline.d5.d5_b.s103",
+      "violations": []
+    },
+    {
+      "capability_count": 9,
+      "family": "pipeline",
+      "monotonic": true,
+      "profile": "d5_b",
+      "seed": 106,
+      "semantic_dependency_depth": 3,
+      "states": {
+        "all_but_one": 0.875,
+        "full": 1.0,
+        "one_capability": 0.8125,
+        "two_capabilities": 0.875,
+        "untouched": 0.6125
+      },
+      "task_id": "swg.calibration.pipeline.team_hours_pipeline.d5.d5_b.s106",
+      "violations": []
+    },
+    {
+      "capability_count": 9,
+      "family": "pipeline",
+      "monotonic": true,
+      "profile": "d5_c",
+      "seed": 108,
+      "semantic_dependency_depth": 5,
+      "states": {
+        "all_but_one": 0.75,
+        "full": 1.0,
+        "one_capability": 0.55,
+        "two_capabilities": 0.625,
+        "untouched": 0.0
+      },
+      "task_id": "swg.calibration.pipeline.team_hours_pipeline.d5.d5_c.s108",
+      "violations": []
+    },
+    {
+      "capability_count": 9,
+      "family": "pipeline",
+      "monotonic": true,
+      "profile": "d5_c",
+      "seed": 109,
+      "semantic_dependency_depth": 5,
+      "states": {
+        "all_but_one": 0.75,
+        "full": 1.0,
+        "one_capability": 0.55,
+        "two_capabilities": 0.625,
+        "untouched": 0.0
+      },
+      "task_id": "swg.calibration.pipeline.team_hours_pipeline.d5.d5_c.s109",
+      "violations": []
+    },
+    {
+      "capability_count": 10,
+      "family": "retrieval_workspace",
+      "monotonic": true,
+      "profile": "d5_a",
+      "seed": 100,
+      "semantic_dependency_depth": 2,
+      "states": {
+        "all_but_one": 0.6,
+        "full": 1.0,
+        "one_capability": 0.15,
+        "two_capabilities": 0.4,
+        "untouched": 0.15
+      },
+      "task_id": "swg.calibration.retrieval_workspace.client_adapter_sync.d5.d5_a.s100",
+      "violations": []
+    },
+    {
+      "capability_count": 10,
+      "family": "retrieval_workspace",
+      "monotonic": true,
+      "profile": "d5_b",
+      "seed": 103,
+      "semantic_dependency_depth": 3,
+      "states": {
+        "all_but_one": 0.75,
+        "full": 1.0,
+        "one_capability": 0.25,
+        "two_capabilities": 0.35,
+        "untouched": 0.15
+      },
+      "task_id": "swg.calibration.retrieval_workspace.client_adapter_policy_sync.d5.d5_b.s103",
+      "violations": []
+    },
+    {
+      "capability_count": 10,
+      "family": "retrieval_workspace",
+      "monotonic": true,
+      "profile": "d5_b",
+      "seed": 106,
+      "semantic_dependency_depth": 3,
+      "states": {
+        "all_but_one": 0.75,
+        "full": 1.0,
+        "one_capability": 0.25,
+        "two_capabilities": 0.35,
+        "untouched": 0.15
+      },
+      "task_id": "swg.calibration.retrieval_workspace.client_adapter_policy_sync.d5.d5_b.s106",
+      "violations": []
+    },
+    {
+      "capability_count": 10,
+      "family": "retrieval_workspace",
+      "monotonic": true,
+      "profile": "d5_c",
+      "seed": 108,
+      "semantic_dependency_depth": 5,
+      "states": {
+        "all_but_one": 0.75,
+        "full": 1.0,
+        "one_capability": 0.25,
+        "two_capabilities": 0.35,
+        "untouched": 0.15
+      },
+      "task_id": "swg.calibration.retrieval_workspace.versioned_client_migration.d5.d5_c.s108",
+      "violations": []
+    },
+    {
+      "capability_count": 10,
+      "family": "retrieval_workspace",
+      "monotonic": true,
+      "profile": "d5_c",
+      "seed": 109,
+      "semantic_dependency_depth": 5,
+      "states": {
+        "all_but_one": 0.75,
+        "full": 1.0,
+        "one_capability": 0.25,
+        "two_capabilities": 0.35,
+        "untouched": 0.15
+      },
+      "task_id": "swg.calibration.retrieval_workspace.versioned_client_migration.d5.d5_c.s109",
+      "violations": []
+    },
+    {
+      "capability_count": 12,
+      "family": "tabular",
+      "monotonic": true,
+      "profile": "d5_a",
+      "seed": 100,
+      "semantic_dependency_depth": 2,
+      "states": {
+        "all_but_one": 0.6,
+        "full": 1.0,
+        "one_capability": 0.52,
+        "two_capabilities": 0.6,
+        "untouched": 0.39
+      },
+      "task_id": "swg.calibration.tabular.account_event_program_synthesis.d5.d5_a.s100",
+      "violations": []
+    },
+    {
+      "capability_count": 12,
+      "family": "tabular",
+      "monotonic": true,
+      "profile": "d5_b",
+      "seed": 103,
+      "semantic_dependency_depth": 3,
+      "states": {
+        "all_but_one": 0.73,
+        "full": 1.0,
+        "one_capability": 0.5,
+        "two_capabilities": 0.63,
+        "untouched": 0.38
+      },
+      "task_id": "swg.calibration.tabular.account_event_program_synthesis.d5.d5_b.s103",
+      "violations": []
+    },
+    {
+      "capability_count": 12,
+      "family": "tabular",
+      "monotonic": true,
+      "profile": "d5_b",
+      "seed": 106,
+      "semantic_dependency_depth": 3,
+      "states": {
+        "all_but_one": 0.73,
+        "full": 1.0,
+        "one_capability": 0.5,
+        "two_capabilities": 0.63,
+        "untouched": 0.38
+      },
+      "task_id": "swg.calibration.tabular.account_event_program_synthesis.d5.d5_b.s106",
+      "violations": []
+    },
+    {
+      "capability_count": 12,
+      "family": "tabular",
+      "monotonic": true,
+      "profile": "d5_c",
+      "seed": 108,
+      "semantic_dependency_depth": 5,
+      "states": {
+        "all_but_one": 0.73,
+        "full": 1.0,
+        "one_capability": 0.3,
+        "two_capabilities": 0.38,
+        "untouched": 0.17
+      },
+      "task_id": "swg.calibration.tabular.account_event_program_synthesis.d5.d5_c.s108",
+      "violations": []
+    },
+    {
+      "capability_count": 12,
+      "family": "tabular",
+      "monotonic": true,
+      "profile": "d5_c",
+      "seed": 109,
+      "semantic_dependency_depth": 5,
+      "states": {
+        "all_but_one": 0.73,
+        "full": 1.0,
+        "one_capability": 0.3,
+        "two_capabilities": 0.38,
+        "untouched": 0.17
+      },
+      "task_id": "swg.calibration.tabular.account_event_program_synthesis.d5.d5_c.s109",
+      "violations": []
+    }
+  ],
+  "violation_count": 0
+}

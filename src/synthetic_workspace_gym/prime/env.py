@@ -8,7 +8,10 @@ from typing import Any
 
 from synthetic_workspace_gym.evaluators.registry import get_evaluator
 from synthetic_workspace_gym.generators.registry import get_generator
-from synthetic_workspace_gym.runtime.environment import LoadedEnvironment, load_environment
+from synthetic_workspace_gym.runtime.environment import (
+    LoadedEnvironment,
+    load_environment,
+)
 from synthetic_workspace_gym.runtime.tools import WorkspaceToolExecutor
 from synthetic_workspace_gym.sandbox.evaluator import verify_workspace_in_sandbox
 from synthetic_workspace_gym.sandbox.runner import build_sandbox_backend
@@ -27,6 +30,7 @@ class SyntheticWorkspacePrimeEnv:
         scenario: str | None = None,
         difficulty: int = 3,
         seed: int = 0,
+        composition_mode: str | None = None,
         max_steps: int | None = None,
         workspace_root: str | Path | None = None,
         output_dir: str | Path | None = None,
@@ -39,10 +43,15 @@ class SyntheticWorkspacePrimeEnv:
         self.scenario = scenario
         self.difficulty = int(difficulty)
         self.seed = int(seed)
+        self.composition_mode = composition_mode
         self.max_steps = max_steps
-        self.workspace_root = Path(workspace_root).resolve() if workspace_root is not None else None
+        self.workspace_root = (
+            Path(workspace_root).resolve() if workspace_root is not None else None
+        )
         self.output_dir = Path(output_dir).resolve() if output_dir is not None else None
-        self.time_limit_seconds = int(time_limit_seconds) if time_limit_seconds is not None else None
+        self.time_limit_seconds = (
+            int(time_limit_seconds) if time_limit_seconds is not None else None
+        )
         self.sandbox_config = sandbox_config or SandboxConfig(backend=sandbox_backend)
         self.sandbox_config.backend = sandbox_backend  # type: ignore[assignment]
         if docker_image is not None:
@@ -70,7 +79,9 @@ class SyntheticWorkspacePrimeEnv:
 
         self._environment = environment
         self._active_workspace = active_workspace
-        runtime_home = self._runtime_root() / "runtime-home" / environment.manifest.env_id
+        runtime_home = (
+            self._runtime_root() / "runtime-home" / environment.manifest.env_id
+        )
         sandbox_tool_backend = (
             build_sandbox_backend(self.sandbox_config)
             if self.sandbox_config.backend != "local"
@@ -135,7 +146,9 @@ class SyntheticWorkspacePrimeEnv:
             }
 
         try:
-            observation = executor.execute(swg_action, remaining_time_seconds=self._remaining_time_seconds())
+            observation = executor.execute(
+                swg_action, remaining_time_seconds=self._remaining_time_seconds()
+            )
         except Exception as exc:
             message = f"Tool execution failed: {type(exc).__name__}"
             if isinstance(exc, KeyError):
@@ -155,7 +168,8 @@ class SyntheticWorkspacePrimeEnv:
 
         self._done = (
             swg_action.action_type == ActionType.SUBMIT
-            or self._step_count >= int(self._step_limit or environment.manifest.max_steps)
+            or self._step_count
+            >= int(self._step_limit or environment.manifest.max_steps)
             or self._remaining_time_seconds() <= 0
         )
 
@@ -170,7 +184,11 @@ class SyntheticWorkspacePrimeEnv:
         info.update(
             {
                 "step_index": self._step_count - 1,
-                "remaining_steps": max(0, int(self._step_limit or environment.manifest.max_steps) - self._step_count),
+                "remaining_steps": max(
+                    0,
+                    int(self._step_limit or environment.manifest.max_steps)
+                    - self._step_count,
+                ),
                 "submitted": swg_action.action_type == ActionType.SUBMIT,
             }
         )
@@ -188,16 +206,22 @@ class SyntheticWorkspacePrimeEnv:
     def evaluate(self) -> dict[str, object]:
         environment, _ = self._require_active()
         if self._active_workspace is None:
-            raise RuntimeError("Environment has no active workspace. Call reset() first.")
+            raise RuntimeError(
+                "Environment has no active workspace. Call reset() first."
+            )
         if self.sandbox_config.backend != "local":
-            payload = verify_workspace_in_sandbox(environment.root, self._active_workspace, self.sandbox_config)
+            payload = verify_workspace_in_sandbox(
+                environment.root, self._active_workspace, self.sandbox_config
+            )
             payload["env_id"] = environment.manifest.env_id
             return payload
         evaluator = get_evaluator(
             environment.manifest.family,
             evaluator_entrypoint=environment.manifest.evaluator_entrypoint,
         )
-        result = evaluator.evaluate(self._active_workspace, environment.manifest, environment.hidden_root)
+        result = evaluator.evaluate(
+            self._active_workspace, environment.manifest, environment.hidden_root
+        )
         payload = evaluator_result_to_prime_reward(result)
         payload["env_id"] = environment.manifest.env_id
         return payload
@@ -228,7 +252,9 @@ class SyntheticWorkspacePrimeEnv:
     @property
     def active_workspace(self) -> Path:
         if self._active_workspace is None:
-            raise RuntimeError("Environment has no active workspace. Call reset() first.")
+            raise RuntimeError(
+                "Environment has no active workspace. Call reset() first."
+            )
         return self._active_workspace
 
     @property
@@ -267,7 +293,9 @@ class SyntheticWorkspacePrimeEnv:
     def _load_or_generate_environment(self) -> LoadedEnvironment:
         if self.workspace_root is not None:
             if not (self.workspace_root / "manifest.json").exists():
-                raise FileNotFoundError(f"Missing manifest.json under {self.workspace_root}")
+                raise FileNotFoundError(
+                    f"Missing manifest.json under {self.workspace_root}"
+                )
             return load_environment(self.workspace_root)
 
         generator = get_generator(self.family)
@@ -275,8 +303,17 @@ class SyntheticWorkspacePrimeEnv:
             difficulty=self.difficulty,
             seed=self.seed,
             scenario_id=self.scenario,
+            generation_params=(
+                {"composition_mode": self.composition_mode}
+                if self.composition_mode is not None
+                else {}
+            ),
             max_steps=self.max_steps or 12,
-            **({"time_limit_seconds": self.time_limit_seconds} if self.time_limit_seconds is not None else {}),
+            **(
+                {"time_limit_seconds": self.time_limit_seconds}
+                if self.time_limit_seconds is not None
+                else {}
+            ),
         )
         bundle = generator.generate_instance(spec, self._runtime_root() / "generated")
         return load_environment(bundle.root)

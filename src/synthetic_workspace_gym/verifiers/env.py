@@ -16,8 +16,8 @@ from .tools import get_verifiers_tools
 
 SYSTEM_PROMPT = (
     "You are operating inside a local synthetic workspace. Use only provided tools. "
-    "Inspect files before editing. Do not access hidden evaluator files. Return exactly "
-    "one tool call per turn. When finished, call submit."
+    "Inspect files before editing. Do not access hidden evaluator files. Use tool calls "
+    "for workspace actions. When finished, call submit."
 )
 
 
@@ -28,6 +28,7 @@ class SyntheticWorkspaceVerifiersEnv:
         scenario: str | None = None,
         difficulty: int = 3,
         seed: int = 0,
+        composition_mode: str | None = None,
         environment_path: str | Path | None = None,
         sandbox_backend: str = "local",
         sandbox_config: SandboxConfig | None = None,
@@ -41,17 +42,33 @@ class SyntheticWorkspaceVerifiersEnv:
         branch_task_id: str | None = None,
         branch_mode: str | None = None,
     ) -> None:
-        self.branch_manifest_path = Path(branch_manifest_path).resolve() if branch_manifest_path is not None else None
+        self.branch_manifest_path = (
+            Path(branch_manifest_path).resolve()
+            if branch_manifest_path is not None
+            else None
+        )
         self.branch_task = None
         self.branch_mode = branch_mode
         if self.branch_manifest_path is not None:
-            from synthetic_workspace_gym.counterfactual.runner import read_branch_manifest
+            from synthetic_workspace_gym.counterfactual.runner import (
+                read_branch_manifest,
+            )
+
             tasks = read_branch_manifest(self.branch_manifest_path)
-            matches = [task for task in tasks if branch_task_id is None or task.task_id == branch_task_id]
+            matches = [
+                task
+                for task in tasks
+                if branch_task_id is None or task.task_id == branch_task_id
+            ]
             if not matches:
                 raise ValueError(f"branch task not found: {branch_task_id!r}")
             self.branch_task = matches[0]
-            family, scenario, difficulty, seed = self.branch_task.family, self.branch_task.scenario_id, self.branch_task.difficulty, self.branch_task.seed
+            family, scenario, difficulty, seed = (
+                self.branch_task.family,
+                self.branch_task.scenario_id,
+                self.branch_task.difficulty,
+                self.branch_task.seed,
+            )
             environment_path = self.branch_task.environment_path
             if max_turns is None:
                 max_turns = self.branch_task.remaining_steps
@@ -62,7 +79,10 @@ class SyntheticWorkspaceVerifiersEnv:
         self.scenario = scenario
         self.difficulty = int(difficulty)
         self.seed = int(seed)
-        self.environment_path = Path(environment_path) if environment_path is not None else None
+        self.composition_mode = composition_mode
+        self.environment_path = (
+            Path(environment_path) if environment_path is not None else None
+        )
         self.reward_mode = reward_mode
         self.reward_weights = dict(reward_weights or {})
         self.max_turns = max_turns
@@ -74,6 +94,7 @@ class SyntheticWorkspaceVerifiersEnv:
             scenario=scenario,
             difficulty=difficulty,
             seed=seed,
+            composition_mode=composition_mode,
             max_steps=max_turns,
             workspace_root=self.environment_path,
             output_dir=output_dir,
@@ -87,19 +108,35 @@ class SyntheticWorkspaceVerifiersEnv:
         observation = self._prime_env.reset()
         self._last_reset = dict(observation)
         messages = self._branch_messages()
-        forced_action = self.branch_task.forced_action if self.branch_task and self.branch_mode == "forced" else None
+        forced_action = (
+            self.branch_task.forced_action
+            if self.branch_task and self.branch_mode == "forced"
+            else None
+        )
         forced_result = None
         if forced_action is not None:
             forced_result = self.step(forced_action)
-            messages.extend([
-                {"role": "assistant", "content": json.dumps(forced_action, sort_keys=True), "metadata": {"forced": True}},
-                {"role": "tool", "content": str(forced_result["observation"]), "metadata": {"forced": True}},
-            ])
+            messages.extend(
+                [
+                    {
+                        "role": "assistant",
+                        "content": json.dumps(forced_action, sort_keys=True),
+                        "metadata": {"forced": True},
+                    },
+                    {
+                        "role": "tool",
+                        "content": str(forced_result["observation"]),
+                        "metadata": {"forced": True},
+                    },
+                ]
+            )
         continuation = {}
         if forced_result is not None:
             continuation = {
-                "observation": forced_result["observation"], "reward": forced_result["reward"],
-                "done": forced_result["done"], "info": forced_result["info"],
+                "observation": forced_result["observation"],
+                "reward": forced_result["reward"],
+                "done": forced_result["done"],
+                "info": forced_result["info"],
             }
         return {
             **observation,
@@ -117,7 +154,8 @@ class SyntheticWorkspaceVerifiersEnv:
         if self.branch_task is None:
             return {}
         return {
-            **self.branch_task.metadata, "counterfactual": True,
+            **self.branch_task.metadata,
+            "counterfactual": True,
             "branch_task_id": self.branch_task.task_id,
             "branch_group_id": self.branch_task.branch_group_id,
             "snapshot_id": self.branch_task.snapshot_id,
@@ -127,11 +165,18 @@ class SyntheticWorkspaceVerifiersEnv:
 
     def _branch_messages(self) -> list[dict[str, Any]]:
         if self.branch_task is None:
-            return [{"role": "system", "content": self.system_prompt}, {"role": "user", "content": str((self._last_reset or {}).get("instruction", ""))}]
+            return [
+                {"role": "system", "content": self.system_prompt},
+                {
+                    "role": "user",
+                    "content": str((self._last_reset or {}).get("instruction", "")),
+                },
+            ]
         messages = [dict(message) for message in self.branch_task.prefix_messages]
         if not messages or messages[0].get("role") != "system":
             messages.insert(0, {"role": "system", "content": self.system_prompt})
         return messages
+
     def step(self, action_or_completion: object) -> dict[str, Any]:
         action = self.parser.parse(action_or_completion)
         result = self._prime_env.step(action)
@@ -140,7 +185,9 @@ class SyntheticWorkspaceVerifiersEnv:
         reward = float(result.get("reward", 0.0) or 0.0)
         if isinstance(reward_payload, dict):
             normalized = normalize_reward_payload(reward_payload)
-            reward = compute_reward(normalized, mode=self.reward_mode, weights=self.reward_weights)
+            reward = compute_reward(
+                normalized, mode=self.reward_mode, weights=self.reward_weights
+            )
             info["reward_payload"] = normalized
             info["verifiers"] = to_verifiers_info(normalized)
         if action.get("parse_error"):
@@ -154,7 +201,9 @@ class SyntheticWorkspaceVerifiersEnv:
 
     def evaluate(self) -> dict[str, Any]:
         payload = normalize_reward_payload(self._prime_env.evaluate())
-        payload["reward"] = compute_reward(payload, mode=self.reward_mode, weights=self.reward_weights)
+        payload["reward"] = compute_reward(
+            payload, mode=self.reward_mode, weights=self.reward_weights
+        )
         return payload
 
     def close(self) -> None:
@@ -185,7 +234,9 @@ class SyntheticWorkspaceVerifiersEnv:
                 "difficulty": reset.get("difficulty"),
                 "seed": reset.get("seed"),
                 "instruction": reset.get("instruction"),
-                "environment_path": (reset.get("metadata") or {}).get("environment_path")
+                "environment_path": (reset.get("metadata") or {}).get(
+                    "environment_path"
+                )
                 if isinstance(reset.get("metadata"), dict)
                 else None,
                 "metadata": dict(reset.get("metadata", {}) or {}),
@@ -198,7 +249,9 @@ class SyntheticWorkspaceVerifiersEnv:
             "difficulty": self.difficulty,
             "seed": self.seed,
             "instruction": None,
-            "environment_path": str(self.environment_path) if self.environment_path else None,
+            "environment_path": str(self.environment_path)
+            if self.environment_path
+            else None,
             "metadata": {},
         }
 
@@ -212,7 +265,9 @@ def make_verifiers_env(**kwargs: Any) -> object:
     return adapt_to_verifiers(SyntheticWorkspaceVerifiersEnv(**kwargs))
 
 
-def adapt_to_verifiers(base_env: SyntheticWorkspaceVerifiersEnv, vf_module: Any | None = None) -> object:
+def adapt_to_verifiers(
+    base_env: SyntheticWorkspaceVerifiersEnv, vf_module: Any | None = None
+) -> object:
     module = vf_module if vf_module is not None else vf
     if module is None:
         return base_env
@@ -224,7 +279,9 @@ def adapt_to_verifiers(base_env: SyntheticWorkspaceVerifiersEnv, vf_module: Any 
     return base_env
 
 
-def _try_construct_native(env_cls: Any, base_env: SyntheticWorkspaceVerifiersEnv) -> object | None:
+def _try_construct_native(
+    env_cls: Any, base_env: SyntheticWorkspaceVerifiersEnv
+) -> object | None:
     dataset = _native_dataset(base_env)
     kwargs_candidates = [
         {
@@ -275,7 +332,9 @@ def _native_environment_classes(module: Any) -> list[Any]:
 
 def _native_dataset(base_env: SyntheticWorkspaceVerifiersEnv) -> object:
     row = dict(base_env.task)
-    row["question"] = row.get("instruction") or row.get("task_id") or "Solve the SWG workspace task."
+    row["question"] = (
+        row.get("instruction") or row.get("task_id") or "Solve the SWG workspace task."
+    )
     try:
         from datasets import Dataset  # type: ignore[import-not-found]
 
@@ -285,12 +344,15 @@ def _native_dataset(base_env: SyntheticWorkspaceVerifiersEnv) -> object:
 
 
 class _NativeVerifiersAdapter:
-    def __init__(self, base_env: SyntheticWorkspaceVerifiersEnv, native_env: object) -> None:
+    def __init__(
+        self, base_env: SyntheticWorkspaceVerifiersEnv, native_env: object
+    ) -> None:
         self.base_env = base_env
         self.native_env = native_env
 
     def reset(self) -> dict[str, Any]:
         return self.base_env.reset()
+
     def step(self, action_or_completion: object) -> dict[str, Any]:
         return self.base_env.step(action_or_completion)
 

@@ -1,0 +1,27 @@
+model = "Qwen/Qwen3.5-0.8B"
+loss = "rl"
+max_steps = 200
+batch_size = 128
+rollouts_per_example = 8
+
+[sampling]
+max_tokens = 1024
+
+[checkpoints]
+interval = 25
+keep_cloud = 8
+
+[adapters]
+interval = 25
+keep_last = 8
+
+[[env]]
+id = "yadnyesh/synthetic-workspace-gym"
+
+[env.args]
+split = "train"
+family = "script_repair"
+difficulties = "1,2,3"
+max_examples = 128
+max_turns = 25
+reward_mode = "score"

@@ -48,6 +48,9 @@ class HubEnvironmentTests(unittest.TestCase):
         self.assertIn("Never stop after only writing a file", HUB_SYSTEM_PROMPT)
         self.assertIn("Tabular: read README.md, task.json, and the listed input files", HUB_SYSTEM_PROMPT)
         self.assertIn("Use only the Python standard library", HUB_SYSTEM_PROMPT)
+        self.assertIn("may include one or more calls in a model turn", HUB_SYSTEM_PROMPT)
+        self.assertIn("max_turns` limits model responses", HUB_SYSTEM_PROMPT)
+        self.assertIn("max_tool_steps` limits executed workspace actions", HUB_SYSTEM_PROMPT)
 
     def test_truncate_observation_marks_omitted_content(self) -> None:
         from synthetic_workspace_gym.hub import _truncate_observation

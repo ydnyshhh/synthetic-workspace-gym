@@ -6,7 +6,15 @@ from pathlib import Path
 from textwrap import dedent
 
 from synthetic_workspace_gym.generators.base import BaseGenerator, GeneratedPayload
-from synthetic_workspace_gym.generators.common import build_difficulty_realization, select_visible_hints
+from synthetic_workspace_gym.generators.d5_quality import normalize_lattice_profile
+from synthetic_workspace_gym.generators.common import (
+    build_d5_composition_profile,
+    build_difficulty_realization,
+    select_visible_hints,
+)
+from synthetic_workspace_gym.generators.difficulty_primitives import (
+    coerce_defect_bundle,
+)
 from synthetic_workspace_gym.generators.script_repair_scenarios import (
     build_csv_schema_drift_scenario,
     build_team_roster_export_scenario,
@@ -30,20 +38,131 @@ class ScriptRepairGenerator(BaseGenerator):
 
         return apply
 
-    def build_environment(self, spec: EnvironmentSpec, *, root: Path, visible_root: Path, hidden_root: Path) -> GeneratedPayload:
-        rng = random.Random(spec.seed)
-        scenarios = self.scenario_pool()
-        scenario = self.select_scenario(spec, scenarios)
-        bug_budget = min(len(scenario["bugs"]), {1: 1, 2: 1, 3: 2, 4: 3, 5: 4}[spec.difficulty])
-        candidates = list(scenario["bugs"])
-        if spec.difficulty < 5:
-            candidates = [bug for bug in candidates if bug["label"] != "syntax_error"]
-        selected_bugs = candidates[:bug_budget]
-        if len(candidates) > bug_budget:
-            selected_bugs = rng.sample(candidates, k=bug_budget)
+    def build_environment(
+        self,
+        spec: EnvironmentSpec,
+        *,
+        root: Path,
+        visible_root: Path,
+        hidden_root: Path,
+    ) -> GeneratedPayload:
+        scenarios = self.scenario_pool(spec)
+        scenario = dict(self.select_scenario(spec, scenarios))
+        materialize = scenario.get("materialize")
+        if callable(materialize):
+            scenario.update(dict(materialize(spec)))
+        partner = None
+        compositional_families = list(scenario.get("d5_compositional_families", []))
+        if compositional_families:
+            partner = EnvironmentFamily(str(compositional_families[0]))
+        composition = build_d5_composition_profile(
+            self.family,
+            spec.difficulty,
+            spec.seed,
+            partner=partner,
+            mode=spec.generation_params.get("composition_mode"),
+        )
+        selected_bugs, bug_selection = self.select_bugs(scenario, spec)
+        bug_selection.update(composition)
 
         correct_files = dict(scenario["files"])
+        composition_artifacts: dict[str, str] = {}
+        composition_spec: dict[str, object] = {}
+        if composition.get("composition_mode") == "compositional":
+            contract_lines = "\n".join(
+                f"- {line}" for line in scenario.get("repair_contract", [])
+            )
+            correct_files.setdefault(
+                "docs/api_contract.md",
+                "# Public API contract\n\n"
+                f"{contract_lines}\n\n"
+                "The contract describes behavior, not implementation locations.\n",
+            )
+            correct_files.setdefault(
+                "changelog/schema_v4.md",
+                "# Schema v4 rollout\n\n"
+                "Schema v4 is the active production contract. Canonicalization must "
+                "happen before domain filtering, aggregation, and serialization.\n\n"
+                "Materialize the resolved decision at `artifacts/resolved_contract.json` "
+                "with `schema_version` set to `v4` and `scenario_id` set to the active task id.\n",
+            )
+            correct_files.setdefault(
+                "logs/failing_request.json",
+                json.dumps(
+                    {
+                        "status": "plausible_output_failed_semantic_validation",
+                        "incident": str(scenario.get("debug_note", "")).strip(),
+                    },
+                    indent=2,
+                    sort_keys=True,
+                )
+                + "\n",
+            )
+            correct_files.setdefault(
+                "notes/old_handoff.md",
+                "# Old handoff (historical)\n\n"
+                "This predates schema v4 and may describe obsolete field names. "
+                "Use the active contract and changelog when it conflicts.\n",
+            )
+            contract_payload = {
+                "schema_version": "v4",
+                "scenario_id": str(scenario["scenario_id"]),
+            }
+            composition_artifacts["artifacts/resolved_contract.json"] = (
+                json.dumps(contract_payload, indent=2, sort_keys=True) + "\n"
+            )
+            guard = """from pathlib import Path as _ContractPath
+import json as _contract_json
+
+_contract_file = _ContractPath(__file__).resolve().parent / "artifacts" / "resolved_contract.json"
+_contract = _contract_json.loads(_contract_file.read_text(encoding="utf-8"))
+if not isinstance(_contract, dict):
+    raise RuntimeError("resolved contract must be a JSON object")
+
+"""
+            future = "from __future__ import annotations\n\n"
+            runner = correct_files["run_example.py"]
+            if future not in runner:
+                raise ValueError("run_example.py is missing the expected future import")
+            correct_files["run_example.py"] = runner.replace(future, future + guard, 1)
+            composition_spec = {
+                "stages": [
+                    {
+                        "stage_id": "resolve_contract",
+                        "required_inputs": [
+                            "docs/api_contract.md",
+                            "changelog/schema_v4.md",
+                            "logs/failing_request.json",
+                        ],
+                        "produced_artifacts": ["artifacts/resolved_contract.json"],
+                        "capability": "contract_resolution",
+                    },
+                    {
+                        "stage_id": "repair_implementation",
+                        "required_inputs": ["artifacts/resolved_contract.json"],
+                        "produced_artifacts": sorted(
+                            str(bug["target_path"]) for bug in selected_bugs
+                        ),
+                        "capability": "integration",
+                    },
+                ],
+                "dependencies": [["resolve_contract", "repair_implementation"]],
+                "stage_count": 2,
+                "downstream_consumes_upstream_artifact": True,
+            }
         buggy_files = dict(correct_files)
+        if composition_artifacts:
+            buggy_files["artifacts/resolved_contract.json"] = (
+                json.dumps(
+                    {
+                        "schema_version": "v3",
+                        "scenario_id": str(scenario["scenario_id"]),
+                    },
+                    indent=2,
+                    sort_keys=True,
+                )
+                + "\n"
+            )
         applied_bug_labels: list[str] = []
         touched_files: set[str] = set()
         for bug in selected_bugs:
@@ -56,15 +175,20 @@ class ScriptRepairGenerator(BaseGenerator):
             write_text(visible_root / relative_path, content)
 
         if spec.difficulty >= 4:
-            write_text(visible_root / "notes" / "incident_log.md", str(scenario["debug_note"]))
+            write_text(
+                visible_root / "notes" / "incident_log.md", str(scenario["debug_note"])
+            )
 
         disclosed_targets = sorted(touched_files)
         if spec.difficulty == 5:
             disclosed_targets = sorted(
                 path
                 for path in correct_files
-                if path.startswith("src/") and path.endswith(".py") and not path.endswith("/__init__.py")
+                if path.startswith("src/")
+                and path.endswith(".py")
+                and not path.endswith("/__init__.py")
             )
+            disclosed_targets.extend(sorted(composition_artifacts))
 
         task_descriptor = {
             "family": "script_repair",
@@ -72,9 +196,30 @@ class ScriptRepairGenerator(BaseGenerator):
             "entrypoint": "python run_example.py",
             "target_files": disclosed_targets,
             "hints": self.visible_hints(list(scenario["hints"]), spec.difficulty),
-            "repair_contract": list(scenario.get("repair_contract", [])),
+            "repair_contract": (
+                []
+                if spec.difficulty == 5
+                else list(scenario.get("repair_contract", []))
+            ),
         }
-        write_text(visible_root / "README.md", self.build_readme(scenario, task_descriptor))
+        if spec.difficulty == 5:
+            task_descriptor.update(
+                {
+                    "composition_mode": bug_selection.get("composition_mode"),
+                    "source_families": bug_selection.get("source_families", []),
+                    "composition_depth": bug_selection.get("composition_depth", 1),
+                }
+            )
+            if bug_selection.get("composition_mode") == "compositional":
+                task_descriptor["composition_spec"] = composition_spec
+                task_descriptor["composition_evidence_paths"] = sorted(
+                    path
+                    for path in correct_files
+                    if path.startswith(("analysis/", "changelog/", "docs/", "logs/"))
+                )
+        write_text(
+            visible_root / "README.md", self.build_readme(scenario, task_descriptor)
+        )
         write_json(visible_root / "task.json", task_descriptor)
 
         hidden_runner = scenario["test_runner"]
@@ -83,8 +228,19 @@ class ScriptRepairGenerator(BaseGenerator):
         write_text(hidden_root / "run_hidden_tests.py", hidden_runner)
         for relative_path, payload in scenario.get("hidden_json_assets", {}).items():
             write_json(hidden_root / relative_path, payload)
+        if composition_artifacts:
+            write_json(
+                hidden_root / "expected_resolved_contract.json",
+                {
+                    "schema_version": "v4",
+                    "scenario_id": str(scenario["scenario_id"]),
+                },
+            )
         reference_solution = {
-            "files": {path: correct_files[path] for path in sorted(touched_files)},
+            "files": {
+                **{path: correct_files[path] for path in sorted(touched_files)},
+                **composition_artifacts,
+            },
             "scenario_id": scenario["scenario_id"],
             "bug_labels": applied_bug_labels,
         }
@@ -94,12 +250,39 @@ class ScriptRepairGenerator(BaseGenerator):
             {
                 "runner": "run_hidden_tests.py",
                 "scenario_id": scenario["scenario_id"],
+                "capability_groups": (
+                    scenario.get("capability_groups", {})
+                    if spec.difficulty == 5
+                    else {}
+                ),
+                "capability_score_caps": (
+                    scenario.get("capability_score_caps", {})
+                    if spec.difficulty == 5
+                    else {}
+                ),
+                "public_entrypoint": (
+                    "run_example.py" if composition_artifacts else None
+                ),
+                "required_json_artifacts": (
+                    [
+                        {
+                            "path": "artifacts/resolved_contract.json",
+                            "expected_path": "expected_resolved_contract.json",
+                            "capability": "contract_materialization",
+                        }
+                    ]
+                    if composition_artifacts
+                    else []
+                ),
+                "required_artifact_failure_cap": 0.30,
             },
         )
 
         metadata = {
             "task_descriptor": task_descriptor,
-            "complexity_profile": spec.complexity_profile.to_dict() if spec.complexity_profile else {},
+            "complexity_profile": spec.complexity_profile.to_dict()
+            if spec.complexity_profile
+            else {},
             "bug_labels": applied_bug_labels,
             "scenario_id": scenario["scenario_id"],
             "scenario_profile": scenario["structure"],
@@ -112,7 +295,41 @@ class ScriptRepairGenerator(BaseGenerator):
                 hint_count=len(task_descriptor["hints"]),
                 candidate_file_count=len(task_descriptor["target_files"]),
                 applied_bug_count=len(applied_bug_labels),
-                touched_file_count=len(touched_files),
+                touched_file_count=(len(touched_files) + len(composition_artifacts)),
+                core_bug_count=bug_selection["core_bug_count"],
+                advanced_bug_count=bug_selection["advanced_bug_count"],
+                nested_bug_selection=bug_selection["nested_bug_selection"],
+                bug_bundle_id=bug_selection.get("bug_bundle_id"),
+                dependency_edges=bug_selection.get("dependency_edges", []),
+                capabilities=bug_selection.get("capabilities", []),
+                composition_mode=bug_selection.get("composition_mode"),
+                source_families=bug_selection.get("source_families", []),
+                composition_depth=int(bug_selection.get("composition_depth", 1)),
+                semantic_dependency_depth=int(
+                    bug_selection.get("semantic_dependency_depth", 0)
+                ),
+                lattice_thresholds=dict(scenario.get("partial_solution_lattice", {})),
+                lattice_validation=dict(
+                    scenario.get("partial_solution_lattice_profile", {})
+                ),
+                dependency_depth=int(
+                    dict(scenario.get("structure", {})).get("dependency_depth", 2)
+                ),
+                hidden_capability_count=int(
+                    dict(scenario.get("structure", {})).get(
+                        "hidden_capability_count", 0
+                    )
+                ),
+                distractor_count=int(
+                    dict(scenario.get("structure", {})).get("distractor_count", 0)
+                ),
+                composition_spec=composition_spec,
+                oracle_profile=normalize_lattice_profile(
+                    dict(scenario.get("partial_solution_lattice_profile", {}))
+                ),
+                public_check_coverage=list(
+                    dict(scenario.get("structure", {})).get("public_check_coverage", [])
+                ),
             ),
         }
         return GeneratedPayload(
@@ -122,13 +339,126 @@ class ScriptRepairGenerator(BaseGenerator):
             evaluator_entrypoint="synthetic_workspace_gym.evaluators.script_repair:ScriptRepairEvaluator",
         )
 
+    def select_bugs(
+        self, scenario: dict[str, object], spec: EnvironmentSpec
+    ) -> tuple[list[dict[str, object]], dict[str, object]]:
+        """Select nested quality tiers while preserving legacy scenario definitions."""
+        if "core_bugs" not in scenario:
+            rng = random.Random(spec.seed)
+            candidates = [
+                bug for bug in scenario["bugs"] if bug["label"] != "syntax_error"
+            ]
+            bug_budget = min(
+                len(candidates), {1: 1, 2: 1, 3: 2, 4: 3, 5: 4}[spec.difficulty]
+            )
+            selected = candidates[:bug_budget]
+            if len(candidates) > bug_budget:
+                selected = rng.sample(candidates, k=bug_budget)
+            return selected, {
+                "core_bug_count": len(selected),
+                "advanced_bug_count": 0,
+                "nested_bug_selection": False,
+            }
+
+        core = [dict(bug) for bug in scenario.get("core_bugs", [])]
+        advanced = [dict(bug) for bug in scenario.get("advanced_bugs", [])]
+        if spec.difficulty == 5 and scenario.get("d5_bug_bundles"):
+            bug_map = {str(bug["label"]): bug for bug in [*core, *advanced]}
+            bundles = list(scenario["d5_bug_bundles"])
+            bundle = coerce_defect_bundle(
+                random.Random(
+                    f"{scenario['scenario_id']}:{spec.seed}:semantic-bundle"
+                ).choice(bundles)
+            )
+            labels = list(bundle.defect_ids)
+            missing = [label for label in labels if label not in bug_map]
+            if missing:
+                raise ValueError(
+                    f"D5 bundle {bundle.bundle_id!r} references unknown bugs: {missing}"
+                )
+            selected = [bug_map[label] for label in labels]
+            core_labels = {str(bug["label"]) for bug in core}
+            composition_mode = "compositional" if spec.seed % 2 else "hard_atomic"
+            source_families = (
+                list(scenario.get("d5_compositional_families", []))
+                if composition_mode == "compositional"
+                else ["script_repair"]
+            )
+            return selected, {
+                "core_bug_count": sum(
+                    str(bug["label"]) in core_labels for bug in selected
+                ),
+                "advanced_bug_count": sum(
+                    str(bug["label"]) not in core_labels for bug in selected
+                ),
+                "nested_bug_selection": False,
+                "bug_bundle_id": bundle.bundle_id,
+                "composition_mode": composition_mode,
+                "source_families": source_families,
+                "composition_depth": len(source_families),
+                "dependency_edges": [list(edge) for edge in bundle.dependency_edges],
+                "capabilities": list(bundle.capability_groups),
+                "capability_groups": {
+                    name: list(defect_ids)
+                    for name, defect_ids in bundle.capability_groups.items()
+                },
+                "required_files": list(bundle.required_files),
+                "semantic_dependency_depth": int(
+                    bundle.to_dict()["semantic_dependency_depth"]
+                ),
+            }
+        core_budget = min(len(core), {1: 1, 2: 1, 3: 2, 4: 3, 5: 3}[spec.difficulty])
+        selected_core = core[:core_budget]
+        if len(core) > core_budget:
+            selected_core = random.Random(spec.seed).sample(core, k=core_budget)
+        selected_advanced: list[dict[str, object]] = []
+        if spec.difficulty == 5:
+            advanced = [dict(bug) for bug in scenario.get("advanced_bugs", [])]
+            advanced_budget = min(
+                int(scenario.get("advanced_bug_budget", 2)), len(advanced)
+            )
+            grouped: dict[str, list[dict[str, object]]] = {}
+            for bug in advanced:
+                grouped.setdefault(str(bug["target_path"]), []).append(bug)
+            group_names = sorted(grouped)
+            group_rng = random.Random(
+                f"{scenario['scenario_id']}:{spec.seed}:advanced-groups"
+            )
+            group_rng.shuffle(group_names)
+            for target_path in group_names:
+                choices = grouped[target_path]
+                choice_rng = random.Random(
+                    f"{scenario['scenario_id']}:{spec.seed}:advanced:{target_path}"
+                )
+                selected_advanced.append(choice_rng.choice(choices))
+                if len(selected_advanced) >= advanced_budget:
+                    break
+            if len(selected_advanced) < advanced_budget:
+                remaining = [bug for bug in advanced if bug not in selected_advanced]
+                fill_rng = random.Random(
+                    f"{scenario['scenario_id']}:{spec.seed}:advanced-fill"
+                )
+                fill_rng.shuffle(remaining)
+                selected_advanced.extend(
+                    remaining[: advanced_budget - len(selected_advanced)]
+                )
+        return selected_core + selected_advanced, {
+            "core_bug_count": len(selected_core),
+            "advanced_bug_count": len(selected_advanced),
+            "nested_bug_selection": True,
+        }
+
     def visible_hints(self, hints: list[str], difficulty: int) -> list[str]:
         return select_visible_hints(hints, difficulty)
 
-    def build_readme(self, scenario: dict[str, object], task_descriptor: dict[str, object]) -> str:
+    def build_readme(
+        self, scenario: dict[str, object], task_descriptor: dict[str, object]
+    ) -> str:
         hints = "\n".join(f"- {hint}" for hint in task_descriptor["hints"])
         targets = "\n".join(f"- `{item}`" for item in task_descriptor["target_files"])
-        contract = "\n".join(f"- {item}" for item in task_descriptor.get("repair_contract", []))
+        contract = "\n".join(
+            f"- {item}" for item in task_descriptor.get("repair_contract", [])
+        )
         contract_section = f"## Expected behavior\n{contract}\n\n" if contract else ""
         return (
             f"# {scenario['title']}\n\n"
@@ -173,7 +503,9 @@ class ScriptRepairGenerator(BaseGenerator):
         )
         return "\n".join(lines) + "\n"
 
-    def hidden_runner(self, *, asset_setup: str, import_block: str, test_methods: str) -> str:
+    def hidden_runner(
+        self, *, asset_setup: str, import_block: str, test_methods: str
+    ) -> str:
         lines = [
             "from __future__ import annotations",
             "",
@@ -186,16 +518,25 @@ class ScriptRepairGenerator(BaseGenerator):
             "def build_suite(workspace: Path) -> unittest.TestSuite:",
             "    hidden_root = Path(__file__).resolve().parent",
         ]
-        lines.extend(f"    {line}" if line else "" for line in dedent(asset_setup).strip().splitlines())
+        lines.extend(
+            f"    {line}" if line else ""
+            for line in dedent(asset_setup).strip().splitlines()
+        )
         lines.append('    sys.path.insert(0, str(workspace / "src"))')
-        lines.extend(f"    {line}" if line else "" for line in dedent(import_block).strip().splitlines())
+        lines.extend(
+            f"    {line}" if line else ""
+            for line in dedent(import_block).strip().splitlines()
+        )
         lines.extend(
             [
                 "",
                 "    class HiddenTests(unittest.TestCase):",
             ]
         )
-        lines.extend(f"        {line}" if line else "" for line in dedent(test_methods).strip().splitlines())
+        lines.extend(
+            f"        {line}" if line else ""
+            for line in dedent(test_methods).strip().splitlines()
+        )
         lines.extend(
             [
                 "",
@@ -230,14 +571,21 @@ class ScriptRepairGenerator(BaseGenerator):
         )
         return "\n".join(lines) + "\n"
 
-    def scenario_pool(self) -> list[dict[str, object]]:
-        return [
+    def scenario_pool(
+        self, spec: EnvironmentSpec | None = None
+    ) -> list[dict[str, object]]:
+        scenarios = [
             self.inventory_report_scenario(),
             self.path_batch_scenario(),
             build_csv_schema_drift_scenario(self),
             build_timestamp_normalization_scenario(self),
             build_team_roster_export_scenario(self),
         ]
+        if spec is not None and spec.difficulty == 5 and spec.scenario_id is None:
+            return [
+                scenario for scenario in scenarios if scenario.get("d5_bug_bundles")
+            ]
+        return scenarios
 
     def inventory_report_scenario(self) -> dict[str, object]:
         items = [

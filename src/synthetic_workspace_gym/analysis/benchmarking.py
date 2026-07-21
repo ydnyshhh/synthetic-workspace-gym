@@ -5,12 +5,15 @@ from statistics import median
 from typing import Callable
 
 from synthetic_workspace_gym.schemas import EnvironmentManifest, EpisodeSummary
+from synthetic_workspace_gym.analysis.calibration import capability_pass_rates
 
 
 BenchmarkRow = dict[str, object]
 
 
-def episode_to_row(summary: EpisodeSummary, manifest: EnvironmentManifest) -> BenchmarkRow:
+def episode_to_row(
+    summary: EpisodeSummary, manifest: EnvironmentManifest
+) -> BenchmarkRow:
     metadata = dict(manifest.metadata)
     scenario_profile = dict(metadata.get("scenario_profile", {}))
     difficulty_realization = dict(metadata.get("difficulty_realization", {}))
@@ -46,15 +49,29 @@ def episode_to_row(summary: EpisodeSummary, manifest: EnvironmentManifest) -> Be
         "output_style": scenario_profile.get("output_style"),
         "difficulty_guidance": difficulty_realization.get("guidance"),
         "difficulty_hint_count": difficulty_realization.get("hint_count"),
-        "difficulty_candidate_file_count": difficulty_realization.get("candidate_file_count"),
-        "difficulty_discovery_required": difficulty_realization.get("discovery_required"),
+        "difficulty_candidate_file_count": difficulty_realization.get(
+            "candidate_file_count"
+        ),
+        "difficulty_discovery_required": difficulty_realization.get(
+            "discovery_required"
+        ),
         "difficulty_operation_count": difficulty_realization.get("operation_count"),
         "difficulty_applied_bug_count": difficulty_realization.get("applied_bug_count"),
-        "difficulty_touched_file_count": difficulty_realization.get("touched_file_count"),
+        "difficulty_touched_file_count": difficulty_realization.get(
+            "touched_file_count"
+        ),
+        "d5_profile": difficulty_realization.get("profile"),
+        "difficulty_capability_count": difficulty_realization.get("capability_count"),
+        "difficulty_semantic_dependency_depth": difficulty_realization.get(
+            "semantic_dependency_depth"
+        ),
         "success": bool(summary.evaluation.success),
         "score": float(summary.evaluation.score),
         "failure_labels": list(summary.evaluation.failure_labels),
-        "subscores": {str(key): float(value) for key, value in summary.evaluation.subscores.items()},
+        "subscores": {
+            str(key): float(value)
+            for key, value in summary.evaluation.subscores.items()
+        },
         "step_count": int(summary.step_count),
         "duration_seconds": float(summary.duration_seconds),
         "submitted": bool(summary.submitted),
@@ -77,6 +94,16 @@ def compute_bucket_metrics(rows: list[BenchmarkRow]) -> dict[str, object]:
             "mean_score": 0.0,
             "median_score": 0.0,
             "perfect_rate": 0.0,
+            "mean_reward": 0.0,
+            "median_reward": 0.0,
+            "min_reward": 0.0,
+            "max_reward": 0.0,
+            "distinct_reward_count": 0,
+            "zero_reward_rate": 0.0,
+            "perfect_reward_rate": 0.0,
+            "partial_reward_rate": 0.0,
+            "largest_reward_bucket_rate": 0.0,
+            "capability_pass_rates": {},
             "mean_step_count": 0.0,
             "mean_duration_seconds": 0.0,
             "failure_label_counts": {},
@@ -88,6 +115,9 @@ def compute_bucket_metrics(rows: list[BenchmarkRow]) -> dict[str, object]:
     durations = [float(row["duration_seconds"]) for row in rows]
     successes = sum(1 for row in rows if bool(row["success"]))
     perfect = sum(1 for row in rows if float(row["score"]) == 1.0)
+    zero = sum(1 for score in scores if score == 0.0)
+    partial = sum(1 for score in scores if 0.0 < score < 1.0)
+    reward_buckets = Counter(scores)
 
     failure_counts: Counter[str] = Counter()
     subscore_totals: defaultdict[str, float] = defaultdict(float)
@@ -109,14 +139,30 @@ def compute_bucket_metrics(rows: list[BenchmarkRow]) -> dict[str, object]:
         "mean_score": round(sum(scores) / len(scores), 6),
         "median_score": round(float(median(scores)), 6),
         "perfect_rate": round(perfect / len(rows), 6),
+        "mean_reward": round(sum(scores) / len(scores), 6),
+        "median_reward": round(float(median(scores)), 6),
+        "min_reward": round(min(scores), 6),
+        "max_reward": round(max(scores), 6),
+        "distinct_reward_count": len(reward_buckets),
+        "zero_reward_rate": round(zero / len(rows), 6),
+        "perfect_reward_rate": round(perfect / len(rows), 6),
+        "partial_reward_rate": round(partial / len(rows), 6),
+        "largest_reward_bucket_rate": round(
+            max(reward_buckets.values()) / len(rows), 6
+        ),
+        "capability_pass_rates": capability_pass_rates(rows),
         "mean_step_count": round(sum(step_counts) / len(step_counts), 6),
         "mean_duration_seconds": round(sum(durations) / len(durations), 6),
-        "failure_label_counts": {key: failure_counts[key] for key in sorted(failure_counts)},
+        "failure_label_counts": {
+            key: failure_counts[key] for key in sorted(failure_counts)
+        },
         "mean_subscores": mean_subscores,
     }
 
 
-def group_rows(rows: list[BenchmarkRow], key_fn: Callable[[BenchmarkRow], object]) -> dict[str, list[BenchmarkRow]]:
+def group_rows(
+    rows: list[BenchmarkRow], key_fn: Callable[[BenchmarkRow], object]
+) -> dict[str, list[BenchmarkRow]]:
     groups: defaultdict[str, list[BenchmarkRow]] = defaultdict(list)
     for row in rows:
         key = key_fn(row)
@@ -145,22 +191,46 @@ def build_benchmark_report(rows: list[BenchmarkRow]) -> dict[str, object]:
         ),
         "by_bug_scope": summarize_groups(rows, lambda row: row.get("bug_scope")),
         "by_failure_mode": summarize_groups(rows, lambda row: row.get("failure_mode")),
-        "by_repair_surface": summarize_groups(rows, lambda row: row.get("repair_surface")),
-        "by_smoke_test_quality": summarize_groups(rows, lambda row: row.get("smoke_test_quality")),
+        "by_repair_surface": summarize_groups(
+            rows, lambda row: row.get("repair_surface")
+        ),
+        "by_smoke_test_quality": summarize_groups(
+            rows, lambda row: row.get("smoke_test_quality")
+        ),
         "by_task_type": summarize_groups(rows, lambda row: row.get("task_type")),
-        "by_content_variant_id": summarize_groups(rows, lambda row: row.get("content_variant_id")),
-        "by_document_count": summarize_groups(rows, lambda row: row.get("document_count")),
-        "by_retrieval_hops": summarize_groups(rows, lambda row: row.get("retrieval_hops")),
-        "by_evidence_distribution": summarize_groups(rows, lambda row: row.get("evidence_distribution")),
-        "by_distractor_count": summarize_groups(rows, lambda row: row.get("distractor_count")),
-        "by_staleness_pattern": summarize_groups(rows, lambda row: row.get("staleness_pattern")),
+        "by_content_variant_id": summarize_groups(
+            rows, lambda row: row.get("content_variant_id")
+        ),
+        "by_document_count": summarize_groups(
+            rows, lambda row: row.get("document_count")
+        ),
+        "by_retrieval_hops": summarize_groups(
+            rows, lambda row: row.get("retrieval_hops")
+        ),
+        "by_evidence_distribution": summarize_groups(
+            rows, lambda row: row.get("evidence_distribution")
+        ),
+        "by_distractor_count": summarize_groups(
+            rows, lambda row: row.get("distractor_count")
+        ),
+        "by_staleness_pattern": summarize_groups(
+            rows, lambda row: row.get("staleness_pattern")
+        ),
         "by_input_shape": summarize_groups(rows, lambda row: row.get("input_shape")),
-        "by_time_bucketing": summarize_groups(rows, lambda row: row.get("time_bucketing")),
+        "by_time_bucketing": summarize_groups(
+            rows, lambda row: row.get("time_bucketing")
+        ),
         "by_output_style": summarize_groups(rows, lambda row: row.get("output_style")),
+        "by_d5_profile": summarize_groups(rows, lambda row: row.get("d5_profile")),
     }
     return report
 
 
-def summarize_groups(rows: list[BenchmarkRow], key_fn: Callable[[BenchmarkRow], object]) -> dict[str, dict[str, object]]:
+def summarize_groups(
+    rows: list[BenchmarkRow], key_fn: Callable[[BenchmarkRow], object]
+) -> dict[str, dict[str, object]]:
     grouped = group_rows(rows, key_fn)
-    return {key: compute_bucket_metrics(grouped_rows) for key, grouped_rows in grouped.items()}
+    return {
+        key: compute_bucket_metrics(grouped_rows)
+        for key, grouped_rows in grouped.items()
+    }

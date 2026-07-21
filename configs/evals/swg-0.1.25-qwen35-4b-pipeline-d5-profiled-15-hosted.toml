@@ -1,0 +1,11 @@
+# Prepared only. Publish 0.1.25 before launching this hosted evaluation.
+model = "Qwen/Qwen3.5-4B"
+num_examples = 5
+rollouts_per_example = 3
+max_tokens = 32768
+temperature = 0.7
+max_concurrent = 5
+
+[[eval]]
+id = "yadnyesh/synthetic-workspace-gym@0.1.25"
+env_args = { split = "test", family = "pipeline", scenario = "team_hours_pipeline", difficulty = 5, seeds = [100, 103, 106, 108, 109], max_examples = 5, composition_mode = "hard_atomic", max_turns = 25, max_tool_steps = 64 }

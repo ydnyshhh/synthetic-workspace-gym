@@ -13,13 +13,20 @@ from synthetic_workspace_gym.sandbox.schemas import SandboxConfig
 from synthetic_workspace_gym.splits.schemas import VALID_SPLITS, normalize_split_name
 from synthetic_workspace_gym.verifiers.compat import vf
 from synthetic_workspace_gym.verifiers.dataset import SWGVerifiersDataset
-from synthetic_workspace_gym.verifiers.env import SYSTEM_PROMPT, SyntheticWorkspaceVerifiersEnv
+from synthetic_workspace_gym.verifiers.env import (
+    SYSTEM_PROMPT,
+    SyntheticWorkspaceVerifiersEnv,
+)
 from synthetic_workspace_gym.verifiers.messages import (
     to_verifiers_branch_messages as _to_verifiers_branch_messages,
     to_verifiers_tool_exchange as _to_verifiers_tool_exchange,
 )
 from synthetic_workspace_gym.verifiers.parser import SWGToolCallParser
-from synthetic_workspace_gym.verifiers.rewards import compute_reward, normalize_reward_payload, to_verifiers_info
+from synthetic_workspace_gym.verifiers.rewards import (
+    compute_reward,
+    normalize_reward_payload,
+    to_verifiers_info,
+)
 
 
 DEFAULT_ENV_ID = "synthetic-workspace-gym"
@@ -48,7 +55,10 @@ HUB_SYSTEM_PROMPT = (
     "or `python script.py` to run_python. If you need Python logic, first create a small script with "
     "write_file, include any needed output-directory creation inside that script, then run it with "
     "run_python using only the script path. Use only the Python standard library unless a dependency is "
-    "already visible in the workspace. Shell commands must use relative paths only.\n\n"
+    "already visible in the workspace. Shell commands must use relative paths only. Native tool calling "
+    "may include one or more calls in a model turn; SWG executes those calls sequentially, and every call "
+    "consumes the separate tool-step budget. `max_turns` limits model responses, while `max_tool_steps` "
+    "limits executed workspace actions.\n\n"
     "If native tool calling is unavailable, respond with exactly one JSON object and no extra text: "
     '{"tool":"list_directory","args":{"path":"."}}. '
     "Available tools are read_file, write_file, append_file, list_directory, run_shell, run_python, and submit."
@@ -90,7 +100,9 @@ async def _run_blocking_swg_operation(operation: Any, *args: Any) -> Any:
         return await asyncio.to_thread(operation, *args)
     except Exception as exc:
         if _is_transient_sandbox_failure(exc) and vf is not None:
-            raise vf.InfraError(f"Transient SWG sandbox infrastructure failure: {exc}") from exc
+            raise vf.InfraError(
+                f"Transient SWG sandbox infrastructure failure: {exc}"
+            ) from exc
         raise
 
 
@@ -100,6 +112,7 @@ def load_environment(
     scenario: str | None = None,
     difficulty: int | None = None,
     seed: int | None = None,
+    composition_mode: str | None = None,
     families: str | list[str] | tuple[str, ...] | None = None,
     difficulties: str | list[int] | tuple[int, ...] | None = None,
     seeds: str | list[int] | tuple[int, ...] | None = None,
@@ -134,17 +147,32 @@ def load_environment(
 
     if branch_manifest_path is not None:
         rows = _build_branch_rows(
-            branch_manifest_path=branch_manifest_path, branch_task_id=branch_task_id,
-            branch_mode=branch_mode, max_examples=max_examples, sample_strategy=sample_strategy,
-            shuffle=shuffle, shuffle_seed=shuffle_seed,
+            branch_manifest_path=branch_manifest_path,
+            branch_task_id=branch_task_id,
+            branch_mode=branch_mode,
+            max_examples=max_examples,
+            sample_strategy=sample_strategy,
+            shuffle=shuffle,
+            shuffle_seed=shuffle_seed,
         )
     else:
         rows = _build_rows(
-            split=split, family=family, scenario=scenario, difficulty=difficulty, seed=seed,
-            families=families, difficulties=difficulties, seeds=seeds,
-            split_manifest_path=split_manifest_path, include_splits=include_splits,
-            exclude_splits=exclude_splits, task_id=task_id, max_examples=max_examples,
-            sample_strategy=sample_strategy, shuffle=shuffle, shuffle_seed=shuffle_seed,
+            split=split,
+            family=family,
+            scenario=scenario,
+            difficulty=difficulty,
+            seed=seed,
+            families=families,
+            difficulties=difficulties,
+            seeds=seeds,
+            split_manifest_path=split_manifest_path,
+            include_splits=include_splits,
+            exclude_splits=exclude_splits,
+            task_id=task_id,
+            max_examples=max_examples,
+            sample_strategy=sample_strategy,
+            shuffle=shuffle,
+            shuffle_seed=shuffle_seed,
         )
     env_args = {
         "split": split,
@@ -152,6 +180,7 @@ def load_environment(
         "scenario": scenario,
         "difficulty": difficulty,
         "seed": seed,
+        "composition_mode": composition_mode,
         "families": families,
         "difficulties": difficulties,
         "seeds": seeds,
@@ -197,12 +226,15 @@ def load_environment(
         scenario=first.get("scenario") or scenario,
         difficulty=int(first.get("difficulty") or difficulty or 3),
         seed=int(first.get("seed") or seed or 0),
+        composition_mode=composition_mode,
         environment_path=first.get("environment_path"),
         sandbox_backend=sandbox_backend,
         docker_image=docker_image,
         reward_mode=reward_mode,
         max_turns=int(first.get("remaining_steps") or max_turns),
-        time_limit_seconds=int(first.get("time_limit_seconds") or time_limit_seconds) if (first.get("time_limit_seconds") or time_limit_seconds) is not None else None,
+        time_limit_seconds=int(first.get("time_limit_seconds") or time_limit_seconds)
+        if (first.get("time_limit_seconds") or time_limit_seconds) is not None
+        else None,
         output_dir=output_dir,
         branch_manifest_path=branch_manifest_path,
         branch_task_id=branch_task_id,
@@ -251,13 +283,18 @@ if _native_hub_available():
             output_dir: str | None,
         ) -> None:
             self.rows = [dict(row) for row in rows]
+            self.composition_mode = env_args.get("composition_mode")
             self.sandbox_backend = sandbox_backend
             self.docker_image = docker_image
             self.reward_mode = reward_mode
             self.output_dir = Path(output_dir).resolve() if output_dir else None
             self.max_tool_steps = _resolve_max_tool_steps(max_turns, max_tool_steps)
-            self.time_limit_seconds = _resolve_time_limit_seconds(max_turns, time_limit_seconds)
-            self.max_observation_chars = _resolve_max_observation_chars(max_observation_chars)
+            self.time_limit_seconds = _resolve_time_limit_seconds(
+                max_turns, time_limit_seconds
+            )
+            self.max_observation_chars = _resolve_max_observation_chars(
+                max_observation_chars
+            )
             self._row_cursor = 0
             self._row_lock = threading.Lock()
             dataset = _to_dataset(self.rows)
@@ -281,14 +318,19 @@ if _native_hub_available():
                 sandbox_config.image = self.docker_image
             output_dir = None
             if self.output_dir is not None:
-                output_dir = self.output_dir / str(state.get("trajectory_id", "rollout"))
+                output_dir = self.output_dir / str(
+                    state.get("trajectory_id", "rollout")
+                )
             env = SyntheticWorkspacePrimeEnv(
                 family=str(row.get("family") or "script_repair"),
                 scenario=row.get("scenario"),
                 difficulty=int(row.get("difficulty") or 3),
                 seed=int(row.get("seed") or 0),
+                composition_mode=self.composition_mode,
                 max_steps=int(row.get("remaining_steps") or self.max_tool_steps),
-                time_limit_seconds=int(row.get("time_limit_seconds") or self.time_limit_seconds),
+                time_limit_seconds=int(
+                    row.get("time_limit_seconds") or self.time_limit_seconds
+                ),
                 workspace_root=row.get("environment_path"),
                 output_dir=output_dir,
                 sandbox_backend=self.sandbox_backend,
@@ -324,15 +366,23 @@ if _native_hub_available():
                     {"role": "user", "content": _task_user_prompt(row, observation)},
                 ]
             state["swg_branch"] = _branch_metadata(row)
-            forced_action = row.get("forced_action") if row.get("branch_mode") == "forced" else None
+            forced_action = (
+                row.get("forced_action") if row.get("branch_mode") == "forced" else None
+            )
             state["swg_forced_action"] = forced_action
             if isinstance(forced_action, dict):
-                forced_content, forced_done, forced_info = await _run_blocking_swg_operation(
+                (
+                    forced_content,
+                    forced_done,
+                    forced_info,
+                ) = await _run_blocking_swg_operation(
                     _execute_forced_swg_action, state, forced_action
                 )
                 forced_call_id = "counterfactual-forced-action"
                 forced_messages = _to_verifiers_tool_exchange(
-                    forced_action, forced_content, forced_call_id,
+                    forced_action,
+                    forced_content,
+                    forced_call_id,
                     metadata={"forced": True},
                 )
                 prompt.extend(forced_messages)
@@ -347,19 +397,27 @@ if _native_hub_available():
                     "observation": forced_content,
                     "done": forced_done,
                     "info": forced_info,
-                    "success": bool(forced_info.get("success", forced_info.get("reward_payload") is not None)),
+                    "success": bool(
+                        forced_info.get(
+                            "success", forced_info.get("reward_payload") is not None
+                        )
+                    ),
                 }
                 if forced_done:
                     state["final_env_response"] = normalize_messages(
-                        [forced_messages[1]], field_name="swg.forced_response",
+                        [forced_messages[1]],
+                        field_name="swg.forced_response",
                     )
             state.setdefault("swg_forced_prefix_length", 0)
             state.setdefault("swg_policy_start_message_index", len(prompt))
-            state.setdefault("swg_loss_mask_metadata", {
-                "exclude_restored_messages": True,
-                "exclude_forced_messages": False,
-                "forced_tool_call_id": None,
-            })
+            state.setdefault(
+                "swg_loss_mask_metadata",
+                {
+                    "exclude_restored_messages": True,
+                    "exclude_forced_messages": False,
+                    "forced_tool_call_id": None,
+                },
+            )
             state["prompt"] = normalize_messages(prompt, field_name="swg.prompt")
             tool_schemas = observation.get("tool_schemas")
             if isinstance(tool_schemas, list) and tool_schemas:
@@ -394,7 +452,9 @@ if _native_hub_available():
                         ],
                         field_name="swg.format_correction",
                     )
-                content, done = await _run_blocking_swg_operation(_execute_swg_action, state, action)
+                content, done = await _run_blocking_swg_operation(
+                    _execute_swg_action, state, action
+                )
                 response = normalize_messages(
                     [{"role": "user", "content": f"Observation:\n{content}"}],
                     field_name="swg.text_tool_response",
@@ -420,14 +480,21 @@ if _native_hub_available():
                     break
             return tool_messages
 
-        async def cleanup(self, state: Any, task: object | None = None, resources: object | None = None) -> None:
+        async def cleanup(
+            self,
+            state: Any,
+            task: object | None = None,
+            resources: object | None = None,
+        ) -> None:
             await super().cleanup(state, task=task, resources=resources)
             env = state.get("swg_env")
             if env is None:
                 return
             try:
                 if state.get("swg_reward_payload") is None:
-                    state["swg_reward_payload"] = await _run_blocking_swg_operation(env.evaluate)
+                    state["swg_reward_payload"] = await _run_blocking_swg_operation(
+                        env.evaluate
+                    )
                 payload = normalize_reward_payload(state["swg_reward_payload"])
                 state["swg_reward_payload"] = payload
                 state["swg_verifiers_info"] = to_verifiers_info(payload)
@@ -465,21 +532,39 @@ def _build_branch_rows(
             raise ValueError("branch_mode must be 'forced' or 'open'")
         if mode == "forced" and task.forced_action is None:
             raise ValueError(f"branch task {task.task_id!r} has no forced action")
-        rows.append(_with_prompt({
-            "task_id": task.task_id, "environment_path": task.environment_path,
-            "prefix_messages": task.prefix_messages,
-            "forced_action": task.forced_action if mode == "forced" else None,
-            "branch_mode": mode, "remaining_steps": task.remaining_steps,
-            "time_limit_seconds": task.time_limit_seconds,
-            "branch_group_id": task.branch_group_id, "snapshot_id": task.snapshot_id,
-            "candidate_id": task.candidate_id, "family": task.family,
-            "scenario": task.scenario_id, "difficulty": task.difficulty, "seed": task.seed,
-            "metadata": dict(task.metadata), "question": "Continue the counterfactual branch from the restored state.",
-        }))
-    rows = _sample_rows(rows, max_examples=max_examples, sample_strategy=sample_strategy,
-                        shuffle=_coerce_bool(shuffle), shuffle_seed=shuffle_seed)
+        rows.append(
+            _with_prompt(
+                {
+                    "task_id": task.task_id,
+                    "environment_path": task.environment_path,
+                    "prefix_messages": task.prefix_messages,
+                    "forced_action": task.forced_action if mode == "forced" else None,
+                    "branch_mode": mode,
+                    "remaining_steps": task.remaining_steps,
+                    "time_limit_seconds": task.time_limit_seconds,
+                    "branch_group_id": task.branch_group_id,
+                    "snapshot_id": task.snapshot_id,
+                    "candidate_id": task.candidate_id,
+                    "family": task.family,
+                    "scenario": task.scenario_id,
+                    "difficulty": task.difficulty,
+                    "seed": task.seed,
+                    "metadata": dict(task.metadata),
+                    "question": "Continue the counterfactual branch from the restored state.",
+                }
+            )
+        )
+    rows = _sample_rows(
+        rows,
+        max_examples=max_examples,
+        sample_strategy=sample_strategy,
+        shuffle=_coerce_bool(shuffle),
+        shuffle_seed=shuffle_seed,
+    )
     if not rows:
-        raise ValueError(f"SWG branch manifest produced no task rows for branch_task_id={branch_task_id!r}.")
+        raise ValueError(
+            f"SWG branch manifest produced no task rows for branch_task_id={branch_task_id!r}."
+        )
     return rows
 
 
@@ -503,11 +588,16 @@ def _build_rows(
     shuffle_seed: int,
 ) -> list[dict[str, Any]]:
     family_values = _coerce_str_list(families) or ([family] if family else None)
-    difficulty_values = _coerce_int_list(difficulties) or ([difficulty] if difficulty is not None else None)
+    difficulty_values = _coerce_int_list(difficulties) or (
+        [difficulty] if difficulty is not None else None
+    )
     seed_values = _coerce_int_list(seeds) or ([seed] if seed is not None else None)
     scenarios = {family: [scenario]} if family and scenario else None
     dataset = SWGVerifiersDataset(
-        families=tuple(family_values or ("tabular", "script_repair", "pipeline", "retrieval_workspace")),
+        families=tuple(
+            family_values
+            or ("tabular", "script_repair", "pipeline", "retrieval_workspace")
+        ),
         scenarios=scenarios,
         difficulties=tuple(difficulty_values or (1, 2, 3, 4, 5)),
         seeds=tuple(seed_values or range(100)),
@@ -527,7 +617,9 @@ def _build_rows(
         shuffle_seed=shuffle_seed,
     )
     if not rows:
-        raise ValueError("SWG load_environment produced no task rows for the requested arguments.")
+        raise ValueError(
+            "SWG load_environment produced no task rows for the requested arguments."
+        )
     return [_with_prompt(row) for row in rows]
 
 
@@ -541,7 +633,9 @@ def _sample_rows(
 ) -> list[dict[str, Any]]:
     strategy = str(sample_strategy or "first").strip().lower()
     if strategy in {"balanced", "stratified"}:
-        return _balanced_sample_rows(rows, max_examples=max_examples, shuffle=shuffle, shuffle_seed=shuffle_seed)
+        return _balanced_sample_rows(
+            rows, max_examples=max_examples, shuffle=shuffle, shuffle_seed=shuffle_seed
+        )
     if strategy not in {"first", "head"}:
         raise ValueError(f"Unsupported SWG sample_strategy: {sample_strategy}")
     sampled = [dict(row) for row in rows]
@@ -602,7 +696,12 @@ def _balanced_sample_rows(
 
 def _with_prompt(row: dict[str, Any]) -> dict[str, Any]:
     payload = dict(row)
-    payload["prompt"] = [{"role": "user", "content": str(payload.get("question") or payload.get("task_id"))}]
+    payload["prompt"] = [
+        {
+            "role": "user",
+            "content": str(payload.get("question") or payload.get("task_id")),
+        }
+    ]
     return payload
 
 
@@ -621,7 +720,10 @@ def _state_row(state: Any) -> dict[str, Any]:
 
 
 def _has_task_identity(row: dict[str, Any]) -> bool:
-    return any(row.get(key) is not None for key in ("task_id", "family", "scenario", "environment_path"))
+    return any(
+        row.get(key) is not None
+        for key in ("task_id", "family", "scenario", "environment_path")
+    )
 
 
 def _state_example_index(state: Any) -> int | None:
@@ -673,7 +775,13 @@ def _task_user_prompt(row: dict[str, Any], observation: dict[str, object]) -> st
             lines.append(f"- {key}: {value}")
     lines.append("")
     lines.append("Instruction:")
-    lines.append(str(observation.get("instruction") or row.get("question") or "Solve the SWG workspace task."))
+    lines.append(
+        str(
+            observation.get("instruction")
+            or row.get("question")
+            or "Solve the SWG workspace task."
+        )
+    )
     required_output = _required_output_path(observation)
     entrypoint = _entrypoint(observation)
     if required_output:
@@ -748,16 +856,20 @@ def _text_action_or_none(content: object) -> dict[str, object] | None:
 
 
 def _execute_forced_swg_action(
-    state: Any, action: dict[str, object],
+    state: Any,
+    action: dict[str, object],
 ) -> tuple[str, bool, dict[str, object]]:
     result = state["swg_env"].step(action)
     content = _truncate_observation(
-        str(result.get("observation", "")), int(state.get("swg_max_observation_chars") or 0),
+        str(result.get("observation", "")),
+        int(state.get("swg_max_observation_chars") or 0),
     )
     info = dict(result.get("info", {}) or {})
     if info.get("reward_payload") is not None:
         state["swg_reward_payload"] = info["reward_payload"]
-        state["swg_verifiers_info"] = to_verifiers_info(normalize_reward_payload(info["reward_payload"]))
+        state["swg_verifiers_info"] = to_verifiers_info(
+            normalize_reward_payload(info["reward_payload"])
+        )
     return content, bool(result.get("done", False)), info
 
 
@@ -769,12 +881,16 @@ def _execute_swg_action(state: Any, action: dict[str, object]) -> tuple[str, boo
     env = state["swg_env"]
     result = env.step(action)
     content = str(result.get("observation", ""))
-    content = _truncate_observation(content, int(state.get("swg_max_observation_chars") or 0))
+    content = _truncate_observation(
+        content, int(state.get("swg_max_observation_chars") or 0)
+    )
     info = dict(result.get("info", {}) or {})
     content = _with_efficiency_guidance(state, action, content, info)
     if info.get("reward_payload") is not None:
         state["swg_reward_payload"] = info["reward_payload"]
-        state["swg_verifiers_info"] = to_verifiers_info(normalize_reward_payload(info["reward_payload"]))
+        state["swg_verifiers_info"] = to_verifiers_info(
+            normalize_reward_payload(info["reward_payload"])
+        )
     return content, bool(result.get("done", False))
 
 
@@ -869,7 +985,11 @@ def _post_write_guidance(
         )
     if family == "script_repair":
         target = target_files[0] if target_files else written_path
-        check = f" Run `{entrypoint}` with `run_shell` if you need one focused check." if entrypoint else ""
+        check = (
+            f" Run `{entrypoint}` with `run_shell` if you need one focused check."
+            if entrypoint
+            else ""
+        )
         return (
             f"Guidance: You changed the repair target.{check} If the fix is complete, call `submit` "
             f"with `{target}` instead of continuing broad verification."
@@ -898,7 +1018,11 @@ def _post_check_guidance(
             "Make the smallest targeted fix so the next check creates it."
         )
     if family == "script_repair":
-        target = target_files[0] if target_files else str(state.get("swg_last_written_path") or "")
+        target = (
+            target_files[0]
+            if target_files
+            else str(state.get("swg_last_written_path") or "")
+        )
         return (
             f"Guidance: A check ran after your edit. If this supports the fix, call `submit` with `{target}` "
             "instead of continuing broad verification. Do not look for hidden tests."
@@ -914,9 +1038,16 @@ def _submit_correction_or_none(state: Any, action: dict[str, object]) -> str | N
         return None
     family = str((state.get("swg_task") or {}).get("family") or "")
     required_output_path = str(state.get("swg_required_output_path") or "")
-    if family not in {"tabular", "pipeline", "retrieval_workspace"} or not required_output_path:
+    if (
+        family not in {"tabular", "pipeline", "retrieval_workspace"}
+        or not required_output_path
+    ):
         return None
-    submitted_path = str((action.get("args") or {}).get("path_or_answer", "")).strip().replace("\\", "/")
+    submitted_path = (
+        str((action.get("args") or {}).get("path_or_answer", ""))
+        .strip()
+        .replace("\\", "/")
+    )
     required = required_output_path.replace("\\", "/")
     if submitted_path != required:
         return (
@@ -985,7 +1116,9 @@ def _truncate_observation(content: str, limit: int) -> str:
     )
 
 
-def _coerce_str_list(value: str | list[str] | tuple[str, ...] | None) -> list[str] | None:
+def _coerce_str_list(
+    value: str | list[str] | tuple[str, ...] | None,
+) -> list[str] | None:
     if value is None:
         return None
     if isinstance(value, str):
@@ -993,7 +1126,9 @@ def _coerce_str_list(value: str | list[str] | tuple[str, ...] | None) -> list[st
     return [str(item) for item in value]
 
 
-def _coerce_int_list(value: str | list[int] | tuple[int, ...] | None) -> list[int] | None:
+def _coerce_int_list(
+    value: str | list[int] | tuple[int, ...] | None,
+) -> list[int] | None:
     if value is None:
         return None
     if isinstance(value, str):

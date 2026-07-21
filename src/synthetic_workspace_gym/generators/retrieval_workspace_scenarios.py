@@ -5,6 +5,7 @@ import random
 from copy import deepcopy
 from textwrap import dedent
 
+from synthetic_workspace_gym.generators.d5_profiles import select_d5_profile
 from synthetic_workspace_gym.schemas import EnvironmentSpec
 
 DOCUMENT_PREFIXES = ("docs/", "notes/", "specs/", "logs/", "changelog/")
@@ -18,6 +19,9 @@ def difficulty_settings(difficulty: int) -> dict[str, object]:
     return {
         "retrieval_hops": {1: 1, 2: 2, 3: 3, 4: 4, 5: 5}[difficulty],
         "distractor_count": {1: 0, 2: 1, 3: 2, 4: 3, 5: 4}[difficulty],
+        "authority_chain_depth": {1: 1, 2: 2, 3: 2, 4: 2, 5: 4}[difficulty],
+        "conflict_count": 0 if difficulty <= 3 else 1,
+        "conflict_resolution_required": difficulty >= 4,
         "evidence_distribution": (
             "single_source"
             if difficulty == 1
@@ -25,7 +29,11 @@ def difficulty_settings(difficulty: int) -> dict[str, object]:
             if difficulty == 2
             else "multi_source"
         ),
-        "staleness_pattern": "none" if difficulty <= 3 else "stale_note" if difficulty == 4 else "superseded_changelog",
+        "staleness_pattern": "none"
+        if difficulty <= 3
+        else "stale_note"
+        if difficulty == 4
+        else "superseded_changelog",
     }
 
 
@@ -34,7 +42,9 @@ def count_documents(files: dict[str, str]) -> int:
 
 
 def document_roots(files: dict[str, str]) -> list[str]:
-    roots = {path.split("/", 1)[0] for path in files if path.startswith(DOCUMENT_PREFIXES)}
+    roots = {
+        path.split("/", 1)[0] for path in files if path.startswith(DOCUMENT_PREFIXES)
+    }
     return sorted(roots)
 
 
@@ -49,7 +59,9 @@ def unique_strings(values: list[str]) -> list[str]:
     return output
 
 
-def select_fixture_variant(seed: int, variants: list[dict[str, object]]) -> dict[str, object]:
+def select_fixture_variant(
+    seed: int, variants: list[dict[str, object]]
+) -> dict[str, object]:
     return deepcopy(variants[(seed - 1) % len(variants)])
 
 
@@ -70,6 +82,9 @@ def base_profile(
         "task_type": task_type,
         "document_count": count_documents(files),
         "retrieval_hops": settings["retrieval_hops"],
+        "authority_chain_depth": settings["authority_chain_depth"],
+        "conflict_count": settings["conflict_count"],
+        "conflict_resolution_required": settings["conflict_resolution_required"],
         "evidence_distribution": settings["evidence_distribution"],
         "distractor_count": settings["distractor_count"],
         "staleness_pattern": settings["staleness_pattern"],
@@ -85,7 +100,9 @@ def base_profile(
     return profile
 
 
-def add_distractor_documents(files: dict[str, str], rng: random.Random, count: int) -> None:
+def add_distractor_documents(
+    files: dict[str, str], rng: random.Random, count: int
+) -> None:
     distractors = [
         (
             "docs/retention_policy.md",
@@ -121,6 +138,55 @@ def add_distractor_documents(files: dict[str, str], rng: random.Random, count: i
         added += 1
         if added >= count:
             return
+
+
+def add_d5_authority_chain(
+    files: dict[str, str],
+    *,
+    bundle_id: str,
+    archived_bundle_id: str,
+    authoritative_paths: list[str],
+    stale_paths: list[str],
+) -> None:
+    """Make D5 conflicts resolvable only by following an explicit provenance chain."""
+    missing = [path for path in authoritative_paths + stale_paths if path not in files]
+    if missing:
+        raise ValueError(
+            f"authority-chain paths are missing from the scenario: {missing}"
+        )
+
+    files["changelog/evidence_index.md"] = (
+        dedent(
+            f"""
+        # Evidence Release Index
+
+        - active evidence bundle: `{bundle_id}`
+        - archived evidence bundle: `{archived_bundle_id}`
+
+        Resolve conflicting values using only documents tagged with the active evidence bundle.
+        The precedence policy explains how to combine facts split across active documents.
+        """
+        ).strip()
+        + "\n"
+    )
+    files["docs/evidence_precedence.md"] = (
+        dedent(
+            """
+        # Evidence Precedence
+
+        1. Read `changelog/evidence_index.md` to identify the active evidence bundle.
+        2. Prefer contract and specification documents tagged with that bundle over workspace defaults.
+        3. Merge non-overlapping facts from active notes and logs only after resolving their bundle tag.
+        4. Treat documents tagged with an archived bundle as historical, even when their values look valid.
+        """
+        ).strip()
+        + "\n"
+    )
+
+    for path in authoritative_paths:
+        files[path] = f"Evidence bundle: `{bundle_id}`\n\n{files[path]}"
+    for path in stale_paths:
+        files[path] = f"Evidence bundle: `{archived_bundle_id}`\n\n{files[path]}"
 
 
 def service_config_variants() -> list[dict[str, object]]:
@@ -406,7 +472,8 @@ def build_migration_expected_output(variant: dict[str, object]) -> dict[str, obj
     rename_fields = list(variant["rename_fields"])
     backfill_rules = list(variant["backfill_rules"])
     created_fields = unique_strings(
-        [str(item["to"]) for item in rename_fields] + [str(item["target"]) for item in backfill_rules]
+        [str(item["to"]) for item in rename_fields]
+        + [str(item["target"]) for item in backfill_rules]
     )
     rename_targets = ", ".join(str(item["to"]) for item in rename_fields)
     drop_fields = ", ".join(str(item) for item in variant["drop_fields"])
@@ -415,12 +482,9 @@ def build_migration_expected_output(variant: dict[str, object]) -> dict[str, obj
     else:
         final_rule = backfill_rules[-1]
         leading_rules = ", ".join(
-            f"{item['target']} from {item['source']}"
-            for item in backfill_rules[:-1]
+            f"{item['target']} from {item['source']}" for item in backfill_rules[:-1]
         )
-        backfill_sentence = (
-            f"Backfill {leading_rules}, and {final_rule['target']} from {final_rule['source']}."
-        )
+        backfill_sentence = f"Backfill {leading_rules}, and {final_rule['target']} from {final_rule['source']}."
     ordered_steps = [
         f"Create {variant['schema_version']} columns {', '.join(created_fields)}.",
         backfill_sentence,
@@ -438,63 +502,160 @@ def build_migration_expected_output(variant: dict[str, object]) -> dict[str, obj
 
 
 def build_client_adapter_hidden_runner(variant: dict[str, object]) -> str:
-    lines = [
-        "from __future__ import annotations",
-        "",
-        "import json",
-        "import sys",
-        "import unittest",
-        "from pathlib import Path",
-        "",
-        "",
-        "def build_suite(workspace: Path) -> unittest.TestSuite:",
-        '    sys.path.insert(0, str(workspace / "src"))',
-        "    from client_adapter import build_summary",
-        "",
-        '    sample = json.loads((workspace / "samples" / "response.json").read_text(encoding="utf-8"))',
-        f"    expected_sample = {variant['sample_expected']!r}",
-        f"    alternate_payload = {variant['alternate_payload']!r}",
-        f"    alternate_expected = {variant['alternate_expected']!r}",
-        "",
-        "    class HiddenTests(unittest.TestCase):",
-        "        def test_sample_payload(self) -> None:",
-        "            self.assertEqual(build_summary(sample), expected_sample)",
-        "",
-        "        def test_missing_warehouse_defaults_to_unknown(self) -> None:",
-        "            self.assertEqual(build_summary(alternate_payload), alternate_expected)",
-        "",
-        "    return unittest.defaultTestLoader.loadTestsFromTestCase(HiddenTests)",
-        "",
-        "",
-        "def main() -> None:",
-        "    workspace = Path(sys.argv[1]).resolve()",
-        "    suite = build_suite(workspace)",
-        "    result = unittest.TextTestRunner(verbosity=2).run(suite)",
-        "    payload = {",
-        '        "success": result.wasSuccessful(),',
-        '        "score": 1.0 if result.wasSuccessful() else 0.0,',
-        '        "subscores": {',
-        '            "tests_passed": result.testsRun - len(result.failures) - len(result.errors),',
-        '            "tests_total": result.testsRun,',
-        "        },",
-        '        "failure_labels": ["hidden_tests_failed"] if not result.wasSuccessful() else [],',
-        '        "diagnostics": {',
-        '            "tests_run": result.testsRun,',
-        '            "failures": [case[0].id() for case in result.failures],',
-        '            "errors": [case[0].id() for case in result.errors],',
-        "        },",
-        "    }",
-        "    print(json.dumps(payload, sort_keys=True))",
-        "    sys.exit(0 if result.wasSuccessful() else 1)",
-        "",
-        "",
-        'if __name__ == "__main__":',
-        "    main()",
-    ]
-    return "\n".join(lines) + "\n"
+    weights = {
+        "collection_field": 0.10,
+        "quantity_field": 0.10,
+        "cursor_field": 0.10,
+        "request_id": 0.05,
+        "record_count": 0.10,
+        "total_quantity": 0.15,
+        "warehouse_default": 0.10,
+        "warehouse_sorting": 0.10,
+        "empty_records": 0.05,
+        "hidden_payload_generalization": 0.15,
+    }
+    return (
+        dedent(
+            f"""
+            from __future__ import annotations
+
+            import json
+            import sys
+            from pathlib import Path
 
 
-def build_service_config_reconciliation_scenario(rng: random.Random, spec: EnvironmentSpec) -> dict[str, object]:
+            CAPABILITY_WEIGHTS = {weights!r}
+            ALTERNATE_PAYLOAD = {variant["alternate_payload"]!r}
+            ALTERNATE_EXPECTED = {variant["alternate_expected"]!r}
+
+
+            def main() -> None:
+                workspace = Path(sys.argv[1]).resolve()
+                sys.path.insert(0, str(workspace / "src"))
+                try:
+                    from client_adapter import build_summary
+                except Exception as exc:
+                    print(json.dumps({{"import_error": repr(exc)}}))
+                    raise
+
+                def check(callback) -> float:
+                    try:
+                        return float(bool(callback()))
+                    except Exception:
+                        return 0.0
+
+                shared = {{
+                    "request_id": "shared",
+                    "records": [
+                        {{"quantity": 2, "count": 91, "warehouse": "west"}},
+                        {{"quantity": 5, "count": 92, "warehouse": "east"}},
+                    ],
+                    "items": [
+                        {{"quantity": 2, "count": 91, "warehouse": "west"}},
+                        {{"quantity": 5, "count": 92, "warehouse": "east"}},
+                    ],
+                    "next_cursor": "new-cursor",
+                    "cursor": "legacy-cursor",
+                }}
+                capabilities = {{
+                    "collection_field": check(
+                        lambda: build_summary({{
+                            "request_id": "collection",
+                            "records": [],
+                            "items": [{{"count": 9, "warehouse": "legacy"}}],
+                            "next_cursor": None,
+                        }})["record_count"] == 0
+                    ),
+                    "quantity_field": check(
+                        lambda: build_summary(shared)["total_quantity"] == 7
+                    ),
+                    "cursor_field": check(
+                        lambda: build_summary(shared)["next_cursor"] == "new-cursor"
+                    ),
+                    "request_id": check(
+                        lambda: build_summary(shared)["request_id"] == "shared"
+                    ),
+                    "record_count": check(
+                        lambda: build_summary(shared)["record_count"] == 2
+                    ),
+                    "total_quantity": check(
+                        lambda: build_summary(shared)["total_quantity"] == 7
+                    ),
+                    "warehouse_default": check(
+                        lambda: build_summary({{
+                            "request_id": "default",
+                            "records": [{{"quantity": 1}}],
+                            "items": [{{"count": 1}}],
+                            "next_cursor": None,
+                        }})["warehouses"] == ["unknown"]
+                    ),
+                    "warehouse_sorting": check(
+                        lambda: build_summary({{
+                            "request_id": "warehouses",
+                            "records": [
+                                {{"quantity": 1, "count": 1, "warehouse": "west"}},
+                                {{"quantity": 1, "count": 1, "warehouse": "east"}},
+                                {{"quantity": 1, "count": 1, "warehouse": "west"}},
+                            ],
+                            "items": [
+                                {{"quantity": 1, "count": 1, "warehouse": "west"}},
+                                {{"quantity": 1, "count": 1, "warehouse": "east"}},
+                                {{"quantity": 1, "count": 1, "warehouse": "west"}},
+                            ],
+                            "next_cursor": None,
+                        }})["warehouses"] == ["east", "west"]
+                    ),
+                    "empty_records": check(
+                        lambda: build_summary({{
+                            "request_id": "empty",
+                            "records": [],
+                            "items": [],
+                            "next_cursor": None,
+                        }}) == {{
+                            "request_id": "empty",
+                            "next_cursor": None,
+                            "record_count": 0,
+                            "total_quantity": 0,
+                            "warehouses": [],
+                        }}
+                    ),
+                    "hidden_payload_generalization": check(
+                        lambda: build_summary(ALTERNATE_PAYLOAD) == ALTERNATE_EXPECTED
+                    ),
+                }}
+                passed = sum(capabilities.values())
+                payload = {{
+                    "success": all(value == 1.0 for value in capabilities.values()),
+                    "subscores": {{
+                        **{{f"capability_{{name}}": value for name, value in capabilities.items()}},
+                        "tests_passed": passed,
+                        "tests_total": len(capabilities),
+                    }},
+                    "capability_weights": CAPABILITY_WEIGHTS,
+                    "failure_labels": (
+                        [] if all(value == 1.0 for value in capabilities.values())
+                        else ["hidden_capabilities_failed"]
+                    ),
+                    "diagnostics": {{
+                        "failed_capabilities": [
+                            name for name, value in capabilities.items() if value < 1.0
+                        ]
+                    }},
+                }}
+                print(json.dumps(payload, sort_keys=True))
+
+
+            if __name__ == "__main__":
+                main()
+            """
+        ).strip()
+        + "\n"
+    )
+
+
+def build_service_config_reconciliation_scenario(
+    rng: random.Random, spec: EnvironmentSpec
+) -> dict[str, object]:
     difficulty = spec.difficulty
     variant = select_fixture_variant(spec.seed, service_config_variants())
     expected_config = {
@@ -528,8 +689,9 @@ def build_service_config_reconciliation_scenario(rng: random.Random, spec: Envir
         else "Shadow mode remains disabled for the current cohort."
     )
     if difficulty == 1:
-        visible_files["specs/runtime_contract.md"] = dedent(
-            f"""
+        visible_files["specs/runtime_contract.md"] = (
+            dedent(
+                f"""
             # Runtime Contract
 
             The `config/service_config.json` file must contain:
@@ -542,10 +704,13 @@ def build_service_config_reconciliation_scenario(rng: random.Random, spec: Envir
             - `enable_shadow_mode`: `{shadow_flag}`
             - `cohort_limit`: `{expected_config["cohort_limit"]}`
             """
-        ).strip() + "\n"
+            ).strip()
+            + "\n"
+        )
     else:
-        visible_files["specs/runtime_contract.md"] = dedent(
-            f"""
+        visible_files["specs/runtime_contract.md"] = (
+            dedent(
+                f"""
             # Runtime Contract
 
             The service contract now uses:
@@ -555,9 +720,12 @@ def build_service_config_reconciliation_scenario(rng: random.Random, spec: Envir
             - `timeout_seconds`: `{expected_config["timeout_seconds"]}`
             - `retry_attempts`: `{expected_config["retry_attempts"]}`
             """
-        ).strip() + "\n"
-        visible_files["notes/rollout_plan.md"] = dedent(
-            f"""
+            ).strip()
+            + "\n"
+        )
+        visible_files["notes/rollout_plan.md"] = (
+            dedent(
+                f"""
             # Rollout Plan
 
             {rollout_sentence}
@@ -565,18 +733,24 @@ def build_service_config_reconciliation_scenario(rng: random.Random, spec: Envir
             - `enable_shadow_mode`: `{shadow_flag}`
             - `cohort_limit`: `{expected_config["cohort_limit"]}`
             """
-        ).strip() + "\n"
+            ).strip()
+            + "\n"
+        )
         if difficulty >= 3:
-            visible_files["notes/region_override.md"] = dedent(
-                f"""
+            visible_files["notes/region_override.md"] = (
+                dedent(
+                    f"""
                 # Region Override
 
                 The current deployment stays pinned to `{expected_config["region"]}` until the next failover rehearsal.
                 """
-            ).strip() + "\n"
+                ).strip()
+                + "\n"
+            )
     if difficulty == 4:
-        visible_files["notes/legacy_service_config.md"] = dedent(
-            f"""
+        visible_files["notes/legacy_service_config.md"] = (
+            dedent(
+                f"""
             # Legacy Service Config
 
             Old rollout draft:
@@ -585,13 +759,16 @@ def build_service_config_reconciliation_scenario(rng: random.Random, spec: Envir
             - `timeout_seconds`: `{legacy["timeout_seconds"]}`
             - `region`: `{legacy["region"]}`
             """
-        ).strip() + "\n"
+            ).strip()
+            + "\n"
+        )
     if difficulty == 5:
-        visible_files["changelog/2026-01-runtime-rollout.md"] = dedent(
-            f"""
+        visible_files["changelog/2026-01-runtime-rollout.md"] = (
+            dedent(
+                f"""
             # 2026-01 Runtime Rollout
 
-            Superseded by the current runtime contract and rollout plan.
+            Candidate rollout values:
 
             Historical values:
 
@@ -599,8 +776,23 @@ def build_service_config_reconciliation_scenario(rng: random.Random, spec: Envir
             - `enable_shadow_mode`: `{legacy_shadow_flag}`
             - `cohort_limit`: `{legacy["cohort_limit"]}`
             """
-        ).strip() + "\n"
-    add_distractor_documents(visible_files, rng, int(difficulty_settings(difficulty)["distractor_count"]))
+            ).strip()
+            + "\n"
+        )
+        add_d5_authority_chain(
+            visible_files,
+            bundle_id="runtime-2026-03",
+            archived_bundle_id="runtime-2026-01",
+            authoritative_paths=[
+                "specs/runtime_contract.md",
+                "notes/rollout_plan.md",
+                "notes/region_override.md",
+            ],
+            stale_paths=["changelog/2026-01-runtime-rollout.md"],
+        )
+    add_distractor_documents(
+        visible_files, rng, int(difficulty_settings(difficulty)["distractor_count"])
+    )
     output_contract = [
         "Update `config/service_config.json` in place.",
         "Keep `service_name` unchanged.",
@@ -644,7 +836,9 @@ def build_service_config_reconciliation_scenario(rng: random.Random, spec: Envir
     }
 
 
-def build_migration_plan_bundle_scenario(rng: random.Random, spec: EnvironmentSpec) -> dict[str, object]:
+def build_migration_plan_bundle_scenario(
+    rng: random.Random, spec: EnvironmentSpec
+) -> dict[str, object]:
     difficulty = spec.difficulty
     variant = select_fixture_variant(spec.seed, migration_plan_variants())
     expected_output = build_migration_expected_output(variant)
@@ -658,7 +852,12 @@ def build_migration_plan_bundle_scenario(rng: random.Random, spec: EnvironmentSp
                 "backfill_rules": [],
                 "drop_fields": list(variant["drop_fields"]),
                 "ordered_steps": ["Create new columns."],
-                "rename_fields": [{"from": str(rename_fields[0]["from"]), "to": str(rename_fields[0]["from"])}],
+                "rename_fields": [
+                    {
+                        "from": str(rename_fields[0]["from"]),
+                        "to": str(rename_fields[0]["from"]),
+                    }
+                ],
                 "schema_version": f"{variant['schema_version']}-draft",
                 "validation_checks": [],
             }
@@ -666,17 +865,19 @@ def build_migration_plan_bundle_scenario(rng: random.Random, spec: EnvironmentSp
     }
     if difficulty == 1:
         rename_lines = "\n".join(
-            f"- rename `{item['from']} -> {item['to']}`"
-            for item in rename_fields
+            f"- rename `{item['from']} -> {item['to']}`" for item in rename_fields
         )
         drop_lines = "\n".join(f"- drop `{item}`" for item in variant["drop_fields"])
         backfill_lines = "\n".join(
             f"- backfill `{item['target']}` from `{item['source']}`"
             for item in backfill_rules
         )
-        validation_lines = "\n".join(f"- {item}" for item in variant["validation_checks"])
-        visible_files[schema_spec_path] = dedent(
-            f"""
+        validation_lines = "\n".join(
+            f"- {item}" for item in variant["validation_checks"]
+        )
+        visible_files[schema_spec_path] = (
+            dedent(
+                f"""
             # Schema {schema_version}
 
             Produce a migration plan with:
@@ -687,15 +888,17 @@ def build_migration_plan_bundle_scenario(rng: random.Random, spec: EnvironmentSp
             {backfill_lines}
             {validation_lines}
             """
-        ).strip() + "\n"
+            ).strip()
+            + "\n"
+        )
     else:
         rename_lines = "\n".join(
-            f"- rename `{item['from']} -> {item['to']}`"
-            for item in rename_fields
+            f"- rename `{item['from']} -> {item['to']}`" for item in rename_fields
         )
         drop_lines = "\n".join(f"- drop `{item}`" for item in variant["drop_fields"])
-        visible_files[schema_spec_path] = dedent(
-            f"""
+        visible_files[schema_spec_path] = (
+            dedent(
+                f"""
             # Schema {schema_version}
 
             Required schema changes:
@@ -704,27 +907,35 @@ def build_migration_plan_bundle_scenario(rng: random.Random, spec: EnvironmentSp
             {drop_lines}
             - schema version `{schema_version}`
             """
-        ).strip() + "\n"
-        visible_files["notes/backfill_rules.md"] = dedent(
-            "\n".join(
-                [
-                    "# Backfill Rules",
-                    "",
-                    *[
-                        f"- `{item['source']} -> {item['target']}`"
-                        for item in backfill_rules
-                    ],
-                ]
-            )
-        ).strip() + "\n"
+            ).strip()
+            + "\n"
+        )
+        visible_files["notes/backfill_rules.md"] = (
+            dedent(
+                "\n".join(
+                    [
+                        "# Backfill Rules",
+                        "",
+                        *[
+                            f"- `{item['source']} -> {item['target']}`"
+                            for item in backfill_rules
+                        ],
+                    ]
+                )
+            ).strip()
+            + "\n"
+        )
         if difficulty >= 3:
             cutover_lines = "\n".join(
                 f"{index}. {step}"
                 for index, step in enumerate(expected_output["ordered_steps"], start=1)
             )
-            validation_lines = "\n".join(f"- {item}" for item in variant["validation_checks"])
-            visible_files["docs/client_cutover.md"] = dedent(
-                f"""
+            validation_lines = "\n".join(
+                f"- {item}" for item in variant["validation_checks"]
+            )
+            visible_files["docs/client_cutover.md"] = (
+                dedent(
+                    f"""
                 # Client Cutover
 
                 Recommended cutover sequence:
@@ -735,41 +946,62 @@ def build_migration_plan_bundle_scenario(rng: random.Random, spec: EnvironmentSp
 
                 {validation_lines}
                 """
-            ).strip() + "\n"
+                ).strip()
+                + "\n"
+            )
     if difficulty == 4:
-        visible_files["notes/v2_cutover.md"] = dedent(
-            "\n".join(
-                [
-                    "# v2 Cutover Draft",
-                    "",
-                    "Old plan draft:",
-                    "",
-                    *[
-                        f"- rename `{item['from']} -> {item['to']}`"
-                        for item in variant["legacy_rename_fields"]
-                    ],
-                    f"- keep `{backfill_rules[0]['target']}` empty",
-                ]
-            )
-        ).strip() + "\n"
+        visible_files["notes/v2_cutover.md"] = (
+            dedent(
+                "\n".join(
+                    [
+                        "# v2 Cutover Draft",
+                        "",
+                        "Old plan draft:",
+                        "",
+                        *[
+                            f"- rename `{item['from']} -> {item['to']}`"
+                            for item in variant["legacy_rename_fields"]
+                        ],
+                        f"- keep `{backfill_rules[0]['target']}` empty",
+                    ]
+                )
+            ).strip()
+            + "\n"
+        )
     if difficulty == 5:
-        visible_files["changelog/2026-02-migration.md"] = dedent(
-            "\n".join(
-                [
-                    f"# 2026-02 Migration for {schema_version}",
-                    "",
-                    f"Superseded by the schema {schema_version} documents.",
-                    "",
-                    "Historical draft:",
-                    "",
-                    *[
-                        f"- rename `{item['from']} -> {item['to']}`"
-                        for item in variant["legacy_rename_fields"]
-                    ],
-                ]
-            )
-        ).strip() + "\n"
-    add_distractor_documents(visible_files, rng, int(difficulty_settings(difficulty)["distractor_count"]))
+        visible_files["changelog/2026-02-migration.md"] = (
+            dedent(
+                "\n".join(
+                    [
+                        f"# 2026-02 Migration for {schema_version}",
+                        "",
+                        f"Candidate migration values for schema {schema_version}.",
+                        "",
+                        "Historical draft:",
+                        "",
+                        *[
+                            f"- rename `{item['from']} -> {item['to']}`"
+                            for item in variant["legacy_rename_fields"]
+                        ],
+                    ]
+                )
+            ).strip()
+            + "\n"
+        )
+        add_d5_authority_chain(
+            visible_files,
+            bundle_id=f"migration-{schema_version}-current",
+            archived_bundle_id="migration-v2-draft",
+            authoritative_paths=[
+                schema_spec_path,
+                "notes/backfill_rules.md",
+                "docs/client_cutover.md",
+            ],
+            stale_paths=["changelog/2026-02-migration.md"],
+        )
+    add_distractor_documents(
+        visible_files, rng, int(difficulty_settings(difficulty)["distractor_count"])
+    )
     return {
         "scenario_id": "migration_plan_bundle",
         "title": "Migration Plan Bundle",
@@ -815,7 +1047,9 @@ def build_migration_plan_bundle_scenario(rng: random.Random, spec: EnvironmentSp
     }
 
 
-def build_incident_report_bundle_scenario(rng: random.Random, spec: EnvironmentSpec) -> dict[str, object]:
+def build_incident_report_bundle_scenario(
+    rng: random.Random, spec: EnvironmentSpec
+) -> dict[str, object]:
     difficulty = spec.difficulty
     variant = select_fixture_variant(spec.seed, incident_variants())
     expected_output = {
@@ -874,30 +1108,38 @@ def build_incident_report_bundle_scenario(rng: random.Random, spec: EnvironmentS
             - `primary_cause`
             - `actions`
             """
-        ).strip() + "\n",
+        ).strip()
+        + "\n",
     }
     if difficulty >= 2:
-        visible_files["notes/severity_policy.md"] = dedent(
-            """
+        visible_files["notes/severity_policy.md"] = (
+            dedent(
+                """
             # Severity Policy
 
             - `P1 -> sev1`
             - `P2 -> sev2`
             - `P3 -> sev3`
             """
-        ).strip() + "\n"
+            ).strip()
+            + "\n"
+        )
     if difficulty >= 3:
-        visible_files["docs/action_capture.md"] = dedent(
-            """
+        visible_files["docs/action_capture.md"] = (
+            dedent(
+                """
             # Action Capture
 
             Every `event=action detail=...` line in the incident log must be preserved in order in the final report.
             The `owner_alias` on the resolved line is the report owner.
             """
-        ).strip() + "\n"
+            ).strip()
+            + "\n"
+        )
     if difficulty == 4:
-        visible_files["notes/postmortem_draft.md"] = dedent(
-            f"""
+        visible_files["notes/postmortem_draft.md"] = (
+            dedent(
+                f"""
             # Postmortem Draft
 
             Draft notes from another incident:
@@ -905,18 +1147,37 @@ def build_incident_report_bundle_scenario(rng: random.Random, spec: EnvironmentS
             - severity: {legacy_severity_for(str(variant["severity"]))}
             - owner: {variant["legacy_owner"]}
             """
-        ).strip() + "\n"
+            ).strip()
+            + "\n"
+        )
     if difficulty == 5:
-        visible_files["changelog/2026-02-reporting.md"] = dedent(
-            f"""
+        visible_files["changelog/2026-02-reporting.md"] = (
+            dedent(
+                f"""
             # 2026-02 Reporting
 
-            Superseded severity mapping:
+            Candidate severity mapping:
 
             - `{variant["priority"]} -> {legacy_severity_for(str(variant["severity"]))}`
             """
-        ).strip() + "\n"
-    add_distractor_documents(visible_files, rng, int(difficulty_settings(difficulty)["distractor_count"]))
+            ).strip()
+            + "\n"
+        )
+        add_d5_authority_chain(
+            visible_files,
+            bundle_id="incident-reporting-2026-03",
+            archived_bundle_id="incident-reporting-2026-02",
+            authoritative_paths=[
+                "specs/report_contract.md",
+                "notes/severity_policy.md",
+                "docs/action_capture.md",
+                f"logs/{str(variant['incident_id']).lower()}.log",
+            ],
+            stale_paths=["changelog/2026-02-reporting.md"],
+        )
+    add_distractor_documents(
+        visible_files, rng, int(difficulty_settings(difficulty)["distractor_count"])
+    )
     structure = base_profile(
         files=visible_files,
         difficulty=difficulty,
@@ -963,11 +1224,15 @@ def build_incident_report_bundle_scenario(rng: random.Random, spec: EnvironmentS
     }
 
 
-def build_client_adapter_sync_scenario(rng: random.Random, spec: EnvironmentSpec) -> dict[str, object]:
+def build_client_adapter_sync_scenario(
+    rng: random.Random, spec: EnvironmentSpec
+) -> dict[str, object]:
     difficulty = spec.difficulty
+    profile = select_d5_profile(difficulty, spec.seed)
     variant = select_fixture_variant(spec.seed, client_adapter_variants())
-    correct_adapter = dedent(
-        """
+    correct_adapter = (
+        dedent(
+            """
         from __future__ import annotations
 
 
@@ -986,9 +1251,12 @@ def build_client_adapter_sync_scenario(rng: random.Random, spec: EnvironmentSpec
                 "warehouses": sorted(warehouses),
             }
         """
-    ).strip() + "\n"
-    buggy_adapter = dedent(
-        """
+        ).strip()
+        + "\n"
+    )
+    buggy_adapter = (
+        dedent(
+            """
         from __future__ import annotations
 
 
@@ -1007,7 +1275,9 @@ def build_client_adapter_sync_scenario(rng: random.Random, spec: EnvironmentSpec
                 "warehouses": sorted(warehouses),
             }
         """
-    ).strip() + "\n"
+        ).strip()
+        + "\n"
+    )
     visible_files: dict[str, str] = {
         "src/client_adapter.py": buggy_adapter,
         "samples/response.json": render_json(variant["sample_response"]),
@@ -1033,7 +1303,8 @@ def build_client_adapter_sync_scenario(rng: random.Random, spec: EnvironmentSpec
             if __name__ == "__main__":
                 main()
             """
-        ).strip() + "\n",
+        ).strip()
+        + "\n",
         "docs/api_reference.md": dedent(
             """
             # API Reference
@@ -1045,11 +1316,13 @@ def build_client_adapter_sync_scenario(rng: random.Random, spec: EnvironmentSpec
             - each record includes `sku`, `quantity`, and optional `warehouse`
             - pagination field: `next_cursor`
             """
-        ).strip() + "\n",
+        ).strip()
+        + "\n",
     }
     if difficulty >= 2:
-        visible_files["docs/output_contract.md"] = dedent(
-            """
+        visible_files["docs/output_contract.md"] = (
+            dedent(
+                """
             # Output Contract
 
             `build_summary()` must return:
@@ -1060,10 +1333,13 @@ def build_client_adapter_sync_scenario(rng: random.Random, spec: EnvironmentSpec
             - `total_quantity`
             - `warehouses` sorted ascending
             """
-        ).strip() + "\n"
+            ).strip()
+            + "\n"
+        )
     if difficulty >= 3:
-        visible_files["notes/api_changelog.md"] = dedent(
-            """
+        visible_files["notes/api_changelog.md"] = (
+            dedent(
+                """
             # API Changelog
 
             Renames in the current release:
@@ -1074,10 +1350,13 @@ def build_client_adapter_sync_scenario(rng: random.Random, spec: EnvironmentSpec
 
             Missing `warehouse` values should default to `unknown`.
             """
-        ).strip() + "\n"
+            ).strip()
+            + "\n"
+        )
     if difficulty == 4:
-        visible_files["notes/legacy_adapter.md"] = dedent(
-            """
+        visible_files["notes/legacy_adapter.md"] = (
+            dedent(
+                """
             # Legacy Adapter
 
             Old adapter behavior:
@@ -1086,19 +1365,146 @@ def build_client_adapter_sync_scenario(rng: random.Random, spec: EnvironmentSpec
             - read `count`
             - fail if `warehouse` is missing
             """
-        ).strip() + "\n"
+            ).strip()
+            + "\n"
+        )
     if difficulty == 5:
-        visible_files["changelog/2026-01-client.md"] = dedent(
-            """
+        visible_files["changelog/2026-01-client.md"] = (
+            dedent(
+                """
             # 2026-01 Client Notes
 
-            Superseded client response shape:
+            Candidate client response shape:
 
             - pagination field `cursor`
             - collection field `items`
             """
-        ).strip() + "\n"
-    add_distractor_documents(visible_files, rng, int(difficulty_settings(difficulty)["distractor_count"]))
+            ).strip()
+            + "\n"
+        )
+        add_d5_authority_chain(
+            visible_files,
+            bundle_id="client-api-2026-03",
+            archived_bundle_id="client-api-2026-01",
+            authoritative_paths=[
+                "docs/api_reference.md",
+                "docs/output_contract.md",
+                "notes/api_changelog.md",
+            ],
+            stale_paths=["changelog/2026-01-client.md"],
+        )
+        if profile is None:
+            raise ValueError("D5 client adapter scenario requires a D5 profile")
+        if profile.profile_id == "d5_a":
+            visible_files["docs/current_api_summary.md"] = (
+                "# Current client summary\n\n"
+                "The active response uses records, per-record quantity, and "
+                "next_cursor. Missing warehouses become unknown. Preserve "
+                "request_id, count records, total quantities, and return sorted "
+                "unique warehouses.\n"
+            )
+            visible_files["public_check.py"] = (
+                dedent(
+                    """
+                import json
+                import sys
+                from pathlib import Path
+                workspace = Path(__file__).resolve().parent
+                sys.path.insert(0, str(workspace / "src"))
+                from client_adapter import build_summary
+                payload = json.loads((workspace / "samples/response.json").read_text(encoding="utf-8"))
+                result = build_summary(payload)
+                assert set(result) == {"request_id", "next_cursor", "record_count", "total_quantity", "warehouses"}
+                assert result["warehouses"] == sorted(set(result["warehouses"]))
+                print("public structure check passed")
+                """
+                ).strip()
+                + "\n"
+            )
+        elif profile.profile_id == "d5_b":
+            visible_files["docs/validation_guide.md"] = (
+                "# Validation guide\n\n"
+                "Validate the visible sample, an empty records list, and a "
+                "record without warehouse. Do not infer values from legacy items.\n"
+            )
+        else:
+            visible_files["docs/version_applicability.md"] = (
+                "# Version applicability\n\n"
+                "The authority index selects client API bundle client-api-2026-03.\n"
+            )
+            visible_files["docs/field_mapping.md"] = (
+                "# Active field mapping\n\n"
+                "items became records, count became quantity, and cursor "
+                "became next_cursor.\n"
+            )
+            visible_files["docs/warehouse_override.md"] = (
+                "# Warehouse exception\n\n"
+                "For this client version, an omitted warehouse is represented as "
+                "unknown; warehouse values are unique and sorted in the summary.\n"
+            )
+    add_distractor_documents(
+        visible_files, rng, int(difficulty_settings(difficulty)["distractor_count"])
+    )
+    defect_specs = [
+        (
+            "legacy_collection_field",
+            'response.get("records", [])',
+            'response.get("items", [])',
+        ),
+        ("legacy_quantity_field", 'record["quantity"]', 'record["count"]'),
+        (
+            "legacy_cursor_field",
+            'response.get("next_cursor")',
+            'response.get("cursor")',
+        ),
+        (
+            "missing_warehouse_default",
+            'record.get("warehouse", "unknown")',
+            'record["warehouse"]',
+        ),
+    ]
+    bugs: list[dict[str, object]] = []
+    for label, old, new in defect_specs:
+
+        def apply(
+            content: str, *, old: str = old, new: str = new, label: str = label
+        ) -> str:
+            updated = content.replace(old, new, 1)
+            if updated == content:
+                raise ValueError(
+                    f"retrieval defect {label!r} did not modify client_adapter.py"
+                )
+            return updated
+
+        bugs.append(
+            {"label": label, "target_path": "src/client_adapter.py", "apply": apply}
+        )
+    contract = {
+        "collection_field": "records",
+        "quantity_field": "quantity",
+        "cursor_field": "next_cursor",
+        "warehouse_default": "unknown",
+    }
+    reference_solution_files = {"src/client_adapter.py": correct_adapter}
+    correct_files = {"src/client_adapter.py": correct_adapter}
+    hidden_json_assets: dict[str, object] = {}
+    evaluator_config: dict[str, object] = {
+        "mode": "hidden_tests",
+        "runner": "run_hidden_tests.py",
+        "target_path": "src/client_adapter.py",
+    }
+    if difficulty == 5:
+        stale_contract = {
+            "collection_field": "items",
+            "quantity_field": "count",
+            "cursor_field": "cursor",
+            "warehouse_default": "error",
+        }
+        visible_files["config/adapter_contract.json"] = render_json(stale_contract)
+        reference_solution_files["config/adapter_contract.json"] = render_json(contract)
+        correct_files["config/adapter_contract.json"] = render_json(contract)
+        hidden_json_assets["expected_adapter_contract.json"] = contract
+
     hidden_runner = build_client_adapter_hidden_runner(variant)
     return {
         "scenario_id": "client_adapter_sync",
@@ -1110,13 +1516,41 @@ def build_client_adapter_sync_scenario(rng: random.Random, spec: EnvironmentSpec
         "entrypoint": "python run_example.py",
         "files": visible_files,
         "expected_output": None,
-        "reference_solution_files": {
-            "src/client_adapter.py": correct_adapter,
+        "reference_solution_files": reference_solution_files,
+        "correct_files": correct_files,
+        "bugs": bugs,
+        "partial_solution_lattice_profile": {
+            "no_fix_score": 0.0,
+            "single_fix_max_score": 0.20,
+            "pair_fix_max_score": 0.60,
+            "all_but_one_max_score": 0.80,
+            "full_solution_score": 1.0,
+            "valid": True,
         },
-        "evaluator_config": {
-            "mode": "hidden_tests",
-            "runner": "run_hidden_tests.py",
+        "defect_bundle": {
+            "bundle_id": "api_evidence_adapter_chain",
+            "defect_ids": [label for label, _, _ in defect_specs],
+            "dependency_edges": [
+                ["legacy_collection_field", "legacy_quantity_field"],
+                ["legacy_quantity_field", "missing_warehouse_default"],
+                ["legacy_collection_field", "legacy_cursor_field"],
+            ],
+            "capability_groups": {
+                "authority_selection": ["legacy_collection_field"],
+                "transformation": ["legacy_quantity_field"],
+                "cross_file_consistency": ["legacy_cursor_field"],
+                "integration": ["missing_warehouse_default"],
+            },
+            "required_files": [
+                "src/client_adapter.py",
+                "docs/api_reference.md",
+                "docs/output_contract.md",
+                "notes/api_changelog.md",
+            ],
+            "semantic_dependency_depth": 3,
         },
+        "evaluator_config": evaluator_config,
+        "hidden_json_assets": hidden_json_assets,
         "hidden_text_assets": {
             "run_hidden_tests.py": hidden_runner,
         },
@@ -1139,6 +1573,10 @@ def build_client_adapter_sync_scenario(rng: random.Random, spec: EnvironmentSpec
             failure_mode="interface_and_semantic",
             smoke_test_quality="informative",
             content_variant_id=str(variant["variant_id"]),
+            d5_profile=(profile.profile_id if profile is not None else None),
+            semantic_dependency_depth=(
+                profile.semantic_dependency_depth if profile is not None else 0
+            ),
         ),
         "document_roots": document_roots(visible_files),
     }
