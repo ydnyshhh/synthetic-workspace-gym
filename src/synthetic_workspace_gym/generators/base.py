@@ -12,6 +12,11 @@ from synthetic_workspace_gym.generators.common import (
     make_env_id,
 )
 from synthetic_workspace_gym.generators.d5_quality import validate_atomic_oracle
+from synthetic_workspace_gym.provenance import (
+    ENVIRONMENT_VERSION,
+    EVALUATOR_VERSION,
+    generation_fingerprint,
+)
 from synthetic_workspace_gym.schemas import (
     EnvironmentFamily,
     EnvironmentManifest,
@@ -127,6 +132,14 @@ class BaseGenerator(ABC):
             spec, root=root, visible_root=visible_root, hidden_root=hidden_root
         )
         metadata = dict(payload.metadata)
+        metadata["release_provenance"] = {
+            "environment_version": ENVIRONMENT_VERSION,
+            "evaluator_version": EVALUATOR_VERSION,
+            "generation_fingerprint": generation_fingerprint(
+                visible_root, hidden_root, payload.evaluator_entrypoint
+            ),
+            "horizon_unit": "tool_steps",
+        }
         split = spec.generation_params.get("split")
         task_id = spec.generation_params.get("task_id")
         if split is not None:

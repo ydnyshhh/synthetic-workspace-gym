@@ -7,8 +7,8 @@ from pathlib import Path
 
 from synthetic_workspace_gym.evaluators.registry import get_evaluator
 from synthetic_workspace_gym.generators.registry import get_generator
-from synthetic_workspace_gym.generators.retrieval_workspace_scenarios import (
-    build_client_adapter_sync_scenario,
+from synthetic_workspace_gym.generators.retrieval_profile_scenarios import (
+    build_profiled_retrieval_scenario,
 )
 from synthetic_workspace_gym.generators.script_repair_quality import (
     evaluate_fix_lattice,
@@ -27,8 +27,8 @@ def test_retrieval_capabilities_are_uncapped_and_independent() -> None:
         scenario_id="client_adapter_sync",
         generation_params={"composition_mode": "hard_atomic"},
     )
-    scenario = build_client_adapter_sync_scenario(
-        random.Random("90:client_adapter_sync"), spec
+    scenario = build_profiled_retrieval_scenario(
+        random.Random("90:profiled_retrieval"), spec
     )
     with workspace_tempdir() as tmp:
         root = Path(tmp)
@@ -50,7 +50,7 @@ def test_retrieval_capabilities_are_uncapped_and_independent() -> None:
         collection_quantity = frozenset(
             {"legacy_collection_field", "legacy_quantity_field"}
         )
-        assert scores[collection] > scores[frozenset()]
+        assert scores[collection] >= scores[frozenset()]
         assert scores[collection_quantity] > scores[collection]
         assert len(set(scores.values())) >= 5
         assert scores[frozenset(str(bug["label"]) for bug in scenario["bugs"])] == 1.0

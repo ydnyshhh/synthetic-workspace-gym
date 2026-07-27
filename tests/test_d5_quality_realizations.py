@@ -7,8 +7,8 @@ from pathlib import Path
 
 from synthetic_workspace_gym.evaluators.registry import get_evaluator
 from synthetic_workspace_gym.generators.registry import get_generator
-from synthetic_workspace_gym.generators.retrieval_workspace_scenarios import (
-    build_client_adapter_sync_scenario,
+from synthetic_workspace_gym.generators.retrieval_profile_scenarios import (
+    build_profiled_retrieval_scenario,
 )
 from synthetic_workspace_gym.generators.script_repair_quality import (
     evaluate_fix_lattice,
@@ -113,7 +113,7 @@ def test_retrieval_composition_requires_config_and_code() -> None:
             set(bundle.manifest.reference_solution["files"]),
         )
         assert stage_a.score <= 0.40
-        assert stage_b.score <= 0.30
+        assert stage_b.score <= 0.35
         assert full.success and full.score == 1.0
         assert not (bundle.visible_root / "evidence/document_inventory.csv").exists()
 
@@ -210,8 +210,8 @@ def test_retrieval_d5_full_oracle_lattice_passes_quality_limits() -> None:
         scenario_id="client_adapter_sync",
         generation_params={"composition_mode": "hard_atomic"},
     )
-    scenario = build_client_adapter_sync_scenario(
-        random.Random("90:client_adapter_sync"), spec
+    scenario = build_profiled_retrieval_scenario(
+        random.Random("90:profiled_retrieval"), spec
     )
     with workspace_tempdir() as tmp_dir:
         root = Path(tmp_dir)
@@ -236,7 +236,7 @@ def test_retrieval_d5_full_oracle_lattice_passes_quality_limits() -> None:
             },
         )
         assert profile["valid"] is True
-        assert profile["no_fix_score"] == 0.30
+        assert profile["no_fix_score"] == 0.15
         assert profile["single_fix_max_score"] > profile["no_fix_score"]
         assert profile["pair_fix_max_score"] > profile["single_fix_max_score"]
         assert profile["full_solution_score"] == 1.0

@@ -14,7 +14,7 @@ from synthetic_workspace_gym.generators.retrieval_profile_scenarios import (
 from synthetic_workspace_gym.utils.io import write_json
 
 
-PROFILE_SEEDS = (100, 102, 107)
+PROFILE_SEEDS = (100, 102, 103, 107, 108)
 
 
 def main() -> int:
@@ -61,13 +61,22 @@ def main() -> int:
                 ("full", set(labels)),
             ]
         else:
+            schema_fix = {"schema_mapping"} if "schema_mapping" in labels else set()
             states = [
                 ("untouched", set()),
-                ("version_config_only", {"authority_config"}),
-                ("parser_only", {"quantity_parsing", "missing_value_policy"}),
+                ("authority_schema", {"authority_config", *schema_fix}),
+                (
+                    "parser_only",
+                    {"quantity_parsing", "missing_value_policy", *schema_fix},
+                ),
                 (
                     "parser_config",
-                    {"authority_config", "quantity_parsing", "missing_value_policy"},
+                    {
+                        "authority_config",
+                        "quantity_parsing",
+                        "missing_value_policy",
+                        *schema_fix,
+                    },
                 ),
                 ("all_except_edge", set(labels) - {"output_contract"}),
                 ("full", set(labels)),
@@ -99,7 +108,7 @@ def main() -> int:
         )
 
     payload = {
-        "schema_version": "retrieval-d5-structural-calibration-v1",
+        "schema_version": "retrieval-d5-structural-calibration-v3",
         "profiles": reports,
         "violation_count": sum(len(report["violations"]) for report in reports),
     }
@@ -140,7 +149,7 @@ def _violations(profile: str, rewards: dict[str, float]) -> list[str]:
         violations.append("full reference solution does not score 1.0")
     if profile != "d5_a":
         bounds = {
-            "version_config_only": (0.15, 0.30),
+            "authority_schema": (0.15, 0.30),
             "parser_only": (0.25, 0.45),
             "parser_config": (0.40, 0.65),
             "all_except_edge": (0.65, 0.85),

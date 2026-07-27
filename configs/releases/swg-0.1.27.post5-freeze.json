@@ -1,0 +1,147 @@
+{
+  "environment": {
+    "name": "yadnyesh/synthetic-workspace-gym",
+    "version": "0.1.27.post5",
+    "wheel": "synthetic_workspace_gym-0.1.27.post5-py3-none-any.whl",
+    "wheel_sha256": "45ae9afdbd9e04a1e116e082311e397872a60c7cfdb3e5b950f3e8656d3867db"
+  },
+  "evaluator": {
+    "horizon_unit": "tool_steps",
+    "max_tool_steps": 64,
+    "max_turns": 25,
+    "version": "swg-capability-evaluators-v2"
+  },
+  "freeze_policy": {
+    "dynamic_task_regeneration_during_evaluation": false,
+    "task_or_reward_changes_require_new_version": true,
+    "training_comparisons_must_record_manifest_hash": true
+  },
+  "frozen_retrieval_d5_panel": {
+    "composition_mode": "hard_atomic",
+    "difficulty": 5,
+    "profile_assignments": [
+      {
+        "generation_fingerprint": "55f5b49453b37096ea892874c9d2ba89d3931c5c080dacd841fcc7ec639aa79d",
+        "profile": "d5_a",
+        "seed": 100,
+        "task_id": "retrieval_workspace-d5-s100-9571d19f"
+      },
+      {
+        "generation_fingerprint": "ffb2bb0187f74d1a5ff9f2f1d6e1f22c38ba1b51cde79cde014bbc79459486e8",
+        "profile": "d5_a",
+        "seed": 101,
+        "task_id": "retrieval_workspace-d5-s101-181a3781"
+      },
+      {
+        "generation_fingerprint": "be69741fe752168bb5719b91e712730df19bfa37a6b21b758ba1e7891debefa3",
+        "profile": "d5_a",
+        "seed": 110,
+        "task_id": "retrieval_workspace-d5-s110-051537ce"
+      },
+      {
+        "generation_fingerprint": "1a291916cd9212577717130be981f857edd2cb7cf57d18f0ed77525b1e77fc7b",
+        "profile": "d5_a",
+        "seed": 111,
+        "task_id": "retrieval_workspace-d5-s111-298835da"
+      },
+      {
+        "generation_fingerprint": "0d308104daefdd7a920467d8c3ac1163539732499c9248a18df1dcca9efb879e",
+        "profile": "d5_a",
+        "seed": 120,
+        "task_id": "retrieval_workspace-d5-s120-aa554826"
+      },
+      {
+        "generation_fingerprint": "13cf6c75f9ba6d2577d110b2dd86d8f91a19fe483e9b2832d64bf726948b7937",
+        "profile": "d5_b",
+        "seed": 102,
+        "task_id": "retrieval_workspace-d5-s102-1493584f"
+      },
+      {
+        "generation_fingerprint": "65e55328187823caaace164a36be3711756a5df9453396dca79d66f47198b9a9",
+        "profile": "d5_b",
+        "seed": 103,
+        "task_id": "retrieval_workspace-d5-s103-fcbe6fd1"
+      },
+      {
+        "generation_fingerprint": "9101530c6d65170df500b30ba75737ef14202cdcee9a62a1b6453e586b6879ce",
+        "profile": "d5_b",
+        "seed": 104,
+        "task_id": "retrieval_workspace-d5-s104-4ce91aa7"
+      },
+      {
+        "generation_fingerprint": "5f50609a243e5c449e759cd8927fb77837cb8311287afe9755253c955ebf7bfe",
+        "profile": "d5_b",
+        "seed": 105,
+        "task_id": "retrieval_workspace-d5-s105-6ac43bcd"
+      },
+      {
+        "generation_fingerprint": "f914c31fee45786db025141b641542b0d96836fc80fbcc317a204f15b0efe37b",
+        "profile": "d5_b",
+        "seed": 106,
+        "task_id": "retrieval_workspace-d5-s106-5d6cecbd"
+      },
+      {
+        "generation_fingerprint": "ae7dda3a8e5e45b48e3132ab7c70161a0d5a1412ecbc73ed7ce089f42f3e873d",
+        "profile": "d5_c",
+        "seed": 107,
+        "task_id": "retrieval_workspace-d5-s107-bbf5dc6a"
+      },
+      {
+        "generation_fingerprint": "2ce7f54b9c5ed5a6c7b8d4b8f44554ca8aad670403f72f3089cc91ca71f4a918",
+        "profile": "d5_c",
+        "seed": 108,
+        "task_id": "retrieval_workspace-d5-s108-0806f7b4"
+      },
+      {
+        "generation_fingerprint": "a5b4cd04bf5463dc912e823994af146dda9c93489080484442ac1f2e3d543eab",
+        "profile": "d5_c",
+        "seed": 109,
+        "task_id": "retrieval_workspace-d5-s109-233d2e00"
+      },
+      {
+        "generation_fingerprint": "24e8f5e443d49215588c096b0aebc60a6b90f01f9f02ee2eaf6627a638147020",
+        "profile": "d5_c",
+        "seed": 117,
+        "task_id": "retrieval_workspace-d5-s117-d64d7217"
+      },
+      {
+        "generation_fingerprint": "c94220ea84116b6ae9931240b4381667bdd971e742e5d66c4409fcc0273767fe",
+        "profile": "d5_c",
+        "seed": 118,
+        "task_id": "retrieval_workspace-d5-s118-0594eee3"
+      }
+    ]
+  },
+  "schema_version": "swg-experimental-freeze-v1",
+  "scope": {
+    "notes": "Post5 preserves the validated post4 retrieval surface and fixes compositional-A reference compatibility. It is frozen for controlled training baselines; composite_workspace is added only in a later version.",
+    "retrieval_d5_calibration_gate_passed": false,
+    "stationary_atomic_families": true
+  },
+  "status": "frozen_experimental_training_baseline",
+  "validation": {
+    "full_suite": {
+      "passed": 238,
+      "skipped": 7,
+      "subtests_passed": 103
+    },
+    "oracle": {
+      "report": "analysis/retrieval-d5-oracle-report-v6.json",
+      "violations": 0
+    },
+    "post4_hosted_calibration": {
+      "acceptance_passed": false,
+      "reason": "A perfect-rate gate was already impossible after 13 valid A rollouts; remaining provider-stalled cells were stopped.",
+      "requested_rollouts": 45,
+      "valid_rollouts": 23
+    },
+    "post5_targeted_suite": {
+      "passed": 37
+    },
+    "surface_generation": {
+      "seeds_per_profile": 100,
+      "tasks": 300,
+      "violations": 0
+    }
+  }
+}

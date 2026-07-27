@@ -112,7 +112,10 @@ def test_retrieval_profiles_have_distinct_artifact_and_evidence_surfaces() -> No
     assert set(scenarios[107]["reference_solution_files"]) == {
         "config/client.json",
         "src/adapter.py",
+        "src/record_policy.py",
+        "src/schema_policy.py",
         "src/serializer.py",
+        "src/temporal_policy.py",
     }
     assert "release/current_manifest.json" in scenarios[107]["files"]
     assert "notes/legacy_rollout.md" in scenarios[102]["files"]
@@ -131,13 +134,22 @@ def test_hard_retrieval_oracle_staircase(seed: int) -> None:
         random.Random(f"{seed}:profiled_retrieval"), spec
     )
     labels = {str(bug["label"]) for bug in scenario["bugs"]}
+    schema_fix = {"schema_mapping"} if "schema_mapping" in labels else set()
     states = [
         ("untouched", set()),
-        ("version_config_only", {"authority_config"}),
-        ("parser_only", {"quantity_parsing", "missing_value_policy"}),
+        ("authority_schema", {"authority_config", *schema_fix}),
+        (
+            "parser_only",
+            {"quantity_parsing", "missing_value_policy", *schema_fix},
+        ),
         (
             "parser_config",
-            {"authority_config", "quantity_parsing", "missing_value_policy"},
+            {
+                "authority_config",
+                "quantity_parsing",
+                "missing_value_policy",
+                *schema_fix,
+            },
         ),
         ("all_except_edge", labels - {"output_contract"}),
         ("full", labels),
@@ -163,7 +175,7 @@ def test_hard_retrieval_oracle_staircase(seed: int) -> None:
         }
 
     assert rewards["untouched"] <= 0.15
-    assert 0.15 <= rewards["version_config_only"] <= 0.30
+    assert 0.15 <= rewards["authority_schema"] <= 0.30
     assert 0.25 <= rewards["parser_only"] <= 0.45
     assert 0.40 <= rewards["parser_config"] <= 0.65
     assert 0.65 <= rewards["all_except_edge"] <= 0.85

@@ -132,6 +132,7 @@ def load_environment(
     docker_image: str | None = None,
     reward_mode: str = "score",
     output_dir: str | None = None,
+    release_wheel_sha256: str | None = None,
     env_id: str = DEFAULT_ENV_ID,
     branch_manifest_path: str | None = None,
     branch_task_id: str | None = None,
@@ -200,6 +201,7 @@ def load_environment(
         "docker_image": docker_image,
         "reward_mode": reward_mode,
         "output_dir": output_dir,
+        "release_wheel_sha256": release_wheel_sha256,
         "branch_manifest_path": branch_manifest_path,
         "branch_task_id": branch_task_id,
         "branch_mode": branch_mode,
@@ -288,6 +290,7 @@ if _native_hub_available():
             self.docker_image = docker_image
             self.reward_mode = reward_mode
             self.output_dir = Path(output_dir).resolve() if output_dir else None
+            self.release_wheel_sha256 = env_args.get("release_wheel_sha256")
             self.max_tool_steps = _resolve_max_tool_steps(max_turns, max_tool_steps)
             self.time_limit_seconds = _resolve_time_limit_seconds(
                 max_turns, time_limit_seconds
@@ -336,6 +339,7 @@ if _native_hub_available():
                 sandbox_backend=self.sandbox_backend,
                 sandbox_config=sandbox_config,
                 docker_image=self.docker_image,
+                release_wheel_sha256=self.release_wheel_sha256,
             )
             # Prime sandbox setup performs synchronous network and archive I/O.
             # Running it on the Verifiers event-loop thread prevents worker

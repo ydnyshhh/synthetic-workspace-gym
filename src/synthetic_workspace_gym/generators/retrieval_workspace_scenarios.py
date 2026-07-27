@@ -8,7 +8,15 @@ from textwrap import dedent
 from synthetic_workspace_gym.generators.d5_profiles import select_d5_profile
 from synthetic_workspace_gym.schemas import EnvironmentSpec
 
-DOCUMENT_PREFIXES = ("docs/", "notes/", "specs/", "logs/", "changelog/")
+DOCUMENT_PREFIXES = (
+    "docs/",
+    "notes/",
+    "specs/",
+    "logs/",
+    "changelog/",
+    "policies/",
+    "release/",
+)
 
 
 def render_json(payload: object) -> str:
@@ -501,10 +509,14 @@ def build_migration_expected_output(variant: dict[str, object]) -> dict[str, obj
     }
 
 
-def build_client_adapter_hidden_runner(variant: dict[str, object]) -> str:
+def build_client_adapter_hidden_runner(
+    variant: dict[str, object],
+    *,
+    include_malformed_records: bool = False,
+) -> str:
     weights = {
         "collection_field": 0.10,
-        "quantity_field": 0.10,
+        "quantity_field": 0.05 if include_malformed_records else 0.10,
         "cursor_field": 0.10,
         "request_id": 0.05,
         "record_count": 0.10,
@@ -512,9 +524,18 @@ def build_client_adapter_hidden_runner(variant: dict[str, object]) -> str:
         "warehouse_default": 0.10,
         "warehouse_sorting": 0.10,
         "empty_records": 0.05,
-        "hidden_payload_generalization": 0.15,
+        "hidden_payload_generalization": 0.10 if include_malformed_records else 0.15,
     }
-    return (
+    if include_malformed_records:
+        weights.update(
+            {
+                "non_mapping_record": 0.025,
+                "missing_quantity": 0.025,
+                "nonnumeric_quantity": 0.025,
+                "mixed_page_isolation": 0.025,
+            }
+        )
+    runner = (
         dedent(
             f"""
             from __future__ import annotations
@@ -651,6 +672,53 @@ def build_client_adapter_hidden_runner(variant: dict[str, object]) -> str:
         ).strip()
         + "\n"
     )
+    if include_malformed_records:
+        marker = "    passed = sum(capabilities.values())"
+        malformed_check = dedent(
+            """
+            capabilities["non_mapping_record"] = check(
+                lambda: build_summary({
+                    "request_id": "non-mapping",
+                    "records": [None],
+                    "next_cursor": None,
+                })["record_count"] == 0
+            )
+            capabilities["missing_quantity"] = check(
+                lambda: build_summary({
+                    "request_id": "missing",
+                    "records": [{"warehouse": "bad"}],
+                    "next_cursor": None,
+                })["record_count"] == 0
+            )
+            capabilities["nonnumeric_quantity"] = check(
+                lambda: build_summary({
+                    "request_id": "nonnumeric",
+                    "records": [{"quantity": "not-numeric", "warehouse": "bad"}],
+                    "next_cursor": None,
+                })["record_count"] == 0
+            )
+            capabilities["mixed_page_isolation"] = check(
+                lambda: build_summary({
+                    "request_id": "mixed",
+                    "records": [
+                        {"quantity": "not-numeric", "warehouse": "bad"},
+                        {"quantity": 4, "warehouse": "good"},
+                        None,
+                    ],
+                    "next_cursor": None,
+                }) == {
+                    "request_id": "mixed",
+                    "next_cursor": None,
+                    "record_count": 1,
+                    "total_quantity": 4,
+                    "warehouses": ["good"],
+                }
+            )
+            """
+        ).strip()
+        indented_check = "    " + malformed_check.replace("\n", "\n    ")
+        runner = runner.replace(marker, indented_check + "\n" + marker, 1)
+    return runner
 
 
 def build_service_config_reconciliation_scenario(

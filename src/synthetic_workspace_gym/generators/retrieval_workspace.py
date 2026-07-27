@@ -66,7 +66,17 @@ class RetrievalWorkspaceGenerator(BaseGenerator):
             task_descriptor["composition_evidence_paths"] = sorted(
                 path
                 for path in scenario["files"]
-                if path.startswith(("changelog/", "docs/", "logs/", "notes/", "specs/"))
+                if path.startswith(
+                    (
+                        "changelog/",
+                        "docs/",
+                        "logs/",
+                        "notes/",
+                        "policies/",
+                        "release/",
+                        "specs/",
+                    )
+                )
             )
             task_descriptor["composition_spec"] = dict(
                 scenario.get("composition_spec", {})
@@ -252,18 +262,26 @@ CONTRACT_PATH = Path(__file__).resolve().parents[1] / "config" / "adapter_contra
 
 def build_summary(response: dict[str, object]) -> dict[str, object]:
     contract = json.loads(CONTRACT_PATH.read_text(encoding="utf-8"))
-    records = list(response.get(contract["collection_field"], []))
-    total_quantity = 0
-    warehouses: set[str] = set()
-    for record in records:
-        total_quantity += int(record[contract["quantity_field"]])
-        warehouses.add(str(record.get("warehouse", contract["warehouse_default"])))
+    records: list[dict[str, object]] = []
+    for candidate in response.get(contract["collection_field"], []):
+        if not isinstance(candidate, dict):
+            continue
+        try:
+            quantity = int(str(candidate[contract["quantity_field"]]).strip())
+        except (KeyError, TypeError, ValueError):
+            continue
+        records.append({**candidate, "quantity": quantity})
     return {
         "request_id": str(response["request_id"]),
         "next_cursor": response.get(contract["cursor_field"]),
         "record_count": len(records),
-        "total_quantity": total_quantity,
-        "warehouses": sorted(warehouses),
+        "total_quantity": sum(int(record["quantity"]) for record in records),
+        "warehouses": sorted(
+            {
+                str(record.get("warehouse", contract["warehouse_default"]))
+                for record in records
+            }
+        ),
     }
 """
         reference_files["src/client_adapter.py"] = correct_adapter

@@ -4,6 +4,7 @@ __pycache__/
 .coverage
 .venv/
 .uv-cache/
+.tmp_*/
 .prime/
 .tmp-tests/
 generated/
@@ -13,3 +14,16 @@ smoke-generated/
 smoke-episodes/
 scratch-check/
 debug-*/
+analysis/eval_plots/
+analysis/model_comparison_plots/
+analysis/qwen35-4b-*/
+data/
+experiments/
+prime-eval-exports/
+swg-*.toml
+docs/*-rl-analysis.*
+docs/*.excalidraw
+docs/swg-*.png
+.pytest-*/
+.tmp-analysis/
+analysis/retrieval-d5-calibration*/

@@ -1,0 +1,80 @@
+{
+  "profiles": [
+    {
+      "monotonic": true,
+      "profile": "d5_a",
+      "scenario": "client_adapter_sync",
+      "seed": 100,
+      "states": {
+        "all_except_edge": 0.925,
+        "full": 1.0,
+        "one_fix": 0.15,
+        "two_fixes": 0.35,
+        "untouched": 0.15
+      },
+      "violations": []
+    },
+    {
+      "monotonic": true,
+      "profile": "d5_b",
+      "scenario": "client_adapter_policy_sync",
+      "seed": 102,
+      "states": {
+        "all_except_edge": 0.75,
+        "authority_schema": 0.25,
+        "full": 1.0,
+        "parser_config": 0.45,
+        "parser_only": 0.35,
+        "untouched": 0.15
+      },
+      "violations": []
+    },
+    {
+      "monotonic": true,
+      "profile": "d5_b",
+      "scenario": "client_adapter_policy_sync",
+      "seed": 103,
+      "states": {
+        "all_except_edge": 0.75,
+        "authority_schema": 0.25,
+        "full": 1.0,
+        "parser_config": 0.45,
+        "parser_only": 0.35,
+        "untouched": 0.15
+      },
+      "violations": []
+    },
+    {
+      "monotonic": true,
+      "profile": "d5_c",
+      "scenario": "versioned_client_migration",
+      "seed": 107,
+      "states": {
+        "all_except_edge": 0.75,
+        "authority_schema": 0.25,
+        "full": 1.0,
+        "parser_config": 0.45,
+        "parser_only": 0.35,
+        "untouched": 0.0
+      },
+      "violations": []
+    },
+    {
+      "monotonic": true,
+      "profile": "d5_c",
+      "scenario": "versioned_client_migration",
+      "seed": 108,
+      "states": {
+        "all_except_edge": 0.75,
+        "authority_schema": 0.25,
+        "full": 1.0,
+        "parser_config": 0.45,
+        "parser_only": 0.35,
+        "untouched": 0.0
+      },
+      "violations": []
+    }
+  ],
+  "schema_version": "retrieval-d5-structural-calibration-v3",
+  "violation_count": 0
+}

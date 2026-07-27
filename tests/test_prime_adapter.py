@@ -158,6 +158,35 @@ class PrimeAdapterTests(unittest.TestCase):
         self.assertIn("reward", result["info"]["reward_payload"])
         self.assertIsInstance(result["reward"], float)
 
+    def test_reward_payload_records_tool_step_and_wheel_provenance(self) -> None:
+        with workspace_tempdir() as tmp_dir:
+            env = SyntheticWorkspacePrimeEnv(
+                family="script_repair",
+                scenario="csv_schema_drift",
+                difficulty=3,
+                seed=42,
+                max_steps=9,
+                output_dir=Path(tmp_dir),
+                release_wheel_sha256="abc123",
+            )
+            try:
+                observation = env.reset()
+                result = env.step(
+                    {"tool": "submit", "args": {"path_or_answer": "done"}}
+                )
+            finally:
+                env.close()
+
+        provenance = observation["metadata"]["release_provenance"]
+        self.assertEqual(provenance["wheel_sha256"], "abc123")
+        self.assertEqual(provenance["horizon_unit"], "tool_steps")
+        self.assertEqual(provenance["max_tool_steps"], 9)
+        payload = result["info"]["reward_payload"]
+        self.assertEqual(payload["diagnostics"]["tool_step_count"], 1)
+        self.assertEqual(payload["diagnostics"]["max_tool_steps"], 9)
+        self.assertEqual(payload["diagnostics"]["horizon_unit"], "tool_steps")
+        self.assertEqual(payload["release_provenance"]["wheel_sha256"], "abc123")
+
     def test_runtime_home_is_not_visible_in_prime_workspace(self) -> None:
         with workspace_tempdir() as tmp_dir:
             env = make_env(

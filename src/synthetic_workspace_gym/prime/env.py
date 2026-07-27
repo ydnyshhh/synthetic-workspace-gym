@@ -38,6 +38,7 @@ class SyntheticWorkspacePrimeEnv:
         sandbox_config: SandboxConfig | None = None,
         docker_image: str | None = None,
         time_limit_seconds: int | None = None,
+        release_wheel_sha256: str | None = None,
     ) -> None:
         self.family = family
         self.scenario = scenario
@@ -52,6 +53,7 @@ class SyntheticWorkspacePrimeEnv:
         self.time_limit_seconds = (
             int(time_limit_seconds) if time_limit_seconds is not None else None
         )
+        self.release_wheel_sha256 = release_wheel_sha256
         self.sandbox_config = sandbox_config or SandboxConfig(backend=sandbox_backend)
         self.sandbox_config.backend = sandbox_backend  # type: ignore[assignment]
         if docker_image is not None:
@@ -101,6 +103,13 @@ class SyntheticWorkspacePrimeEnv:
 
         manifest = environment.manifest
         self._step_limit = int(self.max_steps or manifest.max_steps)
+        provenance = dict(manifest.metadata.get("release_provenance", {}))
+        if self.release_wheel_sha256:
+            provenance["wheel_sha256"] = self.release_wheel_sha256
+        provenance["horizon_unit"] = "tool_steps"
+        provenance["max_tool_steps"] = self._step_limit
+        manifest.metadata["release_provenance"] = provenance
+
         return {
             "env_id": manifest.env_id,
             "instruction": manifest.instruction,
@@ -213,17 +222,26 @@ class SyntheticWorkspacePrimeEnv:
             payload = verify_workspace_in_sandbox(
                 environment.root, self._active_workspace, self.sandbox_config
             )
-            payload["env_id"] = environment.manifest.env_id
-            return payload
-        evaluator = get_evaluator(
-            environment.manifest.family,
-            evaluator_entrypoint=environment.manifest.evaluator_entrypoint,
-        )
-        result = evaluator.evaluate(
-            self._active_workspace, environment.manifest, environment.hidden_root
-        )
-        payload = evaluator_result_to_prime_reward(result)
+        else:
+            evaluator = get_evaluator(
+                environment.manifest.family,
+                evaluator_entrypoint=environment.manifest.evaluator_entrypoint,
+            )
+            result = evaluator.evaluate(
+                self._active_workspace,
+                environment.manifest,
+                environment.hidden_root,
+            )
+            payload = evaluator_result_to_prime_reward(result)
         payload["env_id"] = environment.manifest.env_id
+        diagnostics = dict(payload.get("diagnostics", {}) or {})
+        diagnostics["tool_step_count"] = self._step_count
+        diagnostics["max_tool_steps"] = self._step_limit
+        diagnostics["horizon_unit"] = "tool_steps"
+        payload["diagnostics"] = diagnostics
+        payload["release_provenance"] = dict(
+            environment.manifest.metadata.get("release_provenance", {})
+        )
         return payload
 
     def close(self) -> None:
