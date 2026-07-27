@@ -28,7 +28,17 @@
   "environment_version": "0.2.0.dev1",
   "full_training_runs": {
     "count": 8,
-    "status": "gated_on_pilot_health"
+    "runs": {
+      "all_family_seed_42": "zj4tkmu8wcojd3vzmec5wroy",
+      "all_family_seed_43": "bko57pm43ro6lt18ni2ul0gm",
+      "composition_20pct_seed_42": "sjye7uiee2x9kjf6o0x1ygan",
+      "composition_20pct_seed_43": "lidiv8ngaqb5py3dexm2uyqo",
+      "specialist_pipeline": "l5glxbgjdntswv2l3bv9wvyg",
+      "specialist_retrieval_workspace": "lvr4kva16s9y8cla8gyih3rw",
+      "specialist_script_repair": "fchv5udvzonemg8tek4veiw7",
+      "specialist_tabular": "a3sxjn4taxdjp1ueg32xa95f"
+    },
+    "status": "launched"
   },
   "published_environment": "yadnyesh/synthetic-workspace-gym",
   "superseded_setup_failures": [
@@ -55,7 +65,24 @@
   ],
   "training_pilot": {
     "config": "configs/rl/qwen35-4b-matrix/pilot-8-step-all-family-seed-42.toml",
-    "status": "gated_on_base_evaluation_health"
+    "effective_batch_range": [
+      0.625,
+      0.9375
+    ],
+    "mean_reward_range": [
+      0.7532388671875,
+      0.8816693203125
+    ],
+    "run_id": "dsc0ig6s7x09xl6pckjvsmfp",
+    "status": "completed_healthy",
+    "steps": 8,
+    "total_cost_usd": 3.998,
+    "total_tokens": 66089348,
+    "trajectory_check": {
+      "step": 7,
+      "submitted": 61,
+      "total": 64
+    }
   },
   "wheel_sha256": "63ead4f66d683c7b6d41094cc2e613c6730fe4f5f1f742f3596d0081a58da33a"
 }
