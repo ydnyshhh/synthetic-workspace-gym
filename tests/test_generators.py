@@ -50,7 +50,12 @@ class GeneratorValidityTests(unittest.TestCase):
     def test_d5_distribution_is_exactly_half_compositional_across_families(
         self,
     ) -> None:
-        for family in EnvironmentFamily:
+        atomic_families = [
+            family
+            for family in EnvironmentFamily
+            if family != EnvironmentFamily.COMPOSITE_WORKSPACE
+        ]
+        for family in atomic_families:
             profiles = [
                 build_d5_composition_profile(family, 5, seed) for seed in range(100)
             ]
@@ -74,6 +79,19 @@ class GeneratorValidityTests(unittest.TestCase):
                 )
             )
             self.assertEqual(build_d5_composition_profile(family, 4, 91), {})
+
+        composite = build_d5_composition_profile(
+            EnvironmentFamily.COMPOSITE_WORKSPACE, 5, 91
+        )
+        self.assertEqual(composite["composition_mode"], "compositional")
+        self.assertEqual(
+            composite["source_families"], ["retrieval_workspace", "pipeline"]
+        )
+        self.assertEqual(composite["composition_depth"], 2)
+        self.assertEqual(
+            build_d5_composition_profile(EnvironmentFamily.COMPOSITE_WORKSPACE, 4, 91),
+            {},
+        )
 
         scenario_ids = {
             EnvironmentFamily.TABULAR: "monthly_segment_report",

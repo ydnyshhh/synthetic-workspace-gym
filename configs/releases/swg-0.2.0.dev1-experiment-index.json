@@ -1,0 +1,39 @@
+{
+  "candidate_wheel_sha256": "63ead4f66d683c7b6d41094cc2e613c6730fe4f5f1f742f3596d0081a58da33a",
+  "created_at": "2026-07-27T00:00:00+05:30",
+  "environment_version": "0.2.0.dev1",
+  "evaluation_panels": [
+    "eval-composite-heldout-24",
+    "eval-d5-panel-24",
+    "eval-id-d3-d5",
+    "eval-scenario-heldout"
+  ],
+  "external_evaluation": {
+    "swe_bench_lite": {
+      "instance_count": 25,
+      "status": "requires_frozen_external_instance_ids_and_agent_scaffold"
+    }
+  },
+  "fixed_settings": {
+    "batch_size": 128,
+    "max_output_tokens": 1024,
+    "max_tool_steps": 64,
+    "max_turns": 25,
+    "model": "Qwen/Qwen3.5-4B",
+    "nominal_task_count": 512,
+    "rollouts_per_example": 8,
+    "steps": 200,
+    "temperature": 0.7
+  },
+  "pilot_manifest": "train-all-family-seed-42",
+  "training_runs": [
+    "train-all-family-seed-42",
+    "train-all-family-seed-43",
+    "train-composition-20pct-seed-42",
+    "train-composition-20pct-seed-43",
+    "train-specialist-pipeline",
+    "train-specialist-retrieval_workspace",
+    "train-specialist-script_repair",
+    "train-specialist-tabular"
+  ]
+}

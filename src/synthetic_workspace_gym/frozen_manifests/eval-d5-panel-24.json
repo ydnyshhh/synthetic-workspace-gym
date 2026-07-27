@@ -1,0 +1,400 @@
+{
+  "assignments": [
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "e30dd6a7dc524a7a36f43a14781faa00329115622c31c5b13bb3af64d8b4a067",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-d5-panel-24"
+      },
+      "scenario": "monthly_segment_report",
+      "seed": 190,
+      "split": "test",
+      "task_id": "swg.test.tabular.monthly_segment_report.d5.s190"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "5e9bef56319a3946f9e4edfd6c70fec1311b00aab8f6ab299085e9cc3247e52b",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-d5-panel-24"
+      },
+      "scenario": "channel_status_pivot",
+      "seed": 191,
+      "split": "test",
+      "task_id": "swg.test.tabular.channel_status_pivot.d5.s191"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "20ce62549760aaed6fc5bb03aef34f6077099ef4a9ed17b3ee3f98eca361c63a",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-d5-panel-24"
+      },
+      "scenario": "weekly_refund_rollup",
+      "seed": 192,
+      "split": "test",
+      "task_id": "swg.test.tabular.weekly_refund_rollup.d5.s192"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "cc308f9cec72935619c17a2146881f2b536dd608c7ab7cc0b74a9462d66abb43",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-d5-panel-24"
+      },
+      "scenario": "monthly_segment_report",
+      "seed": 193,
+      "split": "test",
+      "task_id": "swg.test.tabular.monthly_segment_report.d5.s193"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "37ad4795df2406872c88f8384a3b1711533baf98d80d54fdb8e70be18ffe1b5b",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-d5-panel-24"
+      },
+      "scenario": "channel_status_pivot",
+      "seed": 194,
+      "split": "test",
+      "task_id": "swg.test.tabular.channel_status_pivot.d5.s194"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "8bc69b277177f1ac09e1d6d4dcd9cf204c07f26f3f886885dc609fcb973ecb49",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-d5-panel-24"
+      },
+      "scenario": "weekly_refund_rollup",
+      "seed": 195,
+      "split": "test",
+      "task_id": "swg.test.tabular.weekly_refund_rollup.d5.s195"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "195dd1d7b841682abadb7716d44f2d569f5176f35f1c6de256c0251398ca970e",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-d5-panel-24"
+      },
+      "scenario": "inventory_report",
+      "seed": 190,
+      "split": "test",
+      "task_id": "swg.test.script_repair.inventory_report.d5.s190"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "4cd76f31a1f19ff789f0a6cca3dbe709140c2973766e30dc3bfaec0b0f91fa41",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-d5-panel-24"
+      },
+      "scenario": "path_batch",
+      "seed": 191,
+      "split": "test",
+      "task_id": "swg.test.script_repair.path_batch.d5.s191"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "5943aa876cdea7432a0e8dde81a872162a2d8eec23ace8bf7f794d13dd003c09",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-d5-panel-24"
+      },
+      "scenario": "csv_schema_drift",
+      "seed": 192,
+      "split": "test",
+      "task_id": "swg.test.script_repair.csv_schema_drift.d5.s192"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "a1ead5e8a3a2bdf8846c360e29988107f34bb4c91c7ae6b97aef3ec1a2ceceba",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-d5-panel-24"
+      },
+      "scenario": "timestamp_normalization",
+      "seed": 193,
+      "split": "test",
+      "task_id": "swg.test.script_repair.timestamp_normalization.d5.s193"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "68dd390956389d08e1120297a11f695f8ca7fddbf44969e8708e88712aa0d447",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-d5-panel-24"
+      },
+      "scenario": "inventory_report",
+      "seed": 194,
+      "split": "test",
+      "task_id": "swg.test.script_repair.inventory_report.d5.s194"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "9730ec1c5051bd199d4f387591343c0312f4b8681b8b2dab857ac3e97eecbb19",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-d5-panel-24"
+      },
+      "scenario": "path_batch",
+      "seed": 195,
+      "split": "test",
+      "task_id": "swg.test.script_repair.path_batch.d5.s195"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "948ec6446dea8f0651a9182faca95c5ce5ffc71632328471aee080b657f4b2a9",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-d5-panel-24"
+      },
+      "scenario": "team_hours_pipeline",
+      "seed": 190,
+      "split": "test",
+      "task_id": "swg.test.pipeline.team_hours_pipeline.d5.s190"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "c6ba933c5d11f55149a9116da92af0692c1cdbeea8e6eb3cdea4ee053bc7beea",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-d5-panel-24"
+      },
+      "scenario": "sales_csv_pipeline",
+      "seed": 191,
+      "split": "test",
+      "task_id": "swg.test.pipeline.sales_csv_pipeline.d5.s191"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "856ccabee36f11c1730340c94319abea5df325925a5c326d4b5213e92513425b",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-d5-panel-24"
+      },
+      "scenario": "artifact_stitch_pipeline",
+      "seed": 192,
+      "split": "test",
+      "task_id": "swg.test.pipeline.artifact_stitch_pipeline.d5.s192"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "ef7c0eea0e6024e318b6a0ab740463fce2c5a3796046ad17b8d04b0a40e6add4",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-d5-panel-24"
+      },
+      "scenario": "team_hours_pipeline",
+      "seed": 193,
+      "split": "test",
+      "task_id": "swg.test.pipeline.team_hours_pipeline.d5.s193"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "8eb694c581e31e3aee25e8dae4b242207be29035793bd399b453e0f103c9b44a",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-d5-panel-24"
+      },
+      "scenario": "sales_csv_pipeline",
+      "seed": 194,
+      "split": "test",
+      "task_id": "swg.test.pipeline.sales_csv_pipeline.d5.s194"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "d78fa644f186ba622e9cadd86e6adfb649be485e6c9ee398e586d7cbc1b14f49",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-d5-panel-24"
+      },
+      "scenario": "artifact_stitch_pipeline",
+      "seed": 195,
+      "split": "test",
+      "task_id": "swg.test.pipeline.artifact_stitch_pipeline.d5.s195"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "1b34c180e799d0977d8435a99fd1edd0ca286a8771eab52f9651319554a685b9",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-d5-panel-24"
+      },
+      "scenario": "service_config_reconciliation",
+      "seed": 190,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.service_config_reconciliation.d5.s190"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "d94a287b960dce29325ae35e147465df6acae2d2455f8dd05aa5f49e641d8fc9",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-d5-panel-24"
+      },
+      "scenario": "migration_plan_bundle",
+      "seed": 191,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.migration_plan_bundle.d5.s191"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "bfa317556fe52e954382ceda1d67523983216b5023a95d9183a8e52ff05204cc",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-d5-panel-24"
+      },
+      "scenario": "incident_report_bundle",
+      "seed": 192,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.incident_report_bundle.d5.s192"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "d5d795bb4a66fab3d7d6247041fab0be5dca49f368a9d078b53a1d9282642824",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-d5-panel-24"
+      },
+      "scenario": "service_config_reconciliation",
+      "seed": 193,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.service_config_reconciliation.d5.s193"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "9368356bb12287bacdd50595188bb3fd5b9ea4474cf694a3b976c19df8500ed1",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-d5-panel-24"
+      },
+      "scenario": "migration_plan_bundle",
+      "seed": 194,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.migration_plan_bundle.d5.s194"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "0c0ec008b71f4d996b9c0d6cc65459dec09dab71236c4eddb7a86991566a13a1",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-d5-panel-24"
+      },
+      "scenario": "incident_report_bundle",
+      "seed": 195,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.incident_report_bundle.d5.s195"
+    }
+  ],
+  "created_at": "2026-07-27T00:00:00+05:30",
+  "metadata": {
+    "assignment_count": 24,
+    "environment_version": "0.2.0.dev1",
+    "frozen": true,
+    "manifest_fingerprint": "4bfc3bb66faf16e515e9418bde0197cc355382cbdcfb694ff6ff22259e48e53a",
+    "panel": "frozen_d5",
+    "rollouts_per_task": 5
+  },
+  "name": "eval-d5-panel-24",
+  "split_specs": {},
+  "version": "v1"
+}

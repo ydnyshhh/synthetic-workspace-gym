@@ -1,0 +1,12 @@
+model = "Qwen/Qwen3.5-4B"
+num_examples = 24
+rollouts_per_example = 5
+max_tokens = 1024
+temperature = 0.7
+max_concurrent = 5
+timeout_minutes = 90
+
+[[eval]]
+id = "yadnyesh/synthetic-workspace-gym@0.2.0.dev1"
+eval_name = "base-eval-d5-panel-24"
+env_args = { frozen_manifest = "eval-d5-panel-24", split = "test", max_examples = 24, max_turns = 25, max_tool_steps = 64, reward_mode = "score" }

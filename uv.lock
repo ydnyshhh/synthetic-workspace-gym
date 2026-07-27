@@ -2653,7 +2653,7 @@ wheels = [
 
 [[package]]
 name = "synthetic-workspace-gym"
-version = "0.1.27.post5"
+version = "0.2.0.dev1"
 source = { editable = "." }
 dependencies = [
     { name = "harnesses" },

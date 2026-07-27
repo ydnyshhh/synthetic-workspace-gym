@@ -1,0 +1,61 @@
+{
+  "base_evaluations": {
+    "composite_heldout": {
+      "evaluation_id": "pi59auqw69mqrtq5iofawovk",
+      "manifest": "eval-composite-heldout-24",
+      "planned_rollouts": 24,
+      "status": "running"
+    },
+    "d5_panel": {
+      "evaluation_id": "ipz03q0il1rj0z5cwzdtltrq",
+      "manifest": "eval-d5-panel-24",
+      "planned_rollouts": 120,
+      "status": "running"
+    },
+    "in_distribution": {
+      "evaluation_id": "hv70l4ygf93v0s8woj0g4o0r",
+      "manifest": "eval-id-d3-d5",
+      "planned_rollouts": 390,
+      "status": "running"
+    },
+    "scenario_heldout": {
+      "evaluation_id": "pwdn7pnbu1fwzpbav8oyxzng",
+      "manifest": "eval-scenario-heldout",
+      "planned_rollouts": 240,
+      "status": "running"
+    }
+  },
+  "environment_version": "0.2.0.dev1",
+  "full_training_runs": {
+    "count": 8,
+    "status": "gated_on_pilot_health"
+  },
+  "published_environment": "yadnyesh/synthetic-workspace-gym",
+  "superseded_setup_failures": [
+    {
+      "evaluation_id": "ng9iat3v7k5rcopyl33ma1g7",
+      "reason": "missing test split selector",
+      "valid_samples": 0
+    },
+    {
+      "evaluation_id": "wvpmjo0kjnrgw7o7osgn5y8b",
+      "reason": "missing heldout split selector",
+      "valid_samples": 0
+    },
+    {
+      "evaluation_id": "hya0q9dpa61gm6bt1fmwg70e",
+      "reason": "missing test split selector",
+      "valid_samples": 0
+    },
+    {
+      "evaluation_id": "cwdrn2e8ofuqbuyf6l3ucsx8",
+      "reason": "missing heldout split selector",
+      "valid_samples": 0
+    }
+  ],
+  "training_pilot": {
+    "config": "configs/rl/qwen35-4b-matrix/pilot-8-step-all-family-seed-42.toml",
+    "status": "gated_on_base_evaluation_health"
+  },
+  "wheel_sha256": "63ead4f66d683c7b6d41094cc2e613c6730fe4f5f1f742f3596d0081a58da33a"
+}

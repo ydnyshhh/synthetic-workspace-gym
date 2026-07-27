@@ -117,6 +117,13 @@ def build_complexity_profile(
         base["reasoning_hops"] = max(base["reasoning_hops"], difficulty)
         base["bug_subtlety"] = 0 if difficulty <= 2 else 1
         base["execution_required"] = difficulty >= 4
+    elif family == EnvironmentFamily.COMPOSITE_WORKSPACE:
+        base["file_count"] += 4
+        base["distractor_count"] += 1
+        base["dependency_depth"] += 2
+        base["reasoning_hops"] += 2
+        base["transformation_count"] += 2
+        base["execution_required"] = True
     return ComplexityProfile(**base)
 
 
@@ -136,6 +143,7 @@ _D5_COMPOSITION_PARTNERS = {
     EnvironmentFamily.SCRIPT_REPAIR: EnvironmentFamily.RETRIEVAL_WORKSPACE,
     EnvironmentFamily.PIPELINE: EnvironmentFamily.RETRIEVAL_WORKSPACE,
     EnvironmentFamily.RETRIEVAL_WORKSPACE: EnvironmentFamily.TABULAR,
+    EnvironmentFamily.COMPOSITE_WORKSPACE: EnvironmentFamily.RETRIEVAL_WORKSPACE,
 }
 
 
@@ -151,6 +159,15 @@ def build_d5_composition_profile(
     family = EnvironmentFamily(family)
     if difficulty != 5:
         return {}
+    if family == EnvironmentFamily.COMPOSITE_WORKSPACE:
+        return {
+            "composition_mode": "compositional",
+            "source_families": [
+                EnvironmentFamily.RETRIEVAL_WORKSPACE.value,
+                EnvironmentFamily.PIPELINE.value,
+            ],
+            "composition_depth": 2,
+        }
     selected_mode = normalize_composition_mode(mode)
     if selected_mode is None:
         selected_mode = "compositional" if seed % 2 else "hard_atomic"

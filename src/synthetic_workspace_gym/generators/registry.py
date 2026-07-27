@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from synthetic_workspace_gym.schemas import EnvironmentFamily
 
+from .composite_workspace import CompositeWorkspaceGenerator
 from .pipeline_completion import PipelineCompletionGenerator
 from .retrieval_workspace import RetrievalWorkspaceGenerator
 from .script_repair import ScriptRepairGenerator
@@ -12,6 +13,7 @@ GENERATORS = {
     EnvironmentFamily.SCRIPT_REPAIR: ScriptRepairGenerator(),
     EnvironmentFamily.PIPELINE: PipelineCompletionGenerator(),
     EnvironmentFamily.RETRIEVAL_WORKSPACE: RetrievalWorkspaceGenerator(),
+    EnvironmentFamily.COMPOSITE_WORKSPACE: CompositeWorkspaceGenerator(),
 }
 
 

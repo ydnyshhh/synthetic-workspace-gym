@@ -33,6 +33,7 @@ class EnvironmentFamily(str, Enum):
     SCRIPT_REPAIR = "script_repair"
     PIPELINE = "pipeline"
     RETRIEVAL_WORKSPACE = "retrieval_workspace"
+    COMPOSITE_WORKSPACE = "composite_workspace"
 
 
 class ActionType(str, Enum):

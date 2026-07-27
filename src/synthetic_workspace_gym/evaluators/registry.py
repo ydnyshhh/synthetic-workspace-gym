@@ -5,6 +5,7 @@ from importlib import import_module
 from synthetic_workspace_gym.schemas import EnvironmentFamily
 from synthetic_workspace_gym.evaluators.base import BaseEvaluator
 
+from .composite_workspace import CompositeWorkspaceEvaluator
 from .pipeline import PipelineEvaluator
 from .retrieval_workspace import RetrievalWorkspaceEvaluator
 from .script_repair import ScriptRepairEvaluator
@@ -15,6 +16,7 @@ EVALUATORS = {
     EnvironmentFamily.SCRIPT_REPAIR: ScriptRepairEvaluator(),
     EnvironmentFamily.PIPELINE: PipelineEvaluator(),
     EnvironmentFamily.RETRIEVAL_WORKSPACE: RetrievalWorkspaceEvaluator(),
+    EnvironmentFamily.COMPOSITE_WORKSPACE: CompositeWorkspaceEvaluator(),
 }
 
 

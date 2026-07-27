@@ -30,6 +30,8 @@ class SyntheticWorkspacePrimeEnv:
         scenario: str | None = None,
         difficulty: int = 3,
         seed: int = 0,
+        split: str | None = None,
+        task_id: str | None = None,
         composition_mode: str | None = None,
         max_steps: int | None = None,
         workspace_root: str | Path | None = None,
@@ -44,6 +46,8 @@ class SyntheticWorkspacePrimeEnv:
         self.scenario = scenario
         self.difficulty = int(difficulty)
         self.seed = int(seed)
+        self.split = split
+        self.task_id = task_id
         self.composition_mode = composition_mode
         self.max_steps = max_steps
         self.workspace_root = (
@@ -321,11 +325,15 @@ class SyntheticWorkspacePrimeEnv:
             difficulty=self.difficulty,
             seed=self.seed,
             scenario_id=self.scenario,
-            generation_params=(
-                {"composition_mode": self.composition_mode}
-                if self.composition_mode is not None
-                else {}
-            ),
+            generation_params={
+                **(
+                    {"composition_mode": self.composition_mode}
+                    if self.composition_mode is not None
+                    else {}
+                ),
+                **({"split": self.split} if self.split is not None else {}),
+                **({"task_id": self.task_id} if self.task_id is not None else {}),
+            },
             max_steps=self.max_steps or 12,
             **(
                 {"time_limit_seconds": self.time_limit_seconds}

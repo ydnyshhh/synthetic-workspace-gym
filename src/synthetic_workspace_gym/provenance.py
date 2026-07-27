@@ -4,7 +4,7 @@ import hashlib
 from pathlib import Path
 
 
-ENVIRONMENT_VERSION = "0.1.27.post5"
+ENVIRONMENT_VERSION = "0.2.0.dev1"
 EVALUATOR_VERSION = "swg-capability-evaluators-v2"
 
 

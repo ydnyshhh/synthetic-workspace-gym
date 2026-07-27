@@ -49,7 +49,9 @@ HUB_SYSTEM_PROMPT = (
     "- Script repair: inspect task.json and target files; make the smallest source edit; run the public "
     "entrypoint when useful; submit the changed target file.\n"
     "- Retrieval workspace: inspect the named document roots; update the target artifact from visible evidence; "
-    "submit the target artifact path.\n\n"
+    "submit the target artifact path.\n"
+    "- Composite workspace: resolve the authoritative evidence chain, preserve required intermediate artifacts, "
+    "run the pipeline check, and submit the final artifact.\n\n"
     "Tool-use constraints: run_python accepts only a workspace-relative Python script path such as "
     "`scripts/check.py` or `process_report.py`; do not pass inline Python, `python -c`, `python -m`, "
     "or `python script.py` to run_python. If you need Python logic, first create a small script with "
@@ -117,6 +119,7 @@ def load_environment(
     difficulties: str | list[int] | tuple[int, ...] | None = None,
     seeds: str | list[int] | tuple[int, ...] | None = None,
     split_manifest_path: str | None = None,
+    frozen_manifest: str | None = None,
     include_splits: str | list[str] | tuple[str, ...] | None = None,
     exclude_splits: str | list[str] | tuple[str, ...] | None = None,
     task_id: str | None = None,
@@ -166,7 +169,9 @@ def load_environment(
             families=families,
             difficulties=difficulties,
             seeds=seeds,
-            split_manifest_path=split_manifest_path,
+            split_manifest_path=_resolve_frozen_manifest(
+                frozen_manifest, split_manifest_path
+            ),
             include_splits=include_splits,
             exclude_splits=exclude_splits,
             task_id=task_id,
@@ -186,6 +191,7 @@ def load_environment(
         "difficulties": difficulties,
         "seeds": seeds,
         "split_manifest_path": split_manifest_path,
+        "frozen_manifest": frozen_manifest,
         "include_splits": include_splits,
         "exclude_splits": exclude_splits,
         "task_id": task_id,
@@ -329,6 +335,10 @@ if _native_hub_available():
                 scenario=row.get("scenario"),
                 difficulty=int(row.get("difficulty") or 3),
                 seed=int(row.get("seed") or 0),
+                split=str(row.get("split")) if row.get("split") is not None else None,
+                task_id=str(row.get("task_id"))
+                if row.get("task_id") is not None
+                else None,
                 composition_mode=self.composition_mode,
                 max_steps=int(row.get("remaining_steps") or self.max_tool_steps),
                 time_limit_seconds=int(
@@ -570,6 +580,20 @@ def _build_branch_rows(
             f"SWG branch manifest produced no task rows for branch_task_id={branch_task_id!r}."
         )
     return rows
+
+
+def _resolve_frozen_manifest(name: str | None, explicit_path: str | None) -> str | None:
+    if name is None:
+        return explicit_path
+    if explicit_path is not None:
+        raise ValueError("Use either frozen_manifest or split_manifest_path, not both.")
+    normalized = str(name).strip()
+    if not normalized or any(token in normalized for token in ("/", "\\", "..")):
+        raise ValueError("frozen_manifest must be a packaged manifest name.")
+    path = Path(__file__).resolve().parent / "frozen_manifests" / f"{normalized}.json"
+    if not path.is_file():
+        raise ValueError(f"Unknown frozen SWG manifest: {normalized}")
+    return str(path)
 
 
 def _build_rows(
