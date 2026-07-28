@@ -4,26 +4,47 @@
       "evaluation_id": "pi59auqw69mqrtq5iofawovk",
       "manifest": "eval-composite-heldout-24",
       "planned_rollouts": 24,
-      "status": "running"
+      "status": "completed"
     },
     "d5_panel": {
       "evaluation_id": "ipz03q0il1rj0z5cwzdtltrq",
       "manifest": "eval-d5-panel-24",
       "planned_rollouts": 120,
-      "status": "running"
+      "status": "timed_out_100_of_120"
     },
     "in_distribution": {
       "evaluation_id": "hv70l4ygf93v0s8woj0g4o0r",
       "manifest": "eval-id-d3-d5",
       "planned_rollouts": 390,
-      "status": "running"
+      "status": "completed"
     },
     "scenario_heldout": {
       "evaluation_id": "pwdn7pnbu1fwzpbav8oyxzng",
       "manifest": "eval-scenario-heldout",
       "planned_rollouts": 240,
-      "status": "running"
+      "status": "completed"
     }
+  },
+  "checkpoint_recovery": {
+    "pipeline": {
+      "checkpoint_id": "x32x79b4m7cgidhsg5h7aiet",
+      "checkpoint_step": 100,
+      "diagnosis": "specialist saturation; ten consecutive batches fully removed by post-batch filters",
+      "evaluation_carrier_run_id": "h9bl28st7r0lb5ktfvbgs1my",
+      "failed_run_id": "l5glxbgjdntswv2l3bv9wvyg",
+      "failed_step": 123,
+      "status": "evaluation_queued"
+    },
+    "script_repair": {
+      "checkpoint_id": "q36pu5s6sacyj26l5hc31bjk",
+      "checkpoint_step": 150,
+      "diagnosis": "specialist saturation; reward 0.9948, 8/128 trainable, then ten consecutive fully filtered batches",
+      "evaluation_carrier_run_id": "g4x25u3unmknj64ezff5yew1",
+      "failed_run_id": "fchv5udvzonemg8tek4veiw7",
+      "failed_step": 153,
+      "status": "evaluation_queued"
+    },
+    "strategy": "one zero-learning-rate step on the balanced frozen manifest with online evaluation on eval-d5-panel-24; no saturated specialist continuation"
   },
   "environment_version": "0.2.0.dev1",
   "full_training_runs": {
