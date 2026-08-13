@@ -59,6 +59,8 @@ def test_package_hosted_generates_self_contained_smoke_package() -> None:
         assert len(result.pack_sha256) == 64
         assert (output / "environment.py").is_file()
         assert (output / "pyproject.toml").is_file()
+        generated_pyproject = (output / "pyproject.toml").read_text(encoding="utf-8")
+        assert "synthetic-workspace-gym[verifiers] @ git+" in generated_pyproject
         copied = output / "src" / "swg_counterfactual_pilot" / "branch_pack"
         assert (copied / "manifest.jsonl").is_file()
         assert hash_branch_pack(copied) == result.pack_sha256
