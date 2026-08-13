@@ -1,4 +1,4 @@
-# Prepared only. Publish 0.1.25 before launching this hosted evaluation.
+# Historical 0.1.25 evaluation; use only with the exact published 0.1.25 environment.
 model = "Qwen/Qwen3.5-4B"
 num_examples = 5
 rollouts_per_example = 3

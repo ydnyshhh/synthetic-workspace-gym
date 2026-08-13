@@ -52,7 +52,7 @@ class SplitExportTests(unittest.TestCase):
         manifest = build_split_manifest("split-smoke", specs, max_per_split={"train": 1})
         with workspace_tempdir() as tmp_dir:
             root = Path(tmp_dir)
-            summary = export_split_pack(root / "pack", split_manifest=manifest, overwrite=True)
+            export_split_pack(root / "pack", split_manifest=manifest, overwrite=True)
             env_path = next((root / "pack" / "environments" / "train").iterdir())
             row = build_manifest_row(env_path, root / "pack")
             env_manifest = json.loads((env_path / "manifest.json").read_text(encoding="utf-8"))

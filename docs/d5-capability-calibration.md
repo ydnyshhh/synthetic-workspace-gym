@@ -47,6 +47,6 @@ The scratch path must not already exist. The report records untouched,
 one-capability, two-capability, all-but-one, and full reference states and exits
 nonzero when a monotonicity violation is found.
 
-Hosted Qwen3.5-4B configurations are prepared under `configs/evals/` for the
-proposed 0.1.25 release. They must not be launched until that version is
-explicitly approved and published.
+The Qwen3.5-4B configurations under `configs/evals/` target the historical
+0.1.25 release. They are retained for reproducibility and should only be used
+with that exact published environment, not the current 0.2.0 development line.

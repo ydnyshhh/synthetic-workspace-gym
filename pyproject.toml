@@ -9,19 +9,22 @@ description = "Synthetic environment generation and evaluation infrastructure fo
 readme = "README.md"
 requires-python = ">=3.11"
 authors = [{ name = "Yadnyesh Chakane" }]
+license = "Apache-2.0"
 keywords = ["agent", "evaluation", "reinforcement-learning", "verifiers", "workspace"]
 tags = ["agent", "workspace", "tool-use", "train", "eval"]
-dependencies = [
-    "harnesses==0.1.1",
-    "verifiers==0.1.15.dev187",
-    "prime-sandboxes>=0.2.26,<0.3",
-]
+dependencies = []
 
 [project.optional-dependencies]
 verifiers = [
     "harnesses==0.1.1",
     "verifiers==0.1.15.dev187",
     "prime-sandboxes>=0.2.26,<0.3",
+]
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "ruff==0.15.21",
 ]
 
 [project.scripts]

@@ -49,6 +49,9 @@ For B and C the required state bands are:
 
 ## Prepared hosted calibration
 
-`configs/evals/swg-0.1.26-qwen35-4b-retrieval-d5-profile-balanced-15-hosted.toml` contains fifteen distinct seeds: five A, five B, and five C. It is prepared only and must not be launched until SWG 0.1.26 is reviewed and published.
+`configs/evals/swg-0.1.26-qwen35-4b-retrieval-d5-profile-balanced-15-hosted.toml`
+contains fifteen distinct seeds: five A, five B, and five C. This historical
+configuration is retained for reproducibility and should only be used with the
+published 0.1.26 environment, not the current 0.2.0 development line.
 
 Acceptance targets are combined mean 0.40–0.65, at least six distinct rewards, no bucket over 40%, no more than five perfect results, and partial reward on at least half of trajectories. Profile means should be A 0.60–0.80, B 0.35–0.60, and C 0.15–0.45.

@@ -5,7 +5,6 @@ import io
 import json
 from abc import ABC, abstractmethod
 from datetime import datetime
-from pathlib import Path
 from typing import Any
 
 from synthetic_workspace_gym.schemas import Action, ActionType, EnvironmentManifest, ToolObservation, ToolState
