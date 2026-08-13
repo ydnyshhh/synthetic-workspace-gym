@@ -8,6 +8,7 @@ import subprocess
 import tempfile
 import time
 from pathlib import Path
+from typing import Any
 
 from synthetic_workspace_gym.agents import HeuristicBaselineAgent, ScriptedBaselineAgent
 from synthetic_workspace_gym.analysis.benchmarking import build_benchmark_report, episode_to_row

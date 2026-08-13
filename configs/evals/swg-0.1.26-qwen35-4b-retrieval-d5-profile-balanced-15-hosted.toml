@@ -1,4 +1,4 @@
-# Prepared only. Publish 0.1.26 before launching this hosted evaluation.
+# Historical 0.1.26 evaluation; use only with the exact published 0.1.26 environment.
 # Five distinct seeds per retrieval D5 profile; report results by profile.
 model = "Qwen/Qwen3.5-4B"
 num_examples = 15

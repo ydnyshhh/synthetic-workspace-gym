@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-import asyncio
 import hashlib
-import importlib.util
 import json
 import re
 import shutil
@@ -423,7 +421,7 @@ description = "Immutable hosted SWG counterfactual branch pack"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-  "synthetic-workspace-gym @ git+https://github.com/ydnyshhh/synthetic-workspace-gym.git@{swg_ref}",
+  "synthetic-workspace-gym[verifiers] @ git+https://github.com/ydnyshhh/synthetic-workspace-gym.git@{swg_ref}",
 ]
 
 [tool.hatch.metadata]

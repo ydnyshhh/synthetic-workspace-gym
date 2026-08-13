@@ -18,8 +18,10 @@ jobs:
         with:
           enable-cache: true
       - run: uv sync --all-extras
+      - name: Ruff lint
+        run: uv run ruff check src tests scripts
       - name: Unit, counterfactual, and native Verifiers tests
-        run: uv run --with pytest pytest -q
+        run: uv run pytest -q
 
   hosted-wheel-and-leakage:
     runs-on: ubuntu-latest

@@ -6,7 +6,7 @@ from pathlib import Path
 
 from synthetic_workspace_gym.runtime.environment import load_environment
 from synthetic_workspace_gym.runtime.runner import EpisodeRunner
-from synthetic_workspace_gym.utils.io import read_json, write_json, write_jsonl
+from synthetic_workspace_gym.utils.io import write_json, write_jsonl
 
 from .analysis import aggregate_outcomes, summarize_primary_metrics
 from .candidates import generate_candidates
@@ -21,77 +21,236 @@ from .snapshots import NamedSnapshotPolicy, SnapshotCollector, load_snapshot
 
 
 def configure_parser(subparsers: argparse._SubParsersAction) -> None:
-    counterfactual = subparsers.add_parser("counterfactual", help="Counterfactual trajectory branching commands")
+    counterfactual = subparsers.add_parser(
+        "counterfactual", help="Counterfactual trajectory branching commands"
+    )
     cf = counterfactual.add_subparsers(dest="counterfactual_command", required=True)
-    collect = cf.add_parser("collect"); collect.add_argument("--environment", type=Path, required=True); collect.add_argument("--agent", choices=["scripted", "heuristic"], default="scripted"); collect.add_argument("--snapshot-policy", choices=["none", "every_step", "writes", "checks", "submits", "writes_checks_submit", "selected"], default="writes_checks_submit"); collect.add_argument("--max-snapshots", type=int, default=3); collect.add_argument("--max-signal-snapshots", type=int, default=2); collect.add_argument("--intermediate-evaluation", action="store_true"); collect.add_argument("--output-dir", type=Path, required=True)
-    build = cf.add_parser("build"); build.add_argument("--snapshots", type=Path, required=True); build.add_argument("--selectors", default="before_first_write,before_submit"); build.add_argument("--candidates", default="original,submit,run_public_check,read_relevant_file"); build.add_argument("--mode", choices=["forced", "open"], default="forced"); build.add_argument("--max-branch-points", type=int, default=2, help="Maximum selected states per trajectory"); build.add_argument("--max-branch-points-total", type=int); build.add_argument("--max-candidates", type=int, default=4); build.add_argument("--output-dir", type=Path, required=True)
-    run = cf.add_parser("run"); run.add_argument("--manifest", type=Path, required=True); run.add_argument("--client", choices=["scripted", "heuristic"], default="scripted"); run.add_argument("--rollouts-per-branch", type=int, default=1); run.add_argument("--output-dir", type=Path, required=True)
-    analyze = cf.add_parser("analyze"); analyze.add_argument("--outcomes", type=Path, required=True); analyze.add_argument("--recoverable-threshold", type=float, default=.95); analyze.add_argument("--optimality-tolerance", type=float, default=.05); analyze.add_argument("--output", type=Path, required=True)
+    collect = cf.add_parser("collect")
+    collect.add_argument("--environment", type=Path, required=True)
+    collect.add_argument(
+        "--agent", choices=["scripted", "heuristic"], default="scripted"
+    )
+    collect.add_argument(
+        "--snapshot-policy",
+        choices=[
+            "none",
+            "every_step",
+            "writes",
+            "checks",
+            "submits",
+            "writes_checks_submit",
+            "selected",
+        ],
+        default="writes_checks_submit",
+    )
+    collect.add_argument("--max-snapshots", type=int, default=3)
+    collect.add_argument("--max-signal-snapshots", type=int, default=2)
+    collect.add_argument("--intermediate-evaluation", action="store_true")
+    collect.add_argument("--output-dir", type=Path, required=True)
+    build = cf.add_parser("build")
+    build.add_argument("--snapshots", type=Path, required=True)
+    build.add_argument("--selectors", default="before_first_write,before_submit")
+    build.add_argument(
+        "--candidates", default="original,submit,run_public_check,read_relevant_file"
+    )
+    build.add_argument("--mode", choices=["forced", "open"], default="forced")
+    build.add_argument(
+        "--max-branch-points",
+        type=int,
+        default=2,
+        help="Maximum selected states per trajectory",
+    )
+    build.add_argument("--max-branch-points-total", type=int)
+    build.add_argument("--max-candidates", type=int, default=4)
+    build.add_argument("--output-dir", type=Path, required=True)
+    run = cf.add_parser("run")
+    run.add_argument("--manifest", type=Path, required=True)
+    run.add_argument("--client", choices=["scripted", "heuristic"], default="scripted")
+    run.add_argument("--rollouts-per-branch", type=int, default=1)
+    run.add_argument("--output-dir", type=Path, required=True)
+    analyze = cf.add_parser("analyze")
+    analyze.add_argument("--outcomes", type=Path, required=True)
+    analyze.add_argument("--recoverable-threshold", type=float, default=0.95)
+    analyze.add_argument("--optimality-tolerance", type=float, default=0.05)
+    analyze.add_argument("--output", type=Path, required=True)
     analyze.add_argument("--summary-output", type=Path)
-    export = cf.add_parser("export"); export.add_argument("--comparisons", type=Path, required=True); export.add_argument("--branch-manifest", type=Path, required=True); export.add_argument("--format", choices=["sft", "preference", "critic", "rl-taskset"], required=True); export.add_argument("--min-margin", type=float, default=.2); export.add_argument("--min-regret", type=float, default=.2); export.add_argument("--include-privileged", action="store_true", help="Include targets derived from privileged reference data (excluded by default)"); export.add_argument("--output", type=Path, required=True)
-    package = cf.add_parser("package-hosted", help="Generate a self-contained Environment Hub package from a branch pack"); package.add_argument("--branch-pack", type=Path, required=True); package.add_argument("--output-dir", type=Path, required=True); package.add_argument("--package-name", required=True); package.add_argument("--swg-ref", required=True); package.add_argument("--pack-id"); package.add_argument("--version", default="0.1.0"); package.add_argument("--force", action="store_true")
-    import_prime = cf.add_parser("import-prime-roots", help="Regenerate and replay selected Prime evaluation samples")
+    export = cf.add_parser("export")
+    export.add_argument("--comparisons", type=Path, required=True)
+    export.add_argument("--branch-manifest", type=Path, required=True)
+    export.add_argument(
+        "--format", choices=["sft", "preference", "critic", "rl-taskset"], required=True
+    )
+    export.add_argument("--min-margin", type=float, default=0.2)
+    export.add_argument("--min-regret", type=float, default=0.2)
+    export.add_argument(
+        "--include-privileged",
+        action="store_true",
+        help="Include targets derived from privileged reference data (excluded by default)",
+    )
+    export.add_argument("--output", type=Path, required=True)
+    package = cf.add_parser(
+        "package-hosted",
+        help="Generate a self-contained Environment Hub package from a branch pack",
+    )
+    package.add_argument("--branch-pack", type=Path, required=True)
+    package.add_argument("--output-dir", type=Path, required=True)
+    package.add_argument("--package-name", required=True)
+    package.add_argument("--swg-ref", required=True)
+    package.add_argument("--pack-id")
+    package.add_argument("--version", default="0.1.0")
+    package.add_argument("--force", action="store_true")
+    import_prime = cf.add_parser(
+        "import-prime-roots",
+        help="Regenerate and replay selected Prime evaluation samples",
+    )
     import_prime.add_argument("--samples", type=Path, required=True)
     import_prime.add_argument("--example-id", type=int, action="append", required=True)
     import_prime.add_argument("--evaluation-id")
     import_prime.add_argument("--source-model", default="Qwen/Qwen3.5-0.8B")
     import_prime.add_argument("--max-turns", type=int, default=25)
     import_prime.add_argument("--output-dir", type=Path, required=True)
-    inspect = cf.add_parser("inspect"); inspect.add_argument("--comparisons", type=Path, required=True); inspect.add_argument("--comparison-id", required=True)
+    inspect = cf.add_parser("inspect")
+    inspect.add_argument("--comparisons", type=Path, required=True)
+    inspect.add_argument("--comparison-id", required=True)
 
 
 def dispatch(args: argparse.Namespace, get_agent) -> int:
     command = args.counterfactual_command
     if command == "collect":
-        collector = SnapshotCollector(args.output_dir / "snapshots", NamedSnapshotPolicy(args.snapshot_policy), args.max_snapshots, args.intermediate_evaluation, args.max_signal_snapshots)
-        summary = EpisodeRunner(args.output_dir / "episodes", collector).run_episode(load_environment(args.environment), get_agent(args.agent))
-        print(json.dumps({"episode": summary.to_dict(), "snapshots": [x.to_dict() for x in collector.snapshots]}, indent=2)); return 0
+        collector = SnapshotCollector(
+            args.output_dir / "snapshots",
+            NamedSnapshotPolicy(args.snapshot_policy),
+            args.max_snapshots,
+            args.intermediate_evaluation,
+            args.max_signal_snapshots,
+        )
+        summary = EpisodeRunner(args.output_dir / "episodes", collector).run_episode(
+            load_environment(args.environment), get_agent(args.agent)
+        )
+        print(
+            json.dumps(
+                {
+                    "episode": summary.to_dict(),
+                    "snapshots": [x.to_dict() for x in collector.snapshots],
+                },
+                indent=2,
+            )
+        )
+        return 0
     if command == "build":
         roots = sorted({path.parent for path in args.snapshots.rglob("snapshot.json")})
         snapshots = [(load_snapshot(root), root) for root in roots]
-        selected_set = set(select_branch_snapshot_ids(
-            [snapshot for snapshot, _ in snapshots], _csv(args.selectors),
-            args.max_branch_points, args.max_branch_points_total,
-        ))
+        selected_set = set(
+            select_branch_snapshot_ids(
+                [snapshot for snapshot, _ in snapshots],
+                _csv(args.selectors),
+                args.max_branch_points,
+                args.max_branch_points_total,
+            )
+        )
         items = []
-        for snapshot, root in [(s, r) for s, r in snapshots if s.snapshot_id in selected_set]:
+        for snapshot, root in [
+            (s, r) for s, r in snapshots if s.snapshot_id in selected_set
+        ]:
             manifest = load_environment(root).manifest
-            for candidate in generate_candidates(snapshot, manifest, root, _csv(args.candidates), args.max_candidates):
-                if args.mode == "forced" and candidate.action is None: continue
+            for candidate in generate_candidates(
+                snapshot, manifest, root, _csv(args.candidates), args.max_candidates
+            ):
+                if args.mode == "forced" and candidate.action is None:
+                    continue
                 items.append((snapshot, candidate, root))
-        tasks = compile_pack(items, args.output_dir, args.mode); print(json.dumps({"task_count": len(tasks), "manifest": str(args.output_dir / "manifest.jsonl")}, indent=2)); return 0
+        tasks = compile_pack(items, args.output_dir, args.mode)
+        print(
+            json.dumps(
+                {
+                    "task_count": len(tasks),
+                    "manifest": str(args.output_dir / "manifest.jsonl"),
+                },
+                indent=2,
+            )
+        )
+        return 0
     if command == "run":
-        outcomes = run_branches(read_branch_manifest(args.manifest), lambda: get_agent(args.client), args.rollouts_per_branch, args.output_dir); print(json.dumps({"outcome_count": len(outcomes)}, indent=2)); return 0
+        outcomes = run_branches(
+            read_branch_manifest(args.manifest),
+            lambda: get_agent(args.client),
+            args.rollouts_per_branch,
+            args.output_dir,
+        )
+        print(json.dumps({"outcome_count": len(outcomes)}, indent=2))
+        return 0
     if command == "analyze":
-        outcomes = [BranchOutcome.from_dict(json.loads(line)) for line in args.outcomes.read_text(encoding="utf-8").splitlines() if line.strip()]
-        comparisons = aggregate_outcomes(outcomes, args.recoverable_threshold, args.optimality_tolerance)
+        outcomes = [
+            BranchOutcome.from_dict(json.loads(line))
+            for line in args.outcomes.read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
+        comparisons = aggregate_outcomes(
+            outcomes, args.recoverable_threshold, args.optimality_tolerance
+        )
         write_jsonl(args.output, [x.to_dict() for x in comparisons])
-        summary = summarize_primary_metrics(comparisons, args.recoverable_threshold, args.optimality_tolerance)
+        summary = summarize_primary_metrics(
+            comparisons, args.recoverable_threshold, args.optimality_tolerance
+        )
         if args.summary_output:
             write_json(args.summary_output, summary)
-        print(json.dumps({"comparison_count": len(comparisons), "primary_metrics": summary}, indent=2))
+        print(
+            json.dumps(
+                {"comparison_count": len(comparisons), "primary_metrics": summary},
+                indent=2,
+            )
+        )
         return 0
     if command == "import-prime-roots":
         roots = import_prime_roots(
-            args.samples, args.example_id, args.output_dir,
-            evaluation_id=args.evaluation_id, source_model=args.source_model,
+            args.samples,
+            args.example_id,
+            args.output_dir,
+            evaluation_id=args.evaluation_id,
+            source_model=args.source_model,
             max_turns=args.max_turns,
         )
-        print(json.dumps({"root_count": len(roots), "roots": [root.to_dict() for root in roots]}, indent=2))
+        print(
+            json.dumps(
+                {"root_count": len(roots), "roots": [root.to_dict() for root in roots]},
+                indent=2,
+            )
+        )
         return 0
     if command == "package-hosted":
         result = package_hosted_branch_pack(
-            args.branch_pack, args.output_dir, args.package_name, args.swg_ref,
-            pack_id=args.pack_id, version=args.version, force=args.force,
+            args.branch_pack,
+            args.output_dir,
+            args.package_name,
+            args.swg_ref,
+            pack_id=args.pack_id,
+            version=args.version,
+            force=args.force,
         )
-        print(json.dumps(result.to_dict(), indent=2)); return 0
+        print(json.dumps(result.to_dict(), indent=2))
+        return 0
     comparisons = read_comparisons(args.comparisons)
     if command == "inspect":
-        item = next(x for x in comparisons if x.branch_group_id == args.comparison_id); print(json.dumps(item.to_dict(), indent=2)); return 0
-    tasks_list = read_branch_manifest(args.branch_manifest); tasks = {x.task_id: x for x in tasks_list}
-    if args.format == "rl-taskset": records = export_rl_taskset(comparisons, tasks, args.output, args.min_regret)
-    else: records = export_training_data(comparisons, tasks, args.output, args.format, args.min_margin, exclude_privileged=not args.include_privileged)
-    print(json.dumps({"record_count": len(records), "output": str(args.output)}, indent=2)); return 0
+        item = next(x for x in comparisons if x.branch_group_id == args.comparison_id)
+        print(json.dumps(item.to_dict(), indent=2))
+        return 0
+    tasks_list = read_branch_manifest(args.branch_manifest)
+    tasks = {x.task_id: x for x in tasks_list}
+    if args.format == "rl-taskset":
+        records = export_rl_taskset(comparisons, tasks, args.output, args.min_regret)
+    else:
+        records = export_training_data(
+            comparisons,
+            tasks,
+            args.output,
+            args.format,
+            args.min_margin,
+            exclude_privileged=not args.include_privileged,
+        )
+    print(
+        json.dumps({"record_count": len(records), "output": str(args.output)}, indent=2)
+    )
+    return 0
 
 
 def select_branch_snapshot_ids(
@@ -109,9 +268,15 @@ def select_branch_snapshot_ids(
         for name in selector_names:
             if name not in SELECTORS:
                 raise ValueError(f"unknown selector: {name}")
-            trajectory_ids.extend(item.snapshot_id for item in SELECTORS[name].select(trajectory_snapshots))
+            trajectory_ids.extend(
+                item.snapshot_id
+                for item in SELECTORS[name].select(trajectory_snapshots)
+            )
         selected.extend(list(dict.fromkeys(trajectory_ids))[:max_branch_points])
-        if max_branch_points_total is not None and len(selected) >= max_branch_points_total:
+        if (
+            max_branch_points_total is not None
+            and len(selected) >= max_branch_points_total
+        ):
             return selected[:max_branch_points_total]
     return selected
 

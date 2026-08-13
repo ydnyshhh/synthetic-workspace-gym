@@ -9,56 +9,145 @@ from synthetic_workspace_gym.schemas import EnvironmentManifest
 from .schemas import CandidateAction, CounterfactualSnapshot, stable_id
 
 
-def _candidate(snapshot: CounterfactualSnapshot, kind: str, action: dict[str, Any] | None, source: str = "trajectory", *, privileged: bool = False, rationale: str | None = None) -> CandidateAction:
+def _candidate(
+    snapshot: CounterfactualSnapshot,
+    kind: str,
+    action: dict[str, Any] | None,
+    source: str = "trajectory",
+    *,
+    privileged: bool = False,
+    rationale: str | None = None,
+) -> CandidateAction:
     group = stable_id("cf-group", snapshot.snapshot_id)
-    return CandidateAction(stable_id("candidate", group, kind, action), group, snapshot.snapshot_id, kind, action, source, rationale, privileged)
+    return CandidateAction(
+        stable_id("candidate", group, kind, action),
+        group,
+        snapshot.snapshot_id,
+        kind,
+        action,
+        source,
+        rationale,
+        privileged,
+    )
 
 
-def original_candidate(snapshot: CounterfactualSnapshot, manifest: EnvironmentManifest, root: Path) -> CandidateAction | None:
-    return _candidate(snapshot, "original", snapshot.original_action) if snapshot.original_action else None
+def original_candidate(
+    snapshot: CounterfactualSnapshot, manifest: EnvironmentManifest, root: Path
+) -> CandidateAction | None:
+    return (
+        _candidate(snapshot, "original", snapshot.original_action)
+        if snapshot.original_action
+        else None
+    )
 
 
-def submit_candidate(snapshot: CounterfactualSnapshot, manifest: EnvironmentManifest, root: Path) -> CandidateAction:
+def submit_candidate(
+    snapshot: CounterfactualSnapshot, manifest: EnvironmentManifest, root: Path
+) -> CandidateAction:
     task = _visible_task(root)
-    target = task.get("required_output_path") or task.get("output_path") or task.get("target_path") or "done"
-    return _candidate(snapshot, "submit", {"tool": "submit", "args": {"path_or_answer": target}}, "visible_task", rationale="submit the declared output")
+    target = (
+        task.get("required_output_path")
+        or task.get("output_path")
+        or task.get("target_path")
+        or "done"
+    )
+    return _candidate(
+        snapshot,
+        "submit",
+        {"tool": "submit", "args": {"path_or_answer": target}},
+        "visible_task",
+        rationale="submit the declared output",
+    )
 
 
-def run_public_check_candidate(snapshot: CounterfactualSnapshot, manifest: EnvironmentManifest, root: Path) -> CandidateAction | None:
+def run_public_check_candidate(
+    snapshot: CounterfactualSnapshot, manifest: EnvironmentManifest, root: Path
+) -> CandidateAction | None:
     entrypoint = _visible_task(root).get("entrypoint")
     if not entrypoint:
         return None
-    return _candidate(snapshot, "run_public_check", {"tool": "run_shell", "args": {"command": entrypoint}}, "visible_task", rationale="run the documented public check exactly as declared")
+    return _candidate(
+        snapshot,
+        "run_public_check",
+        {"tool": "run_shell", "args": {"command": entrypoint}},
+        "visible_task",
+        rationale="run the documented public check exactly as declared",
+    )
 
 
-def read_relevant_file_candidate(snapshot: CounterfactualSnapshot, manifest: EnvironmentManifest, root: Path) -> CandidateAction | None:
+def read_relevant_file_candidate(
+    snapshot: CounterfactualSnapshot, manifest: EnvironmentManifest, root: Path
+) -> CandidateAction | None:
     task = _visible_task(root)
-    read_paths = {(event.get("action_arguments") or {}).get("path") for event in snapshot.swg_events_prefix if event.get("action_type") == "read_file"}
+    read_paths = {
+        (event.get("action_arguments") or {}).get("path")
+        for event in snapshot.swg_events_prefix
+        if event.get("action_type") == "read_file"
+    }
     options = list(task.get("input_files", []))
     for key in ("target_path", "source_path", "config_path"):
-        if task.get(key): options.append(task[key])
+        if task.get(key):
+            options.append(task[key])
     options.extend(["README.md", "task.json"])
     for value in options:
         path = str(value).replace("\\", "/")
-        if _safe_relative(path) and path not in read_paths and (root / "visible" / path).is_file():
-            return _candidate(snapshot, "read_relevant_file", {"tool": "read_file", "args": {"path": path}}, "visible_task", rationale="inspect an unexamined task-relevant file")
+        if (
+            _safe_relative(path)
+            and path not in read_paths
+            and (root / "visible" / path).is_file()
+        ):
+            return _candidate(
+                snapshot,
+                "read_relevant_file",
+                {"tool": "read_file", "args": {"path": path}},
+                "visible_task",
+                rationale="inspect an unexamined task-relevant file",
+            )
     for value in options:
         path = str(value).replace("\\", "/")
         if _safe_relative(path) and (root / "visible" / path).is_file():
-            return _candidate(snapshot, "read_relevant_file", {"tool": "read_file", "args": {"path": path}}, "visible_task", rationale="re-read the most relevant visible file")
+            return _candidate(
+                snapshot,
+                "read_relevant_file",
+                {"tool": "read_file", "args": {"path": path}},
+                "visible_task",
+                rationale="re-read the most relevant visible file",
+            )
     return None
 
 
-def list_workspace_candidate(snapshot: CounterfactualSnapshot, manifest: EnvironmentManifest, root: Path) -> CandidateAction:
-    return _candidate(snapshot, "list_workspace", {"tool": "list_directory", "args": {"path": "."}}, "visible_task", rationale="inspect the visible workspace root")
+def list_workspace_candidate(
+    snapshot: CounterfactualSnapshot, manifest: EnvironmentManifest, root: Path
+) -> CandidateAction:
+    return _candidate(
+        snapshot,
+        "list_workspace",
+        {"tool": "list_directory", "args": {"path": "."}},
+        "visible_task",
+        rationale="inspect the visible workspace root",
+    )
 
 
-def skip_repeated_candidate(snapshot: CounterfactualSnapshot, manifest: EnvironmentManifest, root: Path) -> CandidateAction | None:
-    if snapshot.original_action == snapshot.previous_action and snapshot.original_action:
-        return _candidate(snapshot, "skip_repeated_action", None, "trajectory", rationale="omit a repeated action")
+def skip_repeated_candidate(
+    snapshot: CounterfactualSnapshot, manifest: EnvironmentManifest, root: Path
+) -> CandidateAction | None:
+    if (
+        snapshot.original_action == snapshot.previous_action
+        and snapshot.original_action
+    ):
+        return _candidate(
+            snapshot,
+            "skip_repeated_action",
+            None,
+            "trajectory",
+            rationale="omit a repeated action",
+        )
     return None
 
-def trajectory_targeted_edit_candidate(snapshot: CounterfactualSnapshot, manifest: EnvironmentManifest, root: Path) -> CandidateAction | None:
+
+def trajectory_targeted_edit_candidate(
+    snapshot: CounterfactualSnapshot, manifest: EnvironmentManifest, root: Path
+) -> CandidateAction | None:
     """Use a later model-authored edit without consulting trusted evaluator assets."""
     for row in snapshot.metadata.get("root_future_edits", []):
         if int(row.get("step_index", -1)) < snapshot.step_index:
@@ -66,44 +155,65 @@ def trajectory_targeted_edit_candidate(snapshot: CounterfactualSnapshot, manifes
         action = {"tool": row.get("tool"), "args": dict(row.get("args", {}))}
         if action != snapshot.original_action and _required_candidate_path(action):
             return _candidate(
-                snapshot, "trajectory_targeted_edit", action, "future_trajectory",
+                snapshot,
+                "trajectory_targeted_edit",
+                action,
+                "future_trajectory",
                 rationale="apply a later edit authored by the same root policy",
             )
     return None
 
 
-
 def _visible_task(root: Path) -> dict[str, Any]:
     path = root / "visible" / "task.json"
-    if not path.exists(): return {}
-    try: return json.loads(path.read_text(encoding="utf-8"))
-    except (json.JSONDecodeError, OSError): return {}
+    if not path.exists():
+        return {}
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return {}
 
 
 def _safe_relative(value: str) -> bool:
     path = PurePosixPath(value)
     return not path.is_absolute() and ".." not in path.parts
 
+
 def _required_candidate_path(action: dict[str, Any]) -> bool:
     path = str(action.get("args", {}).get("path", "")).replace("\\", "/")
-    return action.get("tool") in {"write_file", "append_file"} and bool(path) and _safe_relative(path)
-
+    return (
+        action.get("tool") in {"write_file", "append_file"}
+        and bool(path)
+        and _safe_relative(path)
+    )
 
 
 CANDIDATE_GENERATORS: dict[str, Callable[..., CandidateAction | None]] = {
-    "original": original_candidate, "submit": submit_candidate, "run_public_check": run_public_check_candidate,
-    "read_relevant_file": read_relevant_file_candidate, "skip_repeated_action": skip_repeated_candidate,
+    "original": original_candidate,
+    "submit": submit_candidate,
+    "run_public_check": run_public_check_candidate,
+    "read_relevant_file": read_relevant_file_candidate,
+    "skip_repeated_action": skip_repeated_candidate,
     "trajectory_targeted_edit": trajectory_targeted_edit_candidate,
     "list_workspace": list_workspace_candidate,
 }
 
 
-def generate_candidates(snapshot: CounterfactualSnapshot, manifest: EnvironmentManifest, snapshot_root: Path, names: list[str], max_candidates: int = 4) -> list[CandidateAction]:
+def generate_candidates(
+    snapshot: CounterfactualSnapshot,
+    manifest: EnvironmentManifest,
+    snapshot_root: Path,
+    names: list[str],
+    max_candidates: int = 4,
+) -> list[CandidateAction]:
     result = []
     for name in names:
         generator = CANDIDATE_GENERATORS.get(name)
-        if generator is None: raise ValueError(f"unknown candidate generator: {name}")
+        if generator is None:
+            raise ValueError(f"unknown candidate generator: {name}")
         candidate = generator(snapshot, manifest, snapshot_root)
-        if candidate is not None: result.append(candidate)
-        if len(result) >= max_candidates: break
+        if candidate is not None:
+            result.append(candidate)
+        if len(result) >= max_candidates:
+            break
     return result

@@ -26,4 +26,9 @@ docs/*.excalidraw
 docs/swg-*.png
 .pytest-*/
 .tmp-analysis/
+# Generated retrieval D5 calibration iterations. Final release reports are
+# force-added when they become part of a frozen release record.
 analysis/retrieval-d5-calibration*/
+analysis/retrieval-d5-calibration*.json
+analysis/retrieval-d5-oracle-report-v*.json
+analysis/retrieval-d5-surface-validation*.json
