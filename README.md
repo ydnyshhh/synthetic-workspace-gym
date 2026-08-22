@@ -135,6 +135,10 @@ For the retrieval family, seeds now vary both distractor layout and the underlyi
 
 ## Prime / Verifiers Integration
 
+New Prime training and upstream contribution work should use the standalone native Verifiers V1 package at [`environments/tool_use/synthetic_workspace_gym`](environments/tool_use/synthetic_workspace_gym). It exports a typed `vf.Taskset`/`vf.Task`, uses Verifiers' standard harness and runtime lifecycle, and contains no SWG rollout, tool-call, Prime-client, or legacy Verifiers adapter layer.
+
+The compatibility APIs described below remain part of the research repository for reproducing existing experiments; they are not included in the upstream V1 package.
+
 The `synthetic_workspace_gym.prime` package provides a thin compatibility layer for Prime Intellect / verifiers-style runners. It exposes SWG as a multi-turn tool-use environment with `reset()`, `step()`, and `evaluate()`, while still using the existing generators, runtime tool executor, manifests, and hidden evaluators.
 
 Minimal usage:
