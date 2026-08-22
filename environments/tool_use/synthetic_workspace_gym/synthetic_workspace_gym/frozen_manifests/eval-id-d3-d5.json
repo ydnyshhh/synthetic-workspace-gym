@@ -1,0 +1,6255 @@
+{
+  "assignments": [
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "e607395243e61c6a10d6ea8b40cb37d41e749b05f74327a1d365028dd8a122a9",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "monthly_segment_report",
+      "seed": 90,
+      "split": "test",
+      "task_id": "swg.test.tabular.monthly_segment_report.d3.s90"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "2c804a6397778a19545dd28bd93cb3899ccd01a73340f1e57c6fc9c9ebbb835a",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "monthly_segment_report",
+      "seed": 91,
+      "split": "test",
+      "task_id": "swg.test.tabular.monthly_segment_report.d3.s91"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "7120016a9dff3a7743afabf87fdfcea0374fd1766181bdb8d7dcbf8e60d1067b",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "monthly_segment_report",
+      "seed": 92,
+      "split": "test",
+      "task_id": "swg.test.tabular.monthly_segment_report.d3.s92"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "c01550d6c91914ae1e7e202b8ad595174070c30d0f4c2e65a9222049fbea11a3",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "monthly_segment_report",
+      "seed": 93,
+      "split": "test",
+      "task_id": "swg.test.tabular.monthly_segment_report.d3.s93"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "b49ac25d332c5cc83c9770ebd711a5a1cf3d0376d0fc12dc722c7e8d7b3d9e51",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "monthly_segment_report",
+      "seed": 94,
+      "split": "test",
+      "task_id": "swg.test.tabular.monthly_segment_report.d3.s94"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "dc1df7f3010fd6f5edfad09f8cefed14a93958e2de31d091b58bf1054285da1b",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "monthly_segment_report",
+      "seed": 95,
+      "split": "test",
+      "task_id": "swg.test.tabular.monthly_segment_report.d3.s95"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "302d2933a87e1c63a6781916432e96008c605561c53cffb179360bad102db10c",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "monthly_segment_report",
+      "seed": 96,
+      "split": "test",
+      "task_id": "swg.test.tabular.monthly_segment_report.d3.s96"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "0a35a4bf8afc10e43127deb83151344a2102a15e1a8367684e6a2ed0ed5d1a4f",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "monthly_segment_report",
+      "seed": 97,
+      "split": "test",
+      "task_id": "swg.test.tabular.monthly_segment_report.d3.s97"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "1147ed566f2f8ec25d864fd2315891cf806ea4e4bedeaab5842f3f82f5793e12",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "monthly_segment_report",
+      "seed": 98,
+      "split": "test",
+      "task_id": "swg.test.tabular.monthly_segment_report.d3.s98"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "a9f68089c5f184034a6eee0e7e177306d5ffafdc5eb5fbef89ef3814dbb9b7eb",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "monthly_segment_report",
+      "seed": 99,
+      "split": "test",
+      "task_id": "swg.test.tabular.monthly_segment_report.d3.s99"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "51a4308c4d853a68596899f836d441a8357e532736fcb9083772c2cc4e7e74b4",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "monthly_segment_report",
+      "seed": 90,
+      "split": "test",
+      "task_id": "swg.test.tabular.monthly_segment_report.d4.s90"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "c3faa1b23c1d82d903c5a7048b171b318d92121788ce72d764483cec3cd0ea57",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "monthly_segment_report",
+      "seed": 91,
+      "split": "test",
+      "task_id": "swg.test.tabular.monthly_segment_report.d4.s91"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "51296e83cca67f28551d0f93b2b0b31826a5bce3a5713e4284db2a250a4f314c",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "monthly_segment_report",
+      "seed": 92,
+      "split": "test",
+      "task_id": "swg.test.tabular.monthly_segment_report.d4.s92"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "a52834938db2b2005bf87ec6372a9a7193f6ebdf836ea39e0cbb3b91ac69f863",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "monthly_segment_report",
+      "seed": 93,
+      "split": "test",
+      "task_id": "swg.test.tabular.monthly_segment_report.d4.s93"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "28f124cd26549132de509d6df5598f21ec27cd3ce7917ff0a6f5e4d95141c83a",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "monthly_segment_report",
+      "seed": 94,
+      "split": "test",
+      "task_id": "swg.test.tabular.monthly_segment_report.d4.s94"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "4964922e78940f6860d2e5c1fa839ecc9eef29513b34836a60ea9e01af7e9045",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "monthly_segment_report",
+      "seed": 95,
+      "split": "test",
+      "task_id": "swg.test.tabular.monthly_segment_report.d4.s95"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "e6c87b775547020bbec5b91b5b1f7e9d87996b83d7f57f2e584689ce5b8928e2",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "monthly_segment_report",
+      "seed": 96,
+      "split": "test",
+      "task_id": "swg.test.tabular.monthly_segment_report.d4.s96"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "89d55139d386ede59dc9f626928dbec91f5ee953f0589593e721e6ed48d50303",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "monthly_segment_report",
+      "seed": 97,
+      "split": "test",
+      "task_id": "swg.test.tabular.monthly_segment_report.d4.s97"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "91b6982f593b976817c9c4b71cbbd34d2de4c974e0a3622524b084a0df46857b",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "monthly_segment_report",
+      "seed": 98,
+      "split": "test",
+      "task_id": "swg.test.tabular.monthly_segment_report.d4.s98"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "67ddddd4fb898d6b54341f827d00b36302064ee6d6462ed0c2e13fc4a618062e",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "monthly_segment_report",
+      "seed": 99,
+      "split": "test",
+      "task_id": "swg.test.tabular.monthly_segment_report.d4.s99"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "f66335acdfe04b985dc226b776be565ef54ed9c155b7314436d4186a2cb9667a",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "monthly_segment_report",
+      "seed": 90,
+      "split": "test",
+      "task_id": "swg.test.tabular.monthly_segment_report.d5.s90"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "80997ff8924145ac034c69c7604b5eade2d03ec34fdccc1f5d6f861c0732bcfb",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "monthly_segment_report",
+      "seed": 91,
+      "split": "test",
+      "task_id": "swg.test.tabular.monthly_segment_report.d5.s91"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "77c9d96d777534e39b6a88f8243e51fbe4619fca0ace66c167819efb23bf6979",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "monthly_segment_report",
+      "seed": 92,
+      "split": "test",
+      "task_id": "swg.test.tabular.monthly_segment_report.d5.s92"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "c02195d2df754f790939b326c91f745a3fb19381fed17e2867b4b05ba8516dac",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "monthly_segment_report",
+      "seed": 93,
+      "split": "test",
+      "task_id": "swg.test.tabular.monthly_segment_report.d5.s93"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "5d3b4f786316500cce726720a4006be767d6e7c1b8eebe71156bac2ccebe6576",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "monthly_segment_report",
+      "seed": 94,
+      "split": "test",
+      "task_id": "swg.test.tabular.monthly_segment_report.d5.s94"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "9cb09a77ebc491924d5948e74cda62ec54d1fce6c8721faa72a00376ddff6202",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "monthly_segment_report",
+      "seed": 95,
+      "split": "test",
+      "task_id": "swg.test.tabular.monthly_segment_report.d5.s95"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "1ac1e43f1e9139a1c85f56d0f46a607101851709480d6065b871346f81929fe4",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "monthly_segment_report",
+      "seed": 96,
+      "split": "test",
+      "task_id": "swg.test.tabular.monthly_segment_report.d5.s96"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "f8e017dc3502b9045700f987a67bcbe279e4bc18900e64221b78c373355a0e5e",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "monthly_segment_report",
+      "seed": 97,
+      "split": "test",
+      "task_id": "swg.test.tabular.monthly_segment_report.d5.s97"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "db18ce706cb85488ebd76effd75512c318d8687b321e7b8a2eefecbd3625bbc1",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "monthly_segment_report",
+      "seed": 98,
+      "split": "test",
+      "task_id": "swg.test.tabular.monthly_segment_report.d5.s98"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "8580744ab3c71789021e31a0fee09285b2a795cee33ba95f16559a7b8d24497a",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "monthly_segment_report",
+      "seed": 99,
+      "split": "test",
+      "task_id": "swg.test.tabular.monthly_segment_report.d5.s99"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "11bbf6cb117a567ba3739646bbfc9ff87c087787fbc31e19327c2fe5bab3eb21",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "channel_status_pivot",
+      "seed": 90,
+      "split": "test",
+      "task_id": "swg.test.tabular.channel_status_pivot.d3.s90"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "76608c2dd0a01820661feab127c08133fca62a7f97511eb7cba5b87f7580b8d1",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "channel_status_pivot",
+      "seed": 91,
+      "split": "test",
+      "task_id": "swg.test.tabular.channel_status_pivot.d3.s91"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "356df47ad6ec6ce0b97f74f58e2519f92c1a59ab742b516b8090a126197deb08",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "channel_status_pivot",
+      "seed": 92,
+      "split": "test",
+      "task_id": "swg.test.tabular.channel_status_pivot.d3.s92"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "4364ab29ad9e8a10ad8eab82c1714689787858a5c6eb3d86305e85e96ea494de",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "channel_status_pivot",
+      "seed": 93,
+      "split": "test",
+      "task_id": "swg.test.tabular.channel_status_pivot.d3.s93"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "5b9fb897e1a7021c25eadd619eb1144514b5b03e0b486adcd7c29e1ea8bf4e87",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "channel_status_pivot",
+      "seed": 94,
+      "split": "test",
+      "task_id": "swg.test.tabular.channel_status_pivot.d3.s94"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "bae5b09b80f9a52906b0a90d113b4c5fc85f200a51e217e3fcc72d98647fa831",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "channel_status_pivot",
+      "seed": 95,
+      "split": "test",
+      "task_id": "swg.test.tabular.channel_status_pivot.d3.s95"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "e3db4dbd3b44d22212c712c98fc92d5be99fb5f4ae9c4b246138a36c9cd47cdb",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "channel_status_pivot",
+      "seed": 96,
+      "split": "test",
+      "task_id": "swg.test.tabular.channel_status_pivot.d3.s96"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "c1fdff1268024cdc28571008d92139e338257a8a4c92be0d68ea8b70d7d61dd6",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "channel_status_pivot",
+      "seed": 97,
+      "split": "test",
+      "task_id": "swg.test.tabular.channel_status_pivot.d3.s97"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "a0b4d88d0bad0d87e7f3994d336f907f376a00838077ff4ce52edabcf9807a1a",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "channel_status_pivot",
+      "seed": 98,
+      "split": "test",
+      "task_id": "swg.test.tabular.channel_status_pivot.d3.s98"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "30c99bbabe86a544d02ede63e934f5060189cf7b0d43bfb057d24d7b436f217c",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "channel_status_pivot",
+      "seed": 99,
+      "split": "test",
+      "task_id": "swg.test.tabular.channel_status_pivot.d3.s99"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "19cf1245033e8d5c8715e6d9482dfafad636949c9794764b24680a9d1ea69cb6",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "channel_status_pivot",
+      "seed": 90,
+      "split": "test",
+      "task_id": "swg.test.tabular.channel_status_pivot.d4.s90"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "9b5183b7dd2a834fbda0451ced2d9db08aaa6f67e65500f6b403523f53b069e4",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "channel_status_pivot",
+      "seed": 91,
+      "split": "test",
+      "task_id": "swg.test.tabular.channel_status_pivot.d4.s91"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "8705f8afc646d324fa86cf74f396d9c94db9f4eaee343653d87922ebb3de29d9",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "channel_status_pivot",
+      "seed": 92,
+      "split": "test",
+      "task_id": "swg.test.tabular.channel_status_pivot.d4.s92"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "a6082b858191a846d6aff300c10a0d63c189e616f7ffa5fd62158b836195e13a",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "channel_status_pivot",
+      "seed": 93,
+      "split": "test",
+      "task_id": "swg.test.tabular.channel_status_pivot.d4.s93"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "ae35e4c24fc81802fe32f1ec44046642c0055ba82c60ff963f54ffb1eb79423f",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "channel_status_pivot",
+      "seed": 94,
+      "split": "test",
+      "task_id": "swg.test.tabular.channel_status_pivot.d4.s94"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "278140e858153c22cdfb208cee84d75f7ced523d55ce504c8e8ada71137920f9",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "channel_status_pivot",
+      "seed": 95,
+      "split": "test",
+      "task_id": "swg.test.tabular.channel_status_pivot.d4.s95"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "48f7483dcb9c04b1a071f91473db67afde759db9c07f85ee898f0528803899f4",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "channel_status_pivot",
+      "seed": 96,
+      "split": "test",
+      "task_id": "swg.test.tabular.channel_status_pivot.d4.s96"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "025154b99b7817bcdf241841a25a01163b1fde2a3a68e656ffa464f0f0c9d914",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "channel_status_pivot",
+      "seed": 97,
+      "split": "test",
+      "task_id": "swg.test.tabular.channel_status_pivot.d4.s97"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "1908d8065d7f9afcb8cdd099ed2b5eb91b8120b205ee4f93211e23e6a6de2722",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "channel_status_pivot",
+      "seed": 98,
+      "split": "test",
+      "task_id": "swg.test.tabular.channel_status_pivot.d4.s98"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "5d764f88d20ee972915991d3a217eb85309e2f0095226b0db1d50dc94d4ce75c",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "channel_status_pivot",
+      "seed": 99,
+      "split": "test",
+      "task_id": "swg.test.tabular.channel_status_pivot.d4.s99"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "9875a134448497f192ce64ddc0c0eebf52b09976dd6b03367d3cddae0275bc23",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "channel_status_pivot",
+      "seed": 90,
+      "split": "test",
+      "task_id": "swg.test.tabular.channel_status_pivot.d5.s90"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "a2aa0aa0a31e8ca9df9b4568c178a6ce685fed2bbb783099b2a3e956fb85da60",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "channel_status_pivot",
+      "seed": 91,
+      "split": "test",
+      "task_id": "swg.test.tabular.channel_status_pivot.d5.s91"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "0263032af23cb6d0f18e9b02c0355c377020775ab00a36415271d4a36718eb25",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "channel_status_pivot",
+      "seed": 92,
+      "split": "test",
+      "task_id": "swg.test.tabular.channel_status_pivot.d5.s92"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "2b6d27b31a85ff8d387754ee6ad16962828ef10bbfdb9666cca3c5075d2e3485",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "channel_status_pivot",
+      "seed": 93,
+      "split": "test",
+      "task_id": "swg.test.tabular.channel_status_pivot.d5.s93"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "e48bff883f0627616ad27d391519adf76175a6d3d4dac03f0fe6fde945932e6a",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "channel_status_pivot",
+      "seed": 94,
+      "split": "test",
+      "task_id": "swg.test.tabular.channel_status_pivot.d5.s94"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "07f93698b9177eea5b065330dc189c727d5e797232ddd2add4e8d90f1e957c9c",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "channel_status_pivot",
+      "seed": 95,
+      "split": "test",
+      "task_id": "swg.test.tabular.channel_status_pivot.d5.s95"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "a117d32a4add2235de31f4f65fc0838fd8a2a51ae6ad4327bf25dc5b66596d52",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "channel_status_pivot",
+      "seed": 96,
+      "split": "test",
+      "task_id": "swg.test.tabular.channel_status_pivot.d5.s96"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "4023c3b4fbca4cae722700c1cb574a8be276b0eb4450becec07b5ad1d8628822",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "channel_status_pivot",
+      "seed": 97,
+      "split": "test",
+      "task_id": "swg.test.tabular.channel_status_pivot.d5.s97"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "e578147a2fec2bb4ca8a3e7db448986a846ea3aef0e0d187c1affbbf4a7a8295",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "channel_status_pivot",
+      "seed": 98,
+      "split": "test",
+      "task_id": "swg.test.tabular.channel_status_pivot.d5.s98"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "a947adbafdc3d7dfe02881e4ce596a925b56c5f25b4ec2d02bed5a55b2951442",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "channel_status_pivot",
+      "seed": 99,
+      "split": "test",
+      "task_id": "swg.test.tabular.channel_status_pivot.d5.s99"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "a5a6fddb0c9db3f8bf97c336c4dacc2da12d59f819887010c1229f804157206d",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "weekly_refund_rollup",
+      "seed": 90,
+      "split": "test",
+      "task_id": "swg.test.tabular.weekly_refund_rollup.d3.s90"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "f75eacd7357e5b9c7bfcbd56cc5d0975e5f50edbf9898302978658f19090565d",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "weekly_refund_rollup",
+      "seed": 91,
+      "split": "test",
+      "task_id": "swg.test.tabular.weekly_refund_rollup.d3.s91"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "1e547b35e368092e0c63aea3f39974fb79b38ad9ef0a630c7d06799d950b8064",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "weekly_refund_rollup",
+      "seed": 92,
+      "split": "test",
+      "task_id": "swg.test.tabular.weekly_refund_rollup.d3.s92"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "00b018e19d6ff0847e2b38baccd1310fc6f23bec8e80abecd4986fd662c5ff6b",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "weekly_refund_rollup",
+      "seed": 93,
+      "split": "test",
+      "task_id": "swg.test.tabular.weekly_refund_rollup.d3.s93"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "56dd0dfdfc21495dcbd464c1cf7461a3319ab3c2e4de8baddf82aa2ee9f29361",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "weekly_refund_rollup",
+      "seed": 94,
+      "split": "test",
+      "task_id": "swg.test.tabular.weekly_refund_rollup.d3.s94"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "3ec88a11f5f1f152b7221320d7755df1b57f8fdbf9ea5b0269cedcb062db6223",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "weekly_refund_rollup",
+      "seed": 95,
+      "split": "test",
+      "task_id": "swg.test.tabular.weekly_refund_rollup.d3.s95"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "c72aadd87a93c000edf12ff8eb26617d0bec84cb53c7e70e101e420a6984c23a",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "weekly_refund_rollup",
+      "seed": 96,
+      "split": "test",
+      "task_id": "swg.test.tabular.weekly_refund_rollup.d3.s96"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "fbd20bdbc188b8981308dccc2b5ba1723730fe295803543903a76ace3766b5f6",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "weekly_refund_rollup",
+      "seed": 97,
+      "split": "test",
+      "task_id": "swg.test.tabular.weekly_refund_rollup.d3.s97"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "c757690c0e31ee4a9f017aaf8bf8e3de7185b77698b365b08f4a20bec3d6ff4c",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "weekly_refund_rollup",
+      "seed": 98,
+      "split": "test",
+      "task_id": "swg.test.tabular.weekly_refund_rollup.d3.s98"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "d9db73973cc1cc63aa8ff5515aedc5dbd7069329df476dde7026a35587a12773",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "weekly_refund_rollup",
+      "seed": 99,
+      "split": "test",
+      "task_id": "swg.test.tabular.weekly_refund_rollup.d3.s99"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "4da347c6f460161af8819adf21c2d4b0949508e352369cd338e19c254b73941d",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "weekly_refund_rollup",
+      "seed": 90,
+      "split": "test",
+      "task_id": "swg.test.tabular.weekly_refund_rollup.d4.s90"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "2a32e2603e5fb8ab660a9d3316e655b329add34340ddd2bbdb7639c0d87e2e32",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "weekly_refund_rollup",
+      "seed": 91,
+      "split": "test",
+      "task_id": "swg.test.tabular.weekly_refund_rollup.d4.s91"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "fdd516bb00e2f1070f62d40b1671fd2aa503fee163e64927bea26f95bed6f964",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "weekly_refund_rollup",
+      "seed": 92,
+      "split": "test",
+      "task_id": "swg.test.tabular.weekly_refund_rollup.d4.s92"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "c04848fa42eb93f3a7660a4deaac151d84694eef325172751e71f359f9fb4446",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "weekly_refund_rollup",
+      "seed": 93,
+      "split": "test",
+      "task_id": "swg.test.tabular.weekly_refund_rollup.d4.s93"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "c936a071cc03f05912a3352054a68492d41886af64128ba7a5e4157826c6aaa2",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "weekly_refund_rollup",
+      "seed": 94,
+      "split": "test",
+      "task_id": "swg.test.tabular.weekly_refund_rollup.d4.s94"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "21d07f1cd432ef2e8ff17d5fbceb7a2e21dec673a59895639801b8c86a3ed176",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "weekly_refund_rollup",
+      "seed": 95,
+      "split": "test",
+      "task_id": "swg.test.tabular.weekly_refund_rollup.d4.s95"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "a5b997d339cb53cef72e99e93f21402b489fb3b8607cb062564da064194589b9",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "weekly_refund_rollup",
+      "seed": 96,
+      "split": "test",
+      "task_id": "swg.test.tabular.weekly_refund_rollup.d4.s96"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "dc906825f686a1b084ff77735e40f0abd7e06cf34beb56882b0c9f074540f403",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "weekly_refund_rollup",
+      "seed": 97,
+      "split": "test",
+      "task_id": "swg.test.tabular.weekly_refund_rollup.d4.s97"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "ea670d058ea92dfa514da9fddebe85facc3a046cad3dbeb6ffb32cfa0a30cdee",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "weekly_refund_rollup",
+      "seed": 98,
+      "split": "test",
+      "task_id": "swg.test.tabular.weekly_refund_rollup.d4.s98"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "ec9dd9993faddb1c4dc169356d275587e218fc58cde32018c6007ce3cd94ed10",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "weekly_refund_rollup",
+      "seed": 99,
+      "split": "test",
+      "task_id": "swg.test.tabular.weekly_refund_rollup.d4.s99"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "c48a773f7a4ebe9d7b9774d6db4a1c5028d6de0f003219acea30cdad653494cb",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "weekly_refund_rollup",
+      "seed": 90,
+      "split": "test",
+      "task_id": "swg.test.tabular.weekly_refund_rollup.d5.s90"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "8376783c41e195a57c8ccc848fafd11c64351c99acbd599a58b24b1b405e1516",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "weekly_refund_rollup",
+      "seed": 91,
+      "split": "test",
+      "task_id": "swg.test.tabular.weekly_refund_rollup.d5.s91"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "15a2476e0557c3e62371677ac0c077f57f5169828f4d605c4062fdb8ef7e7b61",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "weekly_refund_rollup",
+      "seed": 92,
+      "split": "test",
+      "task_id": "swg.test.tabular.weekly_refund_rollup.d5.s92"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "77d2be6b89bec248efe6aa2d3c5411607bdeccde24dc0af079b5a82667583ff8",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "weekly_refund_rollup",
+      "seed": 93,
+      "split": "test",
+      "task_id": "swg.test.tabular.weekly_refund_rollup.d5.s93"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "03ffe693812e10b6242a0975bdcb9f30e89f3c83b821c301aa2bef079c9d20be",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "weekly_refund_rollup",
+      "seed": 94,
+      "split": "test",
+      "task_id": "swg.test.tabular.weekly_refund_rollup.d5.s94"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "ca824a29322d0e0cd4a18933ce4a73d6aba5d736aa7a25cb1eed59817446b13e",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "weekly_refund_rollup",
+      "seed": 95,
+      "split": "test",
+      "task_id": "swg.test.tabular.weekly_refund_rollup.d5.s95"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "eaa847ed82dfe89baf9ed9bf207f4e850ac625d3051f7e0b6a9900a89755abdc",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "weekly_refund_rollup",
+      "seed": 96,
+      "split": "test",
+      "task_id": "swg.test.tabular.weekly_refund_rollup.d5.s96"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "555f68402a81607de9f3ba5d42abfc16d39d6b71f7170bea538e46214274dcce",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "weekly_refund_rollup",
+      "seed": 97,
+      "split": "test",
+      "task_id": "swg.test.tabular.weekly_refund_rollup.d5.s97"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "19b181776f37e888fd0ef8285e6116c74c8b393081b095e4018ae3d5d49915a9",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "weekly_refund_rollup",
+      "seed": 98,
+      "split": "test",
+      "task_id": "swg.test.tabular.weekly_refund_rollup.d5.s98"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "f604c2041d092c2c4163b3e7a1bc6f1b5da447c6f3d1a71134c72e64d32b54ea",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "weekly_refund_rollup",
+      "seed": 99,
+      "split": "test",
+      "task_id": "swg.test.tabular.weekly_refund_rollup.d5.s99"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "6bb6f887155afe96b383654558470a10a38298227ba68044dbcc34871224d330",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "inventory_report",
+      "seed": 90,
+      "split": "test",
+      "task_id": "swg.test.script_repair.inventory_report.d3.s90"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "6ca35da4a4b3ccc98f79c8424b6ea6b065952c2e2a948f45a024a7da737e77f0",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "inventory_report",
+      "seed": 91,
+      "split": "test",
+      "task_id": "swg.test.script_repair.inventory_report.d3.s91"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "7f072858710aafc50101e31baea9152b52c6180e7888cad9e6c7bc90ab83474c",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "inventory_report",
+      "seed": 92,
+      "split": "test",
+      "task_id": "swg.test.script_repair.inventory_report.d3.s92"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "6eca3390e150180de884cb8b77c6578b6804cf39395380c6613b0fa407ac375e",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "inventory_report",
+      "seed": 93,
+      "split": "test",
+      "task_id": "swg.test.script_repair.inventory_report.d3.s93"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "05c3c0e9492388b32c1209b047652b02f433702f366a7fbebcae26ee88fe2dfd",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "inventory_report",
+      "seed": 94,
+      "split": "test",
+      "task_id": "swg.test.script_repair.inventory_report.d3.s94"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "22fa55201ef9e02fc923ab67d4afb57ee2ecbbd38691f8bd3b85482411030f59",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "inventory_report",
+      "seed": 95,
+      "split": "test",
+      "task_id": "swg.test.script_repair.inventory_report.d3.s95"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "bb46a447da14eecc6dc60141573dd86a4f2254bf8703410ceffc5f88f2564323",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "inventory_report",
+      "seed": 96,
+      "split": "test",
+      "task_id": "swg.test.script_repair.inventory_report.d3.s96"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "1e784e4722eb8dc38972edfef9b132c2a9d8317af14589f464c16ce44c12eb6d",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "inventory_report",
+      "seed": 97,
+      "split": "test",
+      "task_id": "swg.test.script_repair.inventory_report.d3.s97"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "1d75f9c72d39c874e1c743cf56aec43b669ed0a8bd2792401e3118a4b171cd65",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "inventory_report",
+      "seed": 98,
+      "split": "test",
+      "task_id": "swg.test.script_repair.inventory_report.d3.s98"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "0f38311cf8f59e35bc70e8d1e560c44b3a7afb098782217d2e5ee69a14fd37d5",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "inventory_report",
+      "seed": 99,
+      "split": "test",
+      "task_id": "swg.test.script_repair.inventory_report.d3.s99"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "14fb27ddac74dda6de9a7b6be9a772a4095dc1a307f6f9808f765efb7ff0b557",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "inventory_report",
+      "seed": 90,
+      "split": "test",
+      "task_id": "swg.test.script_repair.inventory_report.d4.s90"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "14c1222f6f1d989e0f0cc1bc72aff5eadef4ae1b99ba275213a467e72f58139b",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "inventory_report",
+      "seed": 91,
+      "split": "test",
+      "task_id": "swg.test.script_repair.inventory_report.d4.s91"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "e98c2e0bd36cc4cb5d2e442f84cc7b2caa6256e1d2b9c040219f6455096488ac",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "inventory_report",
+      "seed": 92,
+      "split": "test",
+      "task_id": "swg.test.script_repair.inventory_report.d4.s92"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "20b4d8dd5ca6a9727c7fdc192627c4a4b6fbe69aba1ccdeb3092f6e870ad8a62",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "inventory_report",
+      "seed": 93,
+      "split": "test",
+      "task_id": "swg.test.script_repair.inventory_report.d4.s93"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "ba6187571bcd13f9a4990f39b77f8791bf7b4afb43b423328b03fc332459981b",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "inventory_report",
+      "seed": 94,
+      "split": "test",
+      "task_id": "swg.test.script_repair.inventory_report.d4.s94"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "5db3dfb4e8b3b14ce84ea603fe36dfd1b0e710461d8e4a76418bebcc467b34a6",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "inventory_report",
+      "seed": 95,
+      "split": "test",
+      "task_id": "swg.test.script_repair.inventory_report.d4.s95"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "6c1344fba4fde0afe45e265a82ebdde9ad442249704b70995103d8970aaa7392",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "inventory_report",
+      "seed": 96,
+      "split": "test",
+      "task_id": "swg.test.script_repair.inventory_report.d4.s96"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "068d705702e82d54adb895c35cbe7c1833bde94a9aafc237244feddeb4c830d8",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "inventory_report",
+      "seed": 97,
+      "split": "test",
+      "task_id": "swg.test.script_repair.inventory_report.d4.s97"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "3f26b34aaeeb420cd99f08d641b3d204a58fdfad5344cd77b2f02d2f4cb3ba2c",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "inventory_report",
+      "seed": 98,
+      "split": "test",
+      "task_id": "swg.test.script_repair.inventory_report.d4.s98"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "7c7c4fe0e343b5532fa8286420fb24fe052f596a6f322ee97a8d737058869471",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "inventory_report",
+      "seed": 99,
+      "split": "test",
+      "task_id": "swg.test.script_repair.inventory_report.d4.s99"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "655617d9dd9fc21f0bc799297b1b54773c969badc4661bb2f940aef80a5cbdaa",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "inventory_report",
+      "seed": 90,
+      "split": "test",
+      "task_id": "swg.test.script_repair.inventory_report.d5.s90"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "a5d1a753e626f0b277068fcad804062a11fb18e8635afc53a3b312e1a2ae6050",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "inventory_report",
+      "seed": 91,
+      "split": "test",
+      "task_id": "swg.test.script_repair.inventory_report.d5.s91"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "c683bdd5012dc8bb12af730d39952490b0d212a9226e682d300f8314c7c7fe8a",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "inventory_report",
+      "seed": 92,
+      "split": "test",
+      "task_id": "swg.test.script_repair.inventory_report.d5.s92"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "1ae55da9886b37a538665bdeaf27ea3c2d7f2dd31a0b55637a105fb2ed62814b",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "inventory_report",
+      "seed": 93,
+      "split": "test",
+      "task_id": "swg.test.script_repair.inventory_report.d5.s93"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "f23c7043b166ecb3164a2bfe796cb55c7da07b95327e6b0a3db3e0dc4c36f0ce",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "inventory_report",
+      "seed": 94,
+      "split": "test",
+      "task_id": "swg.test.script_repair.inventory_report.d5.s94"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "3273050dda6d677696d59ef1111f37c18aacbfaed6f82d3d1e06feb2ac54daa1",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "inventory_report",
+      "seed": 95,
+      "split": "test",
+      "task_id": "swg.test.script_repair.inventory_report.d5.s95"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "861b993272c3c3a886ca72b5552b3b252833d632f8797227c8d81678e4e4ad55",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "inventory_report",
+      "seed": 96,
+      "split": "test",
+      "task_id": "swg.test.script_repair.inventory_report.d5.s96"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "988a6cc4d09fdc1ffe9c4730745038e856c852c235bda04ecb100a234a5dcef8",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "inventory_report",
+      "seed": 97,
+      "split": "test",
+      "task_id": "swg.test.script_repair.inventory_report.d5.s97"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "ac47e21efd3778a96eb8def8377ad05ccc93e8cb10ab0456ae68edabe13cab9d",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "inventory_report",
+      "seed": 98,
+      "split": "test",
+      "task_id": "swg.test.script_repair.inventory_report.d5.s98"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "dc25e64256ea72c0859451f76d26f5e016b62d4c2244eccd6743ada490196885",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "inventory_report",
+      "seed": 99,
+      "split": "test",
+      "task_id": "swg.test.script_repair.inventory_report.d5.s99"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "214c36c7b29941b10befc3101c807fec85715ee85c117857c8fd00efbfd48c0e",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "path_batch",
+      "seed": 90,
+      "split": "test",
+      "task_id": "swg.test.script_repair.path_batch.d3.s90"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "501f6397669cd58ec7346abf88ac6d563d3dab9204476c0d45cde238347856db",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "path_batch",
+      "seed": 91,
+      "split": "test",
+      "task_id": "swg.test.script_repair.path_batch.d3.s91"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "74f80a1fb3d947459ae8416851783f60ff18fc580ecbbef1a8486f994628b13b",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "path_batch",
+      "seed": 92,
+      "split": "test",
+      "task_id": "swg.test.script_repair.path_batch.d3.s92"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "aab6bbdfaab7811094930619e51a8b5f472743bbb344c7a0c3ce7dff4a2dbb4b",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "path_batch",
+      "seed": 93,
+      "split": "test",
+      "task_id": "swg.test.script_repair.path_batch.d3.s93"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "51fbacef8d7ee2c6bbbc979cf313be2cd8ad5562ce7780b65c1da98b56cac4b6",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "path_batch",
+      "seed": 94,
+      "split": "test",
+      "task_id": "swg.test.script_repair.path_batch.d3.s94"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "dd2902a55dff0fefb9c989f28d52ca95d0a98a54352934e1b210aea4c6a18970",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "path_batch",
+      "seed": 95,
+      "split": "test",
+      "task_id": "swg.test.script_repair.path_batch.d3.s95"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "4e771db1229e23524e6c4078fe61356570bd38023d4631acfdc835a50b516629",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "path_batch",
+      "seed": 96,
+      "split": "test",
+      "task_id": "swg.test.script_repair.path_batch.d3.s96"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "3f5b605b7b403302fa7aa44e76158db1f1e5c2158d6ee40e12b40dba07206af4",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "path_batch",
+      "seed": 97,
+      "split": "test",
+      "task_id": "swg.test.script_repair.path_batch.d3.s97"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "20898cfdce26c0e3f2c9ca86a7bc6b7d3bffe1e983c102a4c216027d696f4884",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "path_batch",
+      "seed": 98,
+      "split": "test",
+      "task_id": "swg.test.script_repair.path_batch.d3.s98"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "0f6edb1ebd279e97e4693dd0b42d73597a261edcaef4475e3f589491285abbf6",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "path_batch",
+      "seed": 99,
+      "split": "test",
+      "task_id": "swg.test.script_repair.path_batch.d3.s99"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "3a8533896bcb792a57589d74864b15b1bb0c5be69946e81704f928199343301a",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "path_batch",
+      "seed": 90,
+      "split": "test",
+      "task_id": "swg.test.script_repair.path_batch.d4.s90"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "1dba24b2685c56d84d34495ccf82c3036623cbfe14b65db02ed1728c79ce9bb2",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "path_batch",
+      "seed": 91,
+      "split": "test",
+      "task_id": "swg.test.script_repair.path_batch.d4.s91"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "f258c9897e8b509e78518e4a91d6e9195a962079278215a60a3fa2e715945f91",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "path_batch",
+      "seed": 92,
+      "split": "test",
+      "task_id": "swg.test.script_repair.path_batch.d4.s92"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "381f42918be1a08651b2636fe7d0166685fc392b8b9e223268592c4a66bc7019",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "path_batch",
+      "seed": 93,
+      "split": "test",
+      "task_id": "swg.test.script_repair.path_batch.d4.s93"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "452e21b14d0f28a51102556a60db927ffd456854dd0e5564dd517208bab086bd",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "path_batch",
+      "seed": 94,
+      "split": "test",
+      "task_id": "swg.test.script_repair.path_batch.d4.s94"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "04056b035f748b24357f54b888781fa001a2e0e2c35677a42318c3fb307b5451",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "path_batch",
+      "seed": 95,
+      "split": "test",
+      "task_id": "swg.test.script_repair.path_batch.d4.s95"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "b19539f9a70e8af14d6c2054e76ad3d826cb3f9ad488e4d6f5b00d75dd71edbc",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "path_batch",
+      "seed": 96,
+      "split": "test",
+      "task_id": "swg.test.script_repair.path_batch.d4.s96"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "3c93156d74a3f9b379c31cb71e53adf7291d9ca5ce73f1b23db56c3b38291ed0",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "path_batch",
+      "seed": 97,
+      "split": "test",
+      "task_id": "swg.test.script_repair.path_batch.d4.s97"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "1e4309bd9165ece5f683fd539267a697b60a099be77d335814c234564f529ed0",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "path_batch",
+      "seed": 98,
+      "split": "test",
+      "task_id": "swg.test.script_repair.path_batch.d4.s98"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "284ebd64afbd340639352eac6497601f765987b8fa24ef463366d4b610c98792",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "path_batch",
+      "seed": 99,
+      "split": "test",
+      "task_id": "swg.test.script_repair.path_batch.d4.s99"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "df39e3f95b7fdec7c9c7dd40f5107a403cbd108cf1e653737e4ed08a245d8770",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "path_batch",
+      "seed": 90,
+      "split": "test",
+      "task_id": "swg.test.script_repair.path_batch.d5.s90"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "c28214d38d57fd63528ec6c49697221d03cac93a955604c3f07413d0378b0f01",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "path_batch",
+      "seed": 91,
+      "split": "test",
+      "task_id": "swg.test.script_repair.path_batch.d5.s91"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "2ed075113715d4249b0b1f5a4ad65cffe2a8883896824aef42c00b933cbc893f",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "path_batch",
+      "seed": 92,
+      "split": "test",
+      "task_id": "swg.test.script_repair.path_batch.d5.s92"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "bc2c5a587904e7439e988aa0061982225c58705c41ae91d22096cd83f2643b4f",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "path_batch",
+      "seed": 93,
+      "split": "test",
+      "task_id": "swg.test.script_repair.path_batch.d5.s93"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "bffb4a283d1d6058ecca3f43baef72269e270c4caad5dfd0f3cd5b308bc12d58",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "path_batch",
+      "seed": 94,
+      "split": "test",
+      "task_id": "swg.test.script_repair.path_batch.d5.s94"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "fb86c2b3ad6e84038e13b558ee194b157370446757649f276d5891fc66f08201",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "path_batch",
+      "seed": 95,
+      "split": "test",
+      "task_id": "swg.test.script_repair.path_batch.d5.s95"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "a7b9397627dd2f2749893c475c45223d26634b1ea438efe80b3beb693bec73b4",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "path_batch",
+      "seed": 96,
+      "split": "test",
+      "task_id": "swg.test.script_repair.path_batch.d5.s96"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "5855798636e2b5bec4c72164121f3a1a858b804453744b0db5231c0dd82e27ef",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "path_batch",
+      "seed": 97,
+      "split": "test",
+      "task_id": "swg.test.script_repair.path_batch.d5.s97"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "182cd7ad636f99cc25b099ef161a3ba77474d2a6d3d091339fef7fa0d9926915",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "path_batch",
+      "seed": 98,
+      "split": "test",
+      "task_id": "swg.test.script_repair.path_batch.d5.s98"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "5be2876d6687f11ec0bfe94232866a23c3a88dfc1e8c53c5d534624c3db52096",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "path_batch",
+      "seed": 99,
+      "split": "test",
+      "task_id": "swg.test.script_repair.path_batch.d5.s99"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "1ab7adaa3f9e3787f4ac2c3d49d5a3199bbcc451778188639e50b346a63c5699",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "csv_schema_drift",
+      "seed": 90,
+      "split": "test",
+      "task_id": "swg.test.script_repair.csv_schema_drift.d3.s90"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "4966d9ec139385f16b3f3d5d4dec2b2a0516f0257026c298e9028235e8c66e05",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "csv_schema_drift",
+      "seed": 91,
+      "split": "test",
+      "task_id": "swg.test.script_repair.csv_schema_drift.d3.s91"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "139e9fc98cd4409ed17704b6e07dff6f341b768f6b4edfcb995ef7882a699ac7",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "csv_schema_drift",
+      "seed": 92,
+      "split": "test",
+      "task_id": "swg.test.script_repair.csv_schema_drift.d3.s92"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "bebb54f1d532d6e0f50869dbdc388f72f986a1842f2695060ef503ad6dfd21b1",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "csv_schema_drift",
+      "seed": 93,
+      "split": "test",
+      "task_id": "swg.test.script_repair.csv_schema_drift.d3.s93"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "984b25a581dd0c4da656d7f2d366487d261c9e6512b7668f120ee37d46c055ff",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "csv_schema_drift",
+      "seed": 94,
+      "split": "test",
+      "task_id": "swg.test.script_repair.csv_schema_drift.d3.s94"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "8138ba244074239909d8979c46f7a9a8d1557f4c3495807b5e466c83351426ce",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "csv_schema_drift",
+      "seed": 95,
+      "split": "test",
+      "task_id": "swg.test.script_repair.csv_schema_drift.d3.s95"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "3edf6872a27cd4ae008a1b93e046778c07a6108a8c8afc5801c218368c1fed6f",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "csv_schema_drift",
+      "seed": 96,
+      "split": "test",
+      "task_id": "swg.test.script_repair.csv_schema_drift.d3.s96"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "2519cd360a2e49dfb7d37f05164aa53947c0b63a3551e7135e49254fd0db1681",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "csv_schema_drift",
+      "seed": 97,
+      "split": "test",
+      "task_id": "swg.test.script_repair.csv_schema_drift.d3.s97"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "02c2eee654d1d7b4cbe296f7e1257b79404a4fde42b0d8a1f3b053cb3e31e9d5",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "csv_schema_drift",
+      "seed": 98,
+      "split": "test",
+      "task_id": "swg.test.script_repair.csv_schema_drift.d3.s98"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "78d1ef98232ed5d88095bad413090b55dd0abb8709e68d7072380e516c820f96",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "csv_schema_drift",
+      "seed": 99,
+      "split": "test",
+      "task_id": "swg.test.script_repair.csv_schema_drift.d3.s99"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "6b6dbe77239d194206ba2c24a6829eeaa3d4a15b02f6749979b2ee12970e3255",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "csv_schema_drift",
+      "seed": 90,
+      "split": "test",
+      "task_id": "swg.test.script_repair.csv_schema_drift.d4.s90"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "224747376942cfc2d167e3fc334ea1e80cf0c4872c358ffc15f0b7239ec0e946",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "csv_schema_drift",
+      "seed": 91,
+      "split": "test",
+      "task_id": "swg.test.script_repair.csv_schema_drift.d4.s91"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "0841798d58db85821c130065b73f19c7bc0d1c4e0cea11e740a112526b801d3b",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "csv_schema_drift",
+      "seed": 92,
+      "split": "test",
+      "task_id": "swg.test.script_repair.csv_schema_drift.d4.s92"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "52dce5f53b4906fbd27399e41bd63a52afaf72981530244a424b9b029a8b3e64",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "csv_schema_drift",
+      "seed": 93,
+      "split": "test",
+      "task_id": "swg.test.script_repair.csv_schema_drift.d4.s93"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "8842199e16522a82154a0b3167e1cb144baac1d18a01da97c1fdbaecbcd254aa",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "csv_schema_drift",
+      "seed": 94,
+      "split": "test",
+      "task_id": "swg.test.script_repair.csv_schema_drift.d4.s94"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "428605225acef0e20aa27e1aea14bdba182aa5bc5a8be9fec8ba236a173e2a18",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "csv_schema_drift",
+      "seed": 95,
+      "split": "test",
+      "task_id": "swg.test.script_repair.csv_schema_drift.d4.s95"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "53396544ab15fa3794d702996698cbdc89ccb8b30418ebf6333f4b123f5bae83",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "csv_schema_drift",
+      "seed": 96,
+      "split": "test",
+      "task_id": "swg.test.script_repair.csv_schema_drift.d4.s96"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "254569b2073bf6b1e0ca07527b2c3ed3891cfac13f2a4c654529da7cc27211d8",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "csv_schema_drift",
+      "seed": 97,
+      "split": "test",
+      "task_id": "swg.test.script_repair.csv_schema_drift.d4.s97"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "9ba6dfabd9e2587c8c0d78cb1cb82e2d84a90b17c833a6b45400a3bc23f7cdd4",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "csv_schema_drift",
+      "seed": 98,
+      "split": "test",
+      "task_id": "swg.test.script_repair.csv_schema_drift.d4.s98"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "b3bc80b10f7b51cc09e304524c5af2c26d3a6560751f03f439ac9eb53bb11162",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "csv_schema_drift",
+      "seed": 99,
+      "split": "test",
+      "task_id": "swg.test.script_repair.csv_schema_drift.d4.s99"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "0d94310aef166d4417e147a33f65558dc3faf939304eda3f8ae1277d4b6471c6",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "csv_schema_drift",
+      "seed": 90,
+      "split": "test",
+      "task_id": "swg.test.script_repair.csv_schema_drift.d5.s90"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "5c3b7cc8459dcee79b8d5e904c1db0c58f1dcbf7673dd6c30c3753a024851c56",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "csv_schema_drift",
+      "seed": 91,
+      "split": "test",
+      "task_id": "swg.test.script_repair.csv_schema_drift.d5.s91"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "6d0cd43805764c60d0f2dc96993b0f2c2ab684c97323f3b46254648647fd3b75",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "csv_schema_drift",
+      "seed": 92,
+      "split": "test",
+      "task_id": "swg.test.script_repair.csv_schema_drift.d5.s92"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "8eb313876c59a1e834b68c31fcb7e9faaf008a45c6e0c633a8b2c14c9761299b",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "csv_schema_drift",
+      "seed": 93,
+      "split": "test",
+      "task_id": "swg.test.script_repair.csv_schema_drift.d5.s93"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "5ac22fbb490cf93cc002944e879cf91f2777b406126994177314e10fdfeb0230",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "csv_schema_drift",
+      "seed": 94,
+      "split": "test",
+      "task_id": "swg.test.script_repair.csv_schema_drift.d5.s94"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "1dc65a924516d00113a49a58bfa040954d4c1e53cbab2dc2101023c9e8abb5c0",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "csv_schema_drift",
+      "seed": 95,
+      "split": "test",
+      "task_id": "swg.test.script_repair.csv_schema_drift.d5.s95"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "d0138b68b91407b3005c71179c1c3fcd0a73320f38057138c4d32e0199b64008",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "csv_schema_drift",
+      "seed": 96,
+      "split": "test",
+      "task_id": "swg.test.script_repair.csv_schema_drift.d5.s96"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "180df054820867d0ac50e1f3b39593a55cabef082e50e0061ef4fcecd8946013",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "csv_schema_drift",
+      "seed": 97,
+      "split": "test",
+      "task_id": "swg.test.script_repair.csv_schema_drift.d5.s97"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "a800a87dfbf689a29dbb2a9cfc8146736a2088c3c30c1f7db97b4652d0c38d48",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "csv_schema_drift",
+      "seed": 98,
+      "split": "test",
+      "task_id": "swg.test.script_repair.csv_schema_drift.d5.s98"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "8ddb1901be70b8bbffebbf59f9f2785442a113200e7cdfa981b982c0d7f181a0",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "csv_schema_drift",
+      "seed": 99,
+      "split": "test",
+      "task_id": "swg.test.script_repair.csv_schema_drift.d5.s99"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "d32665952b7aa69b2034113296dd32fa55418191691d045e02a76d0825f7a890",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "timestamp_normalization",
+      "seed": 90,
+      "split": "test",
+      "task_id": "swg.test.script_repair.timestamp_normalization.d3.s90"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "e6e84b97ed9efed4b96f777900863b1801e7a491fe2aeaee5edb1550e82f64bf",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "timestamp_normalization",
+      "seed": 91,
+      "split": "test",
+      "task_id": "swg.test.script_repair.timestamp_normalization.d3.s91"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "20cd9ff6fc065b0c1a1c0294d8e8c275c342831d73a7739e027f4c70464cd5cc",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "timestamp_normalization",
+      "seed": 92,
+      "split": "test",
+      "task_id": "swg.test.script_repair.timestamp_normalization.d3.s92"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "2f345aabd5fa640929f7e559dd6a508fcf19b6fc1faa77b14637429079502d94",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "timestamp_normalization",
+      "seed": 93,
+      "split": "test",
+      "task_id": "swg.test.script_repair.timestamp_normalization.d3.s93"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "c391e958bb899c30e6a5fe2b9466b61ee3c2cc89653ee53ddbaf68fdcbe9d308",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "timestamp_normalization",
+      "seed": 94,
+      "split": "test",
+      "task_id": "swg.test.script_repair.timestamp_normalization.d3.s94"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "8bd4c4f771b6095b27bce9f94ea9e34ac37938a1e44634601d28735f6a541d5d",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "timestamp_normalization",
+      "seed": 95,
+      "split": "test",
+      "task_id": "swg.test.script_repair.timestamp_normalization.d3.s95"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "8ea9aaeb9776e38c8b2fe8caaea7a800811e899ee381b8bfbac16d3304f4867c",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "timestamp_normalization",
+      "seed": 96,
+      "split": "test",
+      "task_id": "swg.test.script_repair.timestamp_normalization.d3.s96"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "83b262306bcd9bb8d879a85187c85ebdc01d5166c4c7ef2bc99ff93687678e86",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "timestamp_normalization",
+      "seed": 97,
+      "split": "test",
+      "task_id": "swg.test.script_repair.timestamp_normalization.d3.s97"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "4a13002d19f0dd53dea9f9ac9aae308f4b7bb82ef90d1eaa677799a432558690",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "timestamp_normalization",
+      "seed": 98,
+      "split": "test",
+      "task_id": "swg.test.script_repair.timestamp_normalization.d3.s98"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "e675aa4b669a9fb225fdcc0bfeec90dfea45245c848f7f640cfc1a844a3ef7bd",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "timestamp_normalization",
+      "seed": 99,
+      "split": "test",
+      "task_id": "swg.test.script_repair.timestamp_normalization.d3.s99"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "1d81bd702600e416c53a5938202a3e838ea208192f3fb3c333a959759eeaf2c4",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "timestamp_normalization",
+      "seed": 90,
+      "split": "test",
+      "task_id": "swg.test.script_repair.timestamp_normalization.d4.s90"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "a31cbc92a2e15572b56d769cd8e54b6e48aa6a51866a227dab875f724408f733",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "timestamp_normalization",
+      "seed": 91,
+      "split": "test",
+      "task_id": "swg.test.script_repair.timestamp_normalization.d4.s91"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "cc02d9d7f600517605f15cc6cbe497db4811ee99f7dcb8590782489a55dd72d2",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "timestamp_normalization",
+      "seed": 92,
+      "split": "test",
+      "task_id": "swg.test.script_repair.timestamp_normalization.d4.s92"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "65e3299c056795c90aa99ad7f86d91cb61443a48ebe27e6be4299eec3f75a764",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "timestamp_normalization",
+      "seed": 93,
+      "split": "test",
+      "task_id": "swg.test.script_repair.timestamp_normalization.d4.s93"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "80dde662da5de52ddb884d17317ffc02e5845a447369798e7bd9e700629d4174",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "timestamp_normalization",
+      "seed": 94,
+      "split": "test",
+      "task_id": "swg.test.script_repair.timestamp_normalization.d4.s94"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "c4a6dbd7bb495ea74fcad4c7cf2de2514197d73d25605f6fc6492bdba993dcfa",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "timestamp_normalization",
+      "seed": 95,
+      "split": "test",
+      "task_id": "swg.test.script_repair.timestamp_normalization.d4.s95"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "781b92529ffa1661c32a07be6fb9918fc215883bcbdfe3db8f2b39eecf581d21",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "timestamp_normalization",
+      "seed": 96,
+      "split": "test",
+      "task_id": "swg.test.script_repair.timestamp_normalization.d4.s96"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "1b72375b2c9906dc136e2356a902d9b45ac8542645bfe8a5cdeb43f79dfaa8e7",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "timestamp_normalization",
+      "seed": 97,
+      "split": "test",
+      "task_id": "swg.test.script_repair.timestamp_normalization.d4.s97"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "b84a0d89260635952d76c9da534e8b44caeb416f4fd8f12ad6a7c7ae4143e894",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "timestamp_normalization",
+      "seed": 98,
+      "split": "test",
+      "task_id": "swg.test.script_repair.timestamp_normalization.d4.s98"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "8099856b5d2c8d1e46938b53fdf6f90f6ba84908a625afebc40602b9e90d89d8",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "timestamp_normalization",
+      "seed": 99,
+      "split": "test",
+      "task_id": "swg.test.script_repair.timestamp_normalization.d4.s99"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "c6a93d2a5b0530def7ac99a435bad9cfef6229024b235f4cb919e7e4f3df5264",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "timestamp_normalization",
+      "seed": 90,
+      "split": "test",
+      "task_id": "swg.test.script_repair.timestamp_normalization.d5.s90"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "ffa1e8f3159964b72f8289b579ae3c8bbd81ec102c25d25fc3732dc874ace758",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "timestamp_normalization",
+      "seed": 91,
+      "split": "test",
+      "task_id": "swg.test.script_repair.timestamp_normalization.d5.s91"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "42ae85634ea42b748467744b578ba5290c61c0fd8fdede7216a3094766f422bb",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "timestamp_normalization",
+      "seed": 92,
+      "split": "test",
+      "task_id": "swg.test.script_repair.timestamp_normalization.d5.s92"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "3954627136ecaf70bd02bfcfa2c6d13aac4fe0c5c999c29b4b70bd5a28e8359a",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "timestamp_normalization",
+      "seed": 93,
+      "split": "test",
+      "task_id": "swg.test.script_repair.timestamp_normalization.d5.s93"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "76bd431f9bc925c3f32e970d56497bba5f5c1e523fdf6a3a3a8d18fa5088481a",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "timestamp_normalization",
+      "seed": 94,
+      "split": "test",
+      "task_id": "swg.test.script_repair.timestamp_normalization.d5.s94"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "742d42768448849dda7d6cf574e0f63bd178e50069af66600d21ff1871970a6f",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "timestamp_normalization",
+      "seed": 95,
+      "split": "test",
+      "task_id": "swg.test.script_repair.timestamp_normalization.d5.s95"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "5cbf48a86def5ed98034b8c2f7c8e059ce6d8437f7935329f281fb2512b4c419",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "timestamp_normalization",
+      "seed": 96,
+      "split": "test",
+      "task_id": "swg.test.script_repair.timestamp_normalization.d5.s96"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "88119cd4bf788cb512332e904eb8dcba214cf22add5845aaebd40683f4fcf2f5",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "timestamp_normalization",
+      "seed": 97,
+      "split": "test",
+      "task_id": "swg.test.script_repair.timestamp_normalization.d5.s97"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "054c0e5dd74485779f06533f3d25f6a7fa5a0d9c10f69b61872e2a004b403127",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "timestamp_normalization",
+      "seed": 98,
+      "split": "test",
+      "task_id": "swg.test.script_repair.timestamp_normalization.d5.s98"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "581501e95820cc9decec79db975d7538c6f65eddd704c81c4135dffb1021fb48",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "timestamp_normalization",
+      "seed": 99,
+      "split": "test",
+      "task_id": "swg.test.script_repair.timestamp_normalization.d5.s99"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "a1ba65243aeeac9f321f1e0e61c30abddba2140ba2eb998723c24671135b68a1",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "team_hours_pipeline",
+      "seed": 90,
+      "split": "test",
+      "task_id": "swg.test.pipeline.team_hours_pipeline.d3.s90"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "2ae0421059673eb42cca28f1ad3a23605017233caa4a5f07b626d5e93686faa1",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "team_hours_pipeline",
+      "seed": 91,
+      "split": "test",
+      "task_id": "swg.test.pipeline.team_hours_pipeline.d3.s91"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "d84fe4f2506e02c9e20bffb92687b66d148b9791e964c9db26b7751bdcce9eb2",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "team_hours_pipeline",
+      "seed": 92,
+      "split": "test",
+      "task_id": "swg.test.pipeline.team_hours_pipeline.d3.s92"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "edfbfa2449dfe97d92b3664cb8071d38abbc294e4438a391144db69cbd1dbf88",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "team_hours_pipeline",
+      "seed": 93,
+      "split": "test",
+      "task_id": "swg.test.pipeline.team_hours_pipeline.d3.s93"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "7ee232ff50d2b0cd04136cb005e7c6b4b43e585a67f9968e4b861464c6eb02d7",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "team_hours_pipeline",
+      "seed": 94,
+      "split": "test",
+      "task_id": "swg.test.pipeline.team_hours_pipeline.d3.s94"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "e7111c01f1d0aaa5b09241d22ef9ea043a81724d70ee0ee770b9c75c625a6053",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "team_hours_pipeline",
+      "seed": 95,
+      "split": "test",
+      "task_id": "swg.test.pipeline.team_hours_pipeline.d3.s95"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "5ecb30e9656e87a837bd0a3f72ebb831f21632d0f62cb5a6e7dd64a71613902e",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "team_hours_pipeline",
+      "seed": 96,
+      "split": "test",
+      "task_id": "swg.test.pipeline.team_hours_pipeline.d3.s96"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "39ea9baf8b18bb044038e47fe256299e3f7bce2d219308f58a95366ca54dca3b",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "team_hours_pipeline",
+      "seed": 97,
+      "split": "test",
+      "task_id": "swg.test.pipeline.team_hours_pipeline.d3.s97"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "2d5ab2c6ce0245cbc2d881712b43532d66601a59eb1dedf700cba40a9d2335d7",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "team_hours_pipeline",
+      "seed": 98,
+      "split": "test",
+      "task_id": "swg.test.pipeline.team_hours_pipeline.d3.s98"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "fd1c367e3b0d38c2bf4b240713c290449688e895f3035d30b621b6f1016df060",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "team_hours_pipeline",
+      "seed": 99,
+      "split": "test",
+      "task_id": "swg.test.pipeline.team_hours_pipeline.d3.s99"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "e2367f8bd0b9ac76311a7dd85e323f771155f78a114ea2efbcad823a1577c967",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "team_hours_pipeline",
+      "seed": 90,
+      "split": "test",
+      "task_id": "swg.test.pipeline.team_hours_pipeline.d4.s90"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "eb13f3b88d0a98e62bf68176531d15db93b5a850b27473018369d29703f0b583",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "team_hours_pipeline",
+      "seed": 91,
+      "split": "test",
+      "task_id": "swg.test.pipeline.team_hours_pipeline.d4.s91"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "7832e271013a0fe063210d0c866a3d57abc7969c9cafa0690ec2013b679800bb",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "team_hours_pipeline",
+      "seed": 92,
+      "split": "test",
+      "task_id": "swg.test.pipeline.team_hours_pipeline.d4.s92"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "3c3f266b96fc4f542eebae2648988d89a68a1dcd06d0b0f27cacd0239baa1b39",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "team_hours_pipeline",
+      "seed": 93,
+      "split": "test",
+      "task_id": "swg.test.pipeline.team_hours_pipeline.d4.s93"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "4a47446c81b8691ca1ca0f94af76252e71cb898954c85f0b6901f03d8dcc22cc",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "team_hours_pipeline",
+      "seed": 94,
+      "split": "test",
+      "task_id": "swg.test.pipeline.team_hours_pipeline.d4.s94"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "6fee3003f4d402aaa75583b5907f4c698c6ba89d070f209a17948d08422186e4",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "team_hours_pipeline",
+      "seed": 95,
+      "split": "test",
+      "task_id": "swg.test.pipeline.team_hours_pipeline.d4.s95"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "b7e682b44ac9710502303c9d5968848b91673ef55c1e2e8fab6056d98ad4adbb",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "team_hours_pipeline",
+      "seed": 96,
+      "split": "test",
+      "task_id": "swg.test.pipeline.team_hours_pipeline.d4.s96"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "b6229d2fbe3a016640290d19f79553c2192d4088a55d7ea850c2a51a8d1d1b31",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "team_hours_pipeline",
+      "seed": 97,
+      "split": "test",
+      "task_id": "swg.test.pipeline.team_hours_pipeline.d4.s97"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "9deb46fb18333cd9804690212ffb5a8cb21ba825a8ef56f32cce621c942c9258",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "team_hours_pipeline",
+      "seed": 98,
+      "split": "test",
+      "task_id": "swg.test.pipeline.team_hours_pipeline.d4.s98"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "aaff2837a56bbd0adb9c21dfbb04072af58c2fce45ee92443de3958b5779d31e",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "team_hours_pipeline",
+      "seed": 99,
+      "split": "test",
+      "task_id": "swg.test.pipeline.team_hours_pipeline.d4.s99"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "06ce5c295b7b43131472fcea4fa367e7190a486755235577b03f88574d856204",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "team_hours_pipeline",
+      "seed": 90,
+      "split": "test",
+      "task_id": "swg.test.pipeline.team_hours_pipeline.d5.s90"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "08bd0565c4931d8bcfacd530fa76e12559907ac444596febd161899cb51e5352",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "team_hours_pipeline",
+      "seed": 91,
+      "split": "test",
+      "task_id": "swg.test.pipeline.team_hours_pipeline.d5.s91"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "0671fe6dba2abda496388e114aa216f91f5988d45d2812d9fb3420951f5d1954",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "team_hours_pipeline",
+      "seed": 92,
+      "split": "test",
+      "task_id": "swg.test.pipeline.team_hours_pipeline.d5.s92"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "2c7a074fdaeb93bf448c2e0f54982b5a0427508a77943790c33c9476e183f3fd",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "team_hours_pipeline",
+      "seed": 93,
+      "split": "test",
+      "task_id": "swg.test.pipeline.team_hours_pipeline.d5.s93"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "cdd3cc2bd43a91d8bec3c4b0a593758c3a9783396533a6a689c3070f12fbb958",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "team_hours_pipeline",
+      "seed": 94,
+      "split": "test",
+      "task_id": "swg.test.pipeline.team_hours_pipeline.d5.s94"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "2488eafe7add396ac20ccd440b0f421daed3543e38be4c99f55ae2f9bd00f029",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "team_hours_pipeline",
+      "seed": 95,
+      "split": "test",
+      "task_id": "swg.test.pipeline.team_hours_pipeline.d5.s95"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "c1b8b739be6b32228eeb053c8daa8b9c4de2fd711dc74389a1b8f4ac8d654911",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "team_hours_pipeline",
+      "seed": 96,
+      "split": "test",
+      "task_id": "swg.test.pipeline.team_hours_pipeline.d5.s96"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "140da3175930cc5d73b8f6cb29dfeecc3a5a68731cf1a302743645b5075b253c",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "team_hours_pipeline",
+      "seed": 97,
+      "split": "test",
+      "task_id": "swg.test.pipeline.team_hours_pipeline.d5.s97"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "4be4a30a436ef8b37665579bf60e7a1b4832df4022d855258084ff3aca0efb5f",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "team_hours_pipeline",
+      "seed": 98,
+      "split": "test",
+      "task_id": "swg.test.pipeline.team_hours_pipeline.d5.s98"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "435bf356f7999c2d058e2c3dcd847aeafcd08e211933fa205ba1636d0450ae0a",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "team_hours_pipeline",
+      "seed": 99,
+      "split": "test",
+      "task_id": "swg.test.pipeline.team_hours_pipeline.d5.s99"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "950625cc44baa1976e3e42f15bd7fbc77a4d5129f4d80889ab9f72820206c30f",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "sales_csv_pipeline",
+      "seed": 90,
+      "split": "test",
+      "task_id": "swg.test.pipeline.sales_csv_pipeline.d3.s90"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "99097b0b081973d44975b9805714e3ac5a0a66bf1d9214dc1776af8c298cc00c",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "sales_csv_pipeline",
+      "seed": 91,
+      "split": "test",
+      "task_id": "swg.test.pipeline.sales_csv_pipeline.d3.s91"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "bdcea2d23032ffcaa89725ad10bf24ba06441af508905212b3229ab30fe81334",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "sales_csv_pipeline",
+      "seed": 92,
+      "split": "test",
+      "task_id": "swg.test.pipeline.sales_csv_pipeline.d3.s92"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "d83c1fd26b0a3c44dfd05e31cc480701c42405c76581845e3ca997ccb153a6f7",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "sales_csv_pipeline",
+      "seed": 93,
+      "split": "test",
+      "task_id": "swg.test.pipeline.sales_csv_pipeline.d3.s93"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "66f37a1b035bc1f237acd3270d304e715a1817ce87547ce2b1bc00aaf40ceb3a",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "sales_csv_pipeline",
+      "seed": 94,
+      "split": "test",
+      "task_id": "swg.test.pipeline.sales_csv_pipeline.d3.s94"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "f9386dcdd8977d7074fa62405e7e1b419becd7d029659d8b4fa66e5d78dec73f",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "sales_csv_pipeline",
+      "seed": 95,
+      "split": "test",
+      "task_id": "swg.test.pipeline.sales_csv_pipeline.d3.s95"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "8586eb6f314593659cbf63844f792ed180f672ac2fc2d9715a6d2aba1d759a89",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "sales_csv_pipeline",
+      "seed": 96,
+      "split": "test",
+      "task_id": "swg.test.pipeline.sales_csv_pipeline.d3.s96"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "c37aefd2aaf6b59ee2a89c48c5fb5d96c9eb0be1bb62568efe40c96ff2aa914c",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "sales_csv_pipeline",
+      "seed": 97,
+      "split": "test",
+      "task_id": "swg.test.pipeline.sales_csv_pipeline.d3.s97"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "ac1f158c48c72b136d5b31f65568b7c3ed3df377e8c9d05f17aed68147b4a62b",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "sales_csv_pipeline",
+      "seed": 98,
+      "split": "test",
+      "task_id": "swg.test.pipeline.sales_csv_pipeline.d3.s98"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "ae96ca22c12ad1e6feefc66a7d4a937c6745fe8c0821ec87dce384cc70295e1f",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "sales_csv_pipeline",
+      "seed": 99,
+      "split": "test",
+      "task_id": "swg.test.pipeline.sales_csv_pipeline.d3.s99"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "ee6f6799923f186fd10d656b2894e0556be0f25dab596e5a19eddec7cc5c8bb2",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "sales_csv_pipeline",
+      "seed": 90,
+      "split": "test",
+      "task_id": "swg.test.pipeline.sales_csv_pipeline.d4.s90"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "36411865e5db0bcb4641de202d9b047be97d9337068e64c03a97b861389d7de1",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "sales_csv_pipeline",
+      "seed": 91,
+      "split": "test",
+      "task_id": "swg.test.pipeline.sales_csv_pipeline.d4.s91"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "8e5c195d965be5319d586bfee420c973eed0dcbdc9f3f94c6d5a58a7780e68c0",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "sales_csv_pipeline",
+      "seed": 92,
+      "split": "test",
+      "task_id": "swg.test.pipeline.sales_csv_pipeline.d4.s92"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "bf0bc757622dae0f5d3619a270b2087497b915f069d965f3705cce7d90246fbe",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "sales_csv_pipeline",
+      "seed": 93,
+      "split": "test",
+      "task_id": "swg.test.pipeline.sales_csv_pipeline.d4.s93"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "9a325e7ef5fdb000a8172a4264920b4b305362d94796a394615a6b26e07bbf70",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "sales_csv_pipeline",
+      "seed": 94,
+      "split": "test",
+      "task_id": "swg.test.pipeline.sales_csv_pipeline.d4.s94"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "89b6addb7b63e1063877c0294534ddd64101d48dda5437faa6459b4fde732f51",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "sales_csv_pipeline",
+      "seed": 95,
+      "split": "test",
+      "task_id": "swg.test.pipeline.sales_csv_pipeline.d4.s95"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "2752efe876c067bafe0080d2734d1502f22b69ac110cce22f35c2a03ad1c2385",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "sales_csv_pipeline",
+      "seed": 96,
+      "split": "test",
+      "task_id": "swg.test.pipeline.sales_csv_pipeline.d4.s96"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "46323da26ab8ae1073f70fdd0b80b34cbc47ed9da5aef36c90e00a78cdfc08cf",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "sales_csv_pipeline",
+      "seed": 97,
+      "split": "test",
+      "task_id": "swg.test.pipeline.sales_csv_pipeline.d4.s97"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "85818b2c62ef45c4df51a4510f1bfe8792b74a9d24a67ac5c8661573f47bd7b8",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "sales_csv_pipeline",
+      "seed": 98,
+      "split": "test",
+      "task_id": "swg.test.pipeline.sales_csv_pipeline.d4.s98"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "f1cd1f6e0e3864728e760855b5d96d2e73dfb64446652aaa0d5c7be9825aad30",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "sales_csv_pipeline",
+      "seed": 99,
+      "split": "test",
+      "task_id": "swg.test.pipeline.sales_csv_pipeline.d4.s99"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "894f5edc925ba1ed963d3f7b88c5271e5e86ea83aec63128f910b25e059fa4bf",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "sales_csv_pipeline",
+      "seed": 90,
+      "split": "test",
+      "task_id": "swg.test.pipeline.sales_csv_pipeline.d5.s90"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "5ecbacd93a7ae8c171d964849dcaaec92309eb30552e66bde6a70cc8e286c9b8",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "sales_csv_pipeline",
+      "seed": 91,
+      "split": "test",
+      "task_id": "swg.test.pipeline.sales_csv_pipeline.d5.s91"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "9d5d983576fc27edfcd481b66029e103e2a3f9bf5e3429a4bff4b71da3f6423a",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "sales_csv_pipeline",
+      "seed": 92,
+      "split": "test",
+      "task_id": "swg.test.pipeline.sales_csv_pipeline.d5.s92"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "b20d1e84f87d653051e4682918f97ed9000e93854ef3500b9541576e0f693b80",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "sales_csv_pipeline",
+      "seed": 93,
+      "split": "test",
+      "task_id": "swg.test.pipeline.sales_csv_pipeline.d5.s93"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "96aa98b73db90fcd54386c5d155c7a6aa4d16294331098715ef6b5a69e17f8f3",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "sales_csv_pipeline",
+      "seed": 94,
+      "split": "test",
+      "task_id": "swg.test.pipeline.sales_csv_pipeline.d5.s94"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "ee302cb972d149efb48ce9dc11cc860f0822d33b456e389c9f3b499ccde3aeb9",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "sales_csv_pipeline",
+      "seed": 95,
+      "split": "test",
+      "task_id": "swg.test.pipeline.sales_csv_pipeline.d5.s95"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "2253ffe4c460f957fe05428d735baf9ae07782a9321139fd7fe8bf0afc7616a9",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "sales_csv_pipeline",
+      "seed": 96,
+      "split": "test",
+      "task_id": "swg.test.pipeline.sales_csv_pipeline.d5.s96"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "44c612d04b855ff0ea16a9c8842ecf9c45f1762fb3fae9a70e10e9833692a374",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "sales_csv_pipeline",
+      "seed": 97,
+      "split": "test",
+      "task_id": "swg.test.pipeline.sales_csv_pipeline.d5.s97"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "3e7fe25a7c73fa3766f7cb53152488e1e8766b1619e76696b402dc1f04262736",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "sales_csv_pipeline",
+      "seed": 98,
+      "split": "test",
+      "task_id": "swg.test.pipeline.sales_csv_pipeline.d5.s98"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "e48c13baa6cec7d8414dc7da7106b91eb28f48b09f296018c1546eaa2c008cb2",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "sales_csv_pipeline",
+      "seed": 99,
+      "split": "test",
+      "task_id": "swg.test.pipeline.sales_csv_pipeline.d5.s99"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "bb6aab541b6bff8281467511ff32e23604aa73a2c340a46a09f816cc95fe3be0",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "artifact_stitch_pipeline",
+      "seed": 90,
+      "split": "test",
+      "task_id": "swg.test.pipeline.artifact_stitch_pipeline.d3.s90"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "e188bcce86c78f29f78895d955578290be9f95bed8a1edc32e3667540ebe33be",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "artifact_stitch_pipeline",
+      "seed": 91,
+      "split": "test",
+      "task_id": "swg.test.pipeline.artifact_stitch_pipeline.d3.s91"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "36556eeec4de1a361fba0d9d50daf89460902c87067478367500066c2b2925d0",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "artifact_stitch_pipeline",
+      "seed": 92,
+      "split": "test",
+      "task_id": "swg.test.pipeline.artifact_stitch_pipeline.d3.s92"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "e564c5a89c5bc4afb594cf13140e2345fbfc6a12c152795c3981ff0961f26c98",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "artifact_stitch_pipeline",
+      "seed": 93,
+      "split": "test",
+      "task_id": "swg.test.pipeline.artifact_stitch_pipeline.d3.s93"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "dac3563d5a5b9cf2b4163a02a3b5b839a0707fdf64295ada5d6681a725258a85",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "artifact_stitch_pipeline",
+      "seed": 94,
+      "split": "test",
+      "task_id": "swg.test.pipeline.artifact_stitch_pipeline.d3.s94"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "5cee5bcb538bcdc15a2e9cbd6ccf6cd51ca474e7533e43ae5a4d8980fce3c2bd",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "artifact_stitch_pipeline",
+      "seed": 95,
+      "split": "test",
+      "task_id": "swg.test.pipeline.artifact_stitch_pipeline.d3.s95"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "770ff6e30b65cf97dbb04d6031439e052764b01fc92e6da5cebb4e966e3a8a2a",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "artifact_stitch_pipeline",
+      "seed": 96,
+      "split": "test",
+      "task_id": "swg.test.pipeline.artifact_stitch_pipeline.d3.s96"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "260a9bdb941794140631aac9d63a99907a8e6f73f8119d24d22981ec66fb9836",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "artifact_stitch_pipeline",
+      "seed": 97,
+      "split": "test",
+      "task_id": "swg.test.pipeline.artifact_stitch_pipeline.d3.s97"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "8785eb7f9e34360876b1707d2b54be109729ca5e6d4ef2469e10b0a38d72396c",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "artifact_stitch_pipeline",
+      "seed": 98,
+      "split": "test",
+      "task_id": "swg.test.pipeline.artifact_stitch_pipeline.d3.s98"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "c04809618a046024b7f1470ce8613ea74721b4e5b2c7449aa7cfcb76696a9672",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "artifact_stitch_pipeline",
+      "seed": 99,
+      "split": "test",
+      "task_id": "swg.test.pipeline.artifact_stitch_pipeline.d3.s99"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "66fd65917d903b24e0eb9a4a7c7f72ca45137c4188d5d4a4d419e2693b586b87",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "artifact_stitch_pipeline",
+      "seed": 90,
+      "split": "test",
+      "task_id": "swg.test.pipeline.artifact_stitch_pipeline.d4.s90"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "a73a401ff391f699274f7daa76720f0afb256ce3882549e4aef3e05483971e53",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "artifact_stitch_pipeline",
+      "seed": 91,
+      "split": "test",
+      "task_id": "swg.test.pipeline.artifact_stitch_pipeline.d4.s91"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "8261c397f7672912f4a434e2ba4ee2da2249b21eac670da2e58d2e15fe43d7df",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "artifact_stitch_pipeline",
+      "seed": 92,
+      "split": "test",
+      "task_id": "swg.test.pipeline.artifact_stitch_pipeline.d4.s92"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "e6b2f687cf4dae8a0dd47ace522792a6288b6c74e1d6561abbcb3b76b2138958",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "artifact_stitch_pipeline",
+      "seed": 93,
+      "split": "test",
+      "task_id": "swg.test.pipeline.artifact_stitch_pipeline.d4.s93"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "6d6d1520e897b434766013e20c0b6f1d48d09c5a2ceb6a15e4f4a89d8c67491f",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "artifact_stitch_pipeline",
+      "seed": 94,
+      "split": "test",
+      "task_id": "swg.test.pipeline.artifact_stitch_pipeline.d4.s94"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "800b93d2426d877c12edbca9a69d4dc13501ff2b63766e79f189fad0910b3e49",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "artifact_stitch_pipeline",
+      "seed": 95,
+      "split": "test",
+      "task_id": "swg.test.pipeline.artifact_stitch_pipeline.d4.s95"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "8ec784db5cce85597acafb9d8ce9240e6e698b5fde929c10c6850bc26d740b72",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "artifact_stitch_pipeline",
+      "seed": 96,
+      "split": "test",
+      "task_id": "swg.test.pipeline.artifact_stitch_pipeline.d4.s96"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "d19f6e4d16614841c5436375de018bd3750089a2f8c1f3fd2c12638194076cef",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "artifact_stitch_pipeline",
+      "seed": 97,
+      "split": "test",
+      "task_id": "swg.test.pipeline.artifact_stitch_pipeline.d4.s97"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "985579a0d6a6d5d49c2c7e2b4e4ac90155678b6ff96944412787eacce89dd573",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "artifact_stitch_pipeline",
+      "seed": 98,
+      "split": "test",
+      "task_id": "swg.test.pipeline.artifact_stitch_pipeline.d4.s98"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "09459f16cfc5edc209e5107bb85dcbc7479166ab0f2d6201ef1e2412d3aaf32d",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "artifact_stitch_pipeline",
+      "seed": 99,
+      "split": "test",
+      "task_id": "swg.test.pipeline.artifact_stitch_pipeline.d4.s99"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "50bd7baf4d57d7a5730f40d671aaaea198acd4d18bdc6f5c94e4cb260225f209",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "artifact_stitch_pipeline",
+      "seed": 90,
+      "split": "test",
+      "task_id": "swg.test.pipeline.artifact_stitch_pipeline.d5.s90"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "d5eeb5771ba8d36a860e2a1d7930facdad15534665ec2707929f0d2efaeeed6b",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "artifact_stitch_pipeline",
+      "seed": 91,
+      "split": "test",
+      "task_id": "swg.test.pipeline.artifact_stitch_pipeline.d5.s91"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "12ab37526719ad59c95c4003383ec17f9a9fdfd1a230a0504b09899fb001b8fe",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "artifact_stitch_pipeline",
+      "seed": 92,
+      "split": "test",
+      "task_id": "swg.test.pipeline.artifact_stitch_pipeline.d5.s92"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "59a85548a182d6ecd2996bb3c01cdf1bf814afd0781e6af390e524959e9dc0ff",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "artifact_stitch_pipeline",
+      "seed": 93,
+      "split": "test",
+      "task_id": "swg.test.pipeline.artifact_stitch_pipeline.d5.s93"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "3d2a052663ede35209360e475ea1d44833641d2670468548160bd05888b22408",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "artifact_stitch_pipeline",
+      "seed": 94,
+      "split": "test",
+      "task_id": "swg.test.pipeline.artifact_stitch_pipeline.d5.s94"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "797d1e6303229b4205d165b2580e411ad3cc4dccfb73b736068e33bba124e701",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "artifact_stitch_pipeline",
+      "seed": 95,
+      "split": "test",
+      "task_id": "swg.test.pipeline.artifact_stitch_pipeline.d5.s95"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "8056343f9ecc2b16d97def7131b6664606e5f11e0fe834f54bcf3a573fd4fd06",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "artifact_stitch_pipeline",
+      "seed": 96,
+      "split": "test",
+      "task_id": "swg.test.pipeline.artifact_stitch_pipeline.d5.s96"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "ad878763941d374176449854f73f32e0544f7ec4354939cab55f1740f94342dc",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "artifact_stitch_pipeline",
+      "seed": 97,
+      "split": "test",
+      "task_id": "swg.test.pipeline.artifact_stitch_pipeline.d5.s97"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "897fab64020a5598a2db24a9a88a0d628a65a1ab9d5ec7a0d3baea0e2d2ccc1b",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "artifact_stitch_pipeline",
+      "seed": 98,
+      "split": "test",
+      "task_id": "swg.test.pipeline.artifact_stitch_pipeline.d5.s98"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "7b981c1e8e63e8f352c3e278e3beb39e72fb785940579de8f20e3fb90e6de351",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "artifact_stitch_pipeline",
+      "seed": 99,
+      "split": "test",
+      "task_id": "swg.test.pipeline.artifact_stitch_pipeline.d5.s99"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "63f0476bfcc722b2e27325d13ed8840d8e28590d1e705bcb0227b2e2c2c2d4e9",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "service_config_reconciliation",
+      "seed": 90,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.service_config_reconciliation.d3.s90"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "bb58c3e73add34e223a1d48f64cb53431cab4cf3230b0624ac6add33d3b0a662",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "service_config_reconciliation",
+      "seed": 91,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.service_config_reconciliation.d3.s91"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "2908eee218bb837d8ed3044f04d0948b3aa37bb1962e9dbd4dc3286865a0df20",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "service_config_reconciliation",
+      "seed": 92,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.service_config_reconciliation.d3.s92"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "cc06be9a11175e9ace0c82c9ab993f03d725128e3440a345d4bce3431bf6c5c1",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "service_config_reconciliation",
+      "seed": 93,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.service_config_reconciliation.d3.s93"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "9d965db4fa25cb4910e470878296228fa44e5ded483e1068c5db980ab38b46ef",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "service_config_reconciliation",
+      "seed": 94,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.service_config_reconciliation.d3.s94"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "7510ba145d188a748df88796fc0bf212e2ea9bac95b05495e197b842d22d3c5e",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "service_config_reconciliation",
+      "seed": 95,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.service_config_reconciliation.d3.s95"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "6fbee2a61fb7d84e128beeb77d666aa06b35ea2d48a34730aff64d6fbb0f202f",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "service_config_reconciliation",
+      "seed": 96,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.service_config_reconciliation.d3.s96"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "3b9c3ce366ba96f855f59255846c6e74ed84866c553e195c3bbb3bf434cbeb78",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "service_config_reconciliation",
+      "seed": 97,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.service_config_reconciliation.d3.s97"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "68aab61bdea08d463c5584cbc9502f03b81d161232b17778607fb3b045a5d3ce",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "service_config_reconciliation",
+      "seed": 98,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.service_config_reconciliation.d3.s98"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "66b04e5a4955aa31a2806d513cd4fcf3fe411e396ff6ec5b77ae6352219dc10b",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "service_config_reconciliation",
+      "seed": 99,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.service_config_reconciliation.d3.s99"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "ae4801f03e7dd3b91b57489396f23cbe4f474da1092aa94c97279239e6f7b8d9",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "service_config_reconciliation",
+      "seed": 90,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.service_config_reconciliation.d4.s90"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "0535851e4c19a3687a595843d9675a8a388a0db9836cb1c34c1a44d8d813e948",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "service_config_reconciliation",
+      "seed": 91,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.service_config_reconciliation.d4.s91"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "0c4e59b818275ec0a71693bbe8c70c95a2dd510c0e8f04c8a3c8a7342035dc4a",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "service_config_reconciliation",
+      "seed": 92,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.service_config_reconciliation.d4.s92"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "eca716949109eaa8e78b05dc922986752d930db902e1ed5414069790c67f4dca",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "service_config_reconciliation",
+      "seed": 93,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.service_config_reconciliation.d4.s93"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "b3aa3761bcf51f4275bff5f23c5eee63bb300246b48f7c7b6bad765b8b94a5bd",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "service_config_reconciliation",
+      "seed": 94,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.service_config_reconciliation.d4.s94"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "ffff56d6f3767e7b5b3c9c2ca0092b721ebf0e7ea40262d593db9df9d53787d9",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "service_config_reconciliation",
+      "seed": 95,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.service_config_reconciliation.d4.s95"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "28c52e8ac922141396d4de60cd64ee1af38b839d6f09a34425c23980aa30818d",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "service_config_reconciliation",
+      "seed": 96,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.service_config_reconciliation.d4.s96"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "7e82f05117e605b8d46a5b524800aaffffa4de8f0ad1fd60b8e726e503977981",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "service_config_reconciliation",
+      "seed": 97,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.service_config_reconciliation.d4.s97"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "67aa43b98bc62d42d413076927112214856c58ad128df8ad0888bafd12c4e0a8",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "service_config_reconciliation",
+      "seed": 98,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.service_config_reconciliation.d4.s98"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "9385b2d3856a91d42656b85f96a96c2565269bf349464863381ef3ed4a8d608a",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "service_config_reconciliation",
+      "seed": 99,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.service_config_reconciliation.d4.s99"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "71f91c583e46c4508fe84f64ce1a85fa3729dfeac36ff9810d62fba0b905e8f7",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "service_config_reconciliation",
+      "seed": 90,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.service_config_reconciliation.d5.s90"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "2e98f6a98b7712e810f15ffd9589a3e1a300865135b072c11734807f5511e122",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "service_config_reconciliation",
+      "seed": 91,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.service_config_reconciliation.d5.s91"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "53e4ef6476da68d7a07941f2bdc39265da3ea11bd18a59ca3ed9c82c7121c024",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "service_config_reconciliation",
+      "seed": 92,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.service_config_reconciliation.d5.s92"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "3c6a552ae1216794d5dc252be9f27a94d28129cab60e7ae60de79ddba5d13522",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "service_config_reconciliation",
+      "seed": 93,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.service_config_reconciliation.d5.s93"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "5198574b8ebad33f993a8422984cf74fcbc109c740f607fcbdb0e12daadefd19",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "service_config_reconciliation",
+      "seed": 94,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.service_config_reconciliation.d5.s94"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "7caa73c3da8e548a7a50a896ef867d106171476ca324dcab9d4ebb839bcec53b",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "service_config_reconciliation",
+      "seed": 95,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.service_config_reconciliation.d5.s95"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "553a471525da00f0bab1d764b61105e6bf14f9897180f6db13e9f411c6bb246d",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "service_config_reconciliation",
+      "seed": 96,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.service_config_reconciliation.d5.s96"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "906b5e0d09bcaafb6446482c7e6bc6a5afff38777579f55d73aba3afc6da5a4f",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "service_config_reconciliation",
+      "seed": 97,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.service_config_reconciliation.d5.s97"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "b8f00a377d4b03bead1e908bde2786aeb441e42f1cf9d83fac5607f4d664f0c3",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "service_config_reconciliation",
+      "seed": 98,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.service_config_reconciliation.d5.s98"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "0d38ba72e324e17202bcaf1ecd6218a7d1d1e2d67344eb226796e267eb2dcf50",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "service_config_reconciliation",
+      "seed": 99,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.service_config_reconciliation.d5.s99"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "f75a7e57ec0304b622358014cb76f01a5243facdc1c0c58308b94ab6e6ef3262",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "migration_plan_bundle",
+      "seed": 90,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.migration_plan_bundle.d3.s90"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "40754c674af1e7953f3f405d8adf4302c338a7a130819e1065a52823f25618ea",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "migration_plan_bundle",
+      "seed": 91,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.migration_plan_bundle.d3.s91"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "9d660bc97278866a029ced4a0be9af6dfb8199e67d89342ce2fc518c3348489d",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "migration_plan_bundle",
+      "seed": 92,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.migration_plan_bundle.d3.s92"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "2864edd9c61972a0105bbf456028714f20fbc8afbf5b6c2e1f7ea8707c860475",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "migration_plan_bundle",
+      "seed": 93,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.migration_plan_bundle.d3.s93"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "4f263d242de91722b516ecc89d274a1562d973e332c3d052371c986d19d2114f",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "migration_plan_bundle",
+      "seed": 94,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.migration_plan_bundle.d3.s94"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "b24a329b7fadfb5129f6d194fe8b81def1cd811caea8026aa0c8f1bee1124fa3",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "migration_plan_bundle",
+      "seed": 95,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.migration_plan_bundle.d3.s95"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "40ddc2819d07e911f2830067cab1256295f7e5f7ded04f3c6b56642ea2208505",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "migration_plan_bundle",
+      "seed": 96,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.migration_plan_bundle.d3.s96"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "30773b9affecb70298652876538f11e1e6da05732be36b344cdab9a365b88e2a",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "migration_plan_bundle",
+      "seed": 97,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.migration_plan_bundle.d3.s97"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "1d206507467691cdbd9943d93f56900c17cc5aef9f08cbadecd49ea8e4bbeae2",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "migration_plan_bundle",
+      "seed": 98,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.migration_plan_bundle.d3.s98"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "c2b43bcc43719738999e986964ccd33a0d682824c5c12bd2fb8df29e82f1c479",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "migration_plan_bundle",
+      "seed": 99,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.migration_plan_bundle.d3.s99"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "7519403b428a0bb3af46d89051612f8bc10946fc4130523c0b250ea24feaa8e4",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "migration_plan_bundle",
+      "seed": 90,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.migration_plan_bundle.d4.s90"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "dd2798a765669da457cf52b244737742629b1968e65eb029e4a25d4ea17b5b33",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "migration_plan_bundle",
+      "seed": 91,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.migration_plan_bundle.d4.s91"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "b9c6c07690507f41d936d3985e1c6e4fd030f7bcc5343e6ab848bcc0e8211380",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "migration_plan_bundle",
+      "seed": 92,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.migration_plan_bundle.d4.s92"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "9a61a4303076102e9df0964d9d747c236cc6ea63615449163921108f23f85ad8",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "migration_plan_bundle",
+      "seed": 93,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.migration_plan_bundle.d4.s93"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "687b1c5efaf81fd9db13fd4c6722f6126a6d9ee6f60a2f4dd962ce11a6ef0142",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "migration_plan_bundle",
+      "seed": 94,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.migration_plan_bundle.d4.s94"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "2b8c87d1795ebd6ecfd863e47597acd05ff601e3a0764d3b027188c8dfe2f6e3",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "migration_plan_bundle",
+      "seed": 95,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.migration_plan_bundle.d4.s95"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "aa8cf663e863c333c490e464cce04800222b16fb6371eee773b89df25fb156ed",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "migration_plan_bundle",
+      "seed": 96,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.migration_plan_bundle.d4.s96"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "88487d49fa322f0e09287f8a21602ab55da6b3ec6739a77ee087bb873f92c6c4",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "migration_plan_bundle",
+      "seed": 97,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.migration_plan_bundle.d4.s97"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "d49d2493763e3593b86950754c703255b09003fa798edead25eb8d268a05a008",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "migration_plan_bundle",
+      "seed": 98,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.migration_plan_bundle.d4.s98"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "73109f0a7d0d5e92ec5ca15b694ee3130722c547c2ba28428c6d29ff35ba65e7",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "migration_plan_bundle",
+      "seed": 99,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.migration_plan_bundle.d4.s99"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "559fc65d2b89fc2e5c49882531957ace9dfaa0f024f51c9ffac8ddc376351322",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "migration_plan_bundle",
+      "seed": 90,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.migration_plan_bundle.d5.s90"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "15babfdb4c49c3fe27d0005b7f0b0abb927f852e31c2e3117c48bb8c0eec76dd",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "migration_plan_bundle",
+      "seed": 91,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.migration_plan_bundle.d5.s91"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "45771e9f27d4c4c9b2cca7b1060d91aed24127c895c942243b738619c73201a8",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "migration_plan_bundle",
+      "seed": 92,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.migration_plan_bundle.d5.s92"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "17185b1cbb7f3a8c62d71976a15dcd5b0042e14f69cfc771914bc39f6d221729",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "migration_plan_bundle",
+      "seed": 93,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.migration_plan_bundle.d5.s93"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "0fecacc5a13344fdb5c3aa14c8931270e8417448ecde200a76249489f246ea9d",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "migration_plan_bundle",
+      "seed": 94,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.migration_plan_bundle.d5.s94"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "95e29019394821e5884abf2a759ac351fa743f00792d335141d2d5dabb6cc1ed",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "migration_plan_bundle",
+      "seed": 95,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.migration_plan_bundle.d5.s95"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "7c899d2751fdeff15637fdfb301fd9bf87d2474ef9854e3a8af4d6d2764842e8",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "migration_plan_bundle",
+      "seed": 96,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.migration_plan_bundle.d5.s96"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "5711d98137fc03f72918a97406706115f274cabdacec2f68f88638db57ad3cbe",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "migration_plan_bundle",
+      "seed": 97,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.migration_plan_bundle.d5.s97"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "66a8ec7ce8847a6d1793459083818bda971770fa09f440dac6062a21ff569f0e",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "migration_plan_bundle",
+      "seed": 98,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.migration_plan_bundle.d5.s98"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "f6bd8eb9d2e6e7c1e9c2e22e8d2e6c1cd8b59b052c3c275b4e0a51b064fdef05",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "migration_plan_bundle",
+      "seed": 99,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.migration_plan_bundle.d5.s99"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "b4a33f0e3bb8e61357d56b06263ebaa6f8bf8a1da9f5d4427bbe8c37e258b3b2",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "incident_report_bundle",
+      "seed": 90,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.incident_report_bundle.d3.s90"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "2bdcd709cc7859123e71064615cfe2cecee9d645ad1a7691ce1a64b2ff1bcdea",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "incident_report_bundle",
+      "seed": 91,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.incident_report_bundle.d3.s91"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "4217086e45c0958f5ee76f550abeb4bc3a25aa5966510eff169f1135fca33309",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "incident_report_bundle",
+      "seed": 92,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.incident_report_bundle.d3.s92"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "2204cb004b2393f079c02ba0300b0160d37458f8f92ac8eac39e254770c293e1",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "incident_report_bundle",
+      "seed": 93,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.incident_report_bundle.d3.s93"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "aed02b3b89d41d03a1d3a65598acc95b89019836a28b062eac16e1f7d64914a5",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "incident_report_bundle",
+      "seed": 94,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.incident_report_bundle.d3.s94"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "7612e163bfd19a3e19a2211eb95c060f4a797d449dfc2d4948a986a025737d13",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "incident_report_bundle",
+      "seed": 95,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.incident_report_bundle.d3.s95"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "579947ee1e3593a06ab6b11c6c251da42070b531ab141ec4104aa3704f1fe12b",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "incident_report_bundle",
+      "seed": 96,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.incident_report_bundle.d3.s96"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "586d93b5151ba7d51ef33c383daf98d5f126bb19f672a86b176c96decdf40c47",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "incident_report_bundle",
+      "seed": 97,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.incident_report_bundle.d3.s97"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "e366ac47784da4d0c7c71376093e01d37e64b06153ce14c9bc2fcb0280c22f05",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "incident_report_bundle",
+      "seed": 98,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.incident_report_bundle.d3.s98"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "0eecbcd7b93bd57d76b9685dfd3126d562ec23c95ec173df57592fb3f696e99f",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "incident_report_bundle",
+      "seed": 99,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.incident_report_bundle.d3.s99"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "500ef6c3c2c1bcc101abcce2829fffd894f7780097f4db1430e007892dc2ea01",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "incident_report_bundle",
+      "seed": 90,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.incident_report_bundle.d4.s90"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "272a8672ac2a804f060d5b9ffe7764348ad49a170122811bd3ca5376a5a9e407",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "incident_report_bundle",
+      "seed": 91,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.incident_report_bundle.d4.s91"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "94fa10e480b450c23015dcd93b5b4f32a11101d977aa7c0750e2be0063120fc7",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "incident_report_bundle",
+      "seed": 92,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.incident_report_bundle.d4.s92"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "dc756f070845db00e4525bd718b7ca3b1a4abe450f199b463e041aabce0b2ddb",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "incident_report_bundle",
+      "seed": 93,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.incident_report_bundle.d4.s93"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "23cacae2499c313a533f66fee4fdd7b2eb9b24b0ee05f94ad6291dc1a4190006",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "incident_report_bundle",
+      "seed": 94,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.incident_report_bundle.d4.s94"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "178095e2e8733ac823d286b69d05292be90c322c69972fba4bfacf4178419673",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "incident_report_bundle",
+      "seed": 95,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.incident_report_bundle.d4.s95"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "90d7f4cf7ca330933e7aae5151a7046c3490f18c0cd551f4528c73fb514bf1d8",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "incident_report_bundle",
+      "seed": 96,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.incident_report_bundle.d4.s96"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "d6cc5fdf2eb099d7f796555940e7bdffb39514854ad27b11226f7beb04bbcb03",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "incident_report_bundle",
+      "seed": 97,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.incident_report_bundle.d4.s97"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "894f5eabfe2b4695bbb75f3487ae57bcbad4b5ee66f88b42297cbaf0f508a2ff",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "incident_report_bundle",
+      "seed": 98,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.incident_report_bundle.d4.s98"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "841932e06a7e1754443b4b848820f4dde5a3469e0baff09d4c368f6f78c4e310",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "incident_report_bundle",
+      "seed": 99,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.incident_report_bundle.d4.s99"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "9a32ab27ee2e3e28ef36f6e93e887035a21819ed3c4e6c42fb0c207fa8b3b47f",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "incident_report_bundle",
+      "seed": 90,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.incident_report_bundle.d5.s90"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "f5928116b35755b8fa8cd829f1cc261ec3da98989eded1eacadf18993f03056c",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "incident_report_bundle",
+      "seed": 91,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.incident_report_bundle.d5.s91"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "a7c204437064e985bc63bb9197194a84f0e73daf4e6265d091ec0df3ad2ea36f",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "incident_report_bundle",
+      "seed": 92,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.incident_report_bundle.d5.s92"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "54ecc1c6ccee14142e70185dd8241468fcafce907b79120338eb477ead32dcb4",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "incident_report_bundle",
+      "seed": 93,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.incident_report_bundle.d5.s93"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "b0fff47fd4a0ff7f65126546234bb1a497fbc16b3d57682b8d64528fd84274a4",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "incident_report_bundle",
+      "seed": 94,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.incident_report_bundle.d5.s94"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "d7ed29d2e3b54b945ae26148c178a738cc3eb28e257c1f9fca8a19468b046a87",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "incident_report_bundle",
+      "seed": 95,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.incident_report_bundle.d5.s95"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "51449db4dadef3dece1fad755d2fb9e2d060eb46c5e062c626ddd7a222824b31",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "incident_report_bundle",
+      "seed": 96,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.incident_report_bundle.d5.s96"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "6a5550f75c83d5f01e4f0f86e53b0735701032b63a4490de663de5b4d1cefff7",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "incident_report_bundle",
+      "seed": 97,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.incident_report_bundle.d5.s97"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "d3a700b1c252468454066b26963fbbacba245f1e9197bb38b48e312fd9263384",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "incident_report_bundle",
+      "seed": 98,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.incident_report_bundle.d5.s98"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "516f41968c8ca6f9743532e81a89a2e032e589077f229957b8fa2c7ae699e67f",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-id-d3-d5"
+      },
+      "scenario": "incident_report_bundle",
+      "seed": 99,
+      "split": "test",
+      "task_id": "swg.test.retrieval_workspace.incident_report_bundle.d5.s99"
+    }
+  ],
+  "created_at": "2026-07-27T00:00:00+05:30",
+  "metadata": {
+    "assignment_count": 390,
+    "environment_version": "0.2.0.dev1",
+    "frozen": true,
+    "manifest_fingerprint": "b04db6503f540876dd3a076e8ba71831de1f9dedbd039e2e61b95d2bb80cfef0",
+    "panel": "in_distribution"
+  },
+  "name": "eval-id-d3-d5",
+  "split_specs": {},
+  "version": "v1"
+}

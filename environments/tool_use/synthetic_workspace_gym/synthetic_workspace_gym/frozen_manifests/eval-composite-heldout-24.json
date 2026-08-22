@@ -1,0 +1,424 @@
+{
+  "assignments": [
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "composite_workspace",
+      "metadata": {
+        "assignment_fingerprint": "da7388d7b39b6d6a6da8ed89a8ebbafcefa6439df773f430994a5f5a68c762b2",
+        "contributing_families": [
+          "retrieval_workspace",
+          "pipeline"
+        ],
+        "experiment": "eval-composite-heldout-24"
+      },
+      "scenario": "retrieval_guided_pipeline_repair",
+      "seed": 200,
+      "split": "heldout",
+      "task_id": "swg.heldout.composite_workspace.retrieval_guided_pipeline_repair.d3.s200"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "composite_workspace",
+      "metadata": {
+        "assignment_fingerprint": "6ed0c25a68d221c0d47378442334383370dbbeb9182057f821110f17e9553ea7",
+        "contributing_families": [
+          "retrieval_workspace",
+          "pipeline"
+        ],
+        "experiment": "eval-composite-heldout-24"
+      },
+      "scenario": "retrieval_guided_pipeline_repair",
+      "seed": 201,
+      "split": "heldout",
+      "task_id": "swg.heldout.composite_workspace.retrieval_guided_pipeline_repair.d3.s201"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "composite_workspace",
+      "metadata": {
+        "assignment_fingerprint": "8002d7ef1f67e844c75eef305594e5de674eb4c7682a9b66d87503b844af74d1",
+        "contributing_families": [
+          "retrieval_workspace",
+          "pipeline"
+        ],
+        "experiment": "eval-composite-heldout-24"
+      },
+      "scenario": "retrieval_guided_pipeline_repair",
+      "seed": 202,
+      "split": "heldout",
+      "task_id": "swg.heldout.composite_workspace.retrieval_guided_pipeline_repair.d3.s202"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "composite_workspace",
+      "metadata": {
+        "assignment_fingerprint": "e942616b8ed8bd697e464559b458645a4a11f4f70ed5b4c6516c6a60093084a2",
+        "contributing_families": [
+          "retrieval_workspace",
+          "pipeline"
+        ],
+        "experiment": "eval-composite-heldout-24"
+      },
+      "scenario": "retrieval_guided_pipeline_repair",
+      "seed": 203,
+      "split": "heldout",
+      "task_id": "swg.heldout.composite_workspace.retrieval_guided_pipeline_repair.d3.s203"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "composite_workspace",
+      "metadata": {
+        "assignment_fingerprint": "68f76f8f4a06dcef54d65c1d37789141a6e8100d2efcbb159e83f8cb1c34c941",
+        "contributing_families": [
+          "retrieval_workspace",
+          "pipeline"
+        ],
+        "experiment": "eval-composite-heldout-24"
+      },
+      "scenario": "retrieval_guided_pipeline_repair",
+      "seed": 204,
+      "split": "heldout",
+      "task_id": "swg.heldout.composite_workspace.retrieval_guided_pipeline_repair.d3.s204"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "composite_workspace",
+      "metadata": {
+        "assignment_fingerprint": "af8fa7f3ad51581daafff415f877c9ef374904e0e8f3c8e25e3c923d67b4d96f",
+        "contributing_families": [
+          "retrieval_workspace",
+          "pipeline"
+        ],
+        "experiment": "eval-composite-heldout-24"
+      },
+      "scenario": "retrieval_guided_pipeline_repair",
+      "seed": 205,
+      "split": "heldout",
+      "task_id": "swg.heldout.composite_workspace.retrieval_guided_pipeline_repair.d3.s205"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "composite_workspace",
+      "metadata": {
+        "assignment_fingerprint": "fe2a0fae645d1c6a9e4c7852931a073ea18de7072dbb3496826191320d38eac3",
+        "contributing_families": [
+          "retrieval_workspace",
+          "pipeline"
+        ],
+        "experiment": "eval-composite-heldout-24"
+      },
+      "scenario": "retrieval_guided_pipeline_repair",
+      "seed": 206,
+      "split": "heldout",
+      "task_id": "swg.heldout.composite_workspace.retrieval_guided_pipeline_repair.d3.s206"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "composite_workspace",
+      "metadata": {
+        "assignment_fingerprint": "6cd21dfa9c75a88ace7ee60f43a319ba2796f68d3430fe6b53a6e99a6f191eeb",
+        "contributing_families": [
+          "retrieval_workspace",
+          "pipeline"
+        ],
+        "experiment": "eval-composite-heldout-24"
+      },
+      "scenario": "retrieval_guided_pipeline_repair",
+      "seed": 207,
+      "split": "heldout",
+      "task_id": "swg.heldout.composite_workspace.retrieval_guided_pipeline_repair.d3.s207"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "composite_workspace",
+      "metadata": {
+        "assignment_fingerprint": "970d931a0e63d630f3faec1f97956def7579f554d1007f2ec59e46e3452d61d2",
+        "contributing_families": [
+          "retrieval_workspace",
+          "pipeline"
+        ],
+        "experiment": "eval-composite-heldout-24"
+      },
+      "scenario": "retrieval_guided_pipeline_repair",
+      "seed": 200,
+      "split": "heldout",
+      "task_id": "swg.heldout.composite_workspace.retrieval_guided_pipeline_repair.d4.s200"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "composite_workspace",
+      "metadata": {
+        "assignment_fingerprint": "d2ca695680af3e69cdcec4d09e0e708c73d0ed3c5e63ea708ff322a4643717ce",
+        "contributing_families": [
+          "retrieval_workspace",
+          "pipeline"
+        ],
+        "experiment": "eval-composite-heldout-24"
+      },
+      "scenario": "retrieval_guided_pipeline_repair",
+      "seed": 201,
+      "split": "heldout",
+      "task_id": "swg.heldout.composite_workspace.retrieval_guided_pipeline_repair.d4.s201"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "composite_workspace",
+      "metadata": {
+        "assignment_fingerprint": "e7f48e2b3b4ffcc110fb48d998af447b68fc7c557b7dd73951ba86837aa49347",
+        "contributing_families": [
+          "retrieval_workspace",
+          "pipeline"
+        ],
+        "experiment": "eval-composite-heldout-24"
+      },
+      "scenario": "retrieval_guided_pipeline_repair",
+      "seed": 202,
+      "split": "heldout",
+      "task_id": "swg.heldout.composite_workspace.retrieval_guided_pipeline_repair.d4.s202"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "composite_workspace",
+      "metadata": {
+        "assignment_fingerprint": "f0844cca3ddc389a126f835c4e8745d244e7cc26e49dd46993b03df28b55830f",
+        "contributing_families": [
+          "retrieval_workspace",
+          "pipeline"
+        ],
+        "experiment": "eval-composite-heldout-24"
+      },
+      "scenario": "retrieval_guided_pipeline_repair",
+      "seed": 203,
+      "split": "heldout",
+      "task_id": "swg.heldout.composite_workspace.retrieval_guided_pipeline_repair.d4.s203"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "composite_workspace",
+      "metadata": {
+        "assignment_fingerprint": "f1b67fec86a97a2529667bad9c7dc8e94e83757a5bf4b2ad79115e9c1f496653",
+        "contributing_families": [
+          "retrieval_workspace",
+          "pipeline"
+        ],
+        "experiment": "eval-composite-heldout-24"
+      },
+      "scenario": "retrieval_guided_pipeline_repair",
+      "seed": 204,
+      "split": "heldout",
+      "task_id": "swg.heldout.composite_workspace.retrieval_guided_pipeline_repair.d4.s204"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "composite_workspace",
+      "metadata": {
+        "assignment_fingerprint": "ddff9f7ab438df5c8fdfdee94b88a552407cd7b27a5aea241745de32eab7be1f",
+        "contributing_families": [
+          "retrieval_workspace",
+          "pipeline"
+        ],
+        "experiment": "eval-composite-heldout-24"
+      },
+      "scenario": "retrieval_guided_pipeline_repair",
+      "seed": 205,
+      "split": "heldout",
+      "task_id": "swg.heldout.composite_workspace.retrieval_guided_pipeline_repair.d4.s205"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "composite_workspace",
+      "metadata": {
+        "assignment_fingerprint": "4336d3b1b98aa3aa6d61a46fd9373b74512ae1b49cc58852c518faaf4ff440e6",
+        "contributing_families": [
+          "retrieval_workspace",
+          "pipeline"
+        ],
+        "experiment": "eval-composite-heldout-24"
+      },
+      "scenario": "retrieval_guided_pipeline_repair",
+      "seed": 206,
+      "split": "heldout",
+      "task_id": "swg.heldout.composite_workspace.retrieval_guided_pipeline_repair.d4.s206"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "composite_workspace",
+      "metadata": {
+        "assignment_fingerprint": "2daacf7cd394da002ef89294005b96f5cdb2a901f9674b6e69654e89955bf781",
+        "contributing_families": [
+          "retrieval_workspace",
+          "pipeline"
+        ],
+        "experiment": "eval-composite-heldout-24"
+      },
+      "scenario": "retrieval_guided_pipeline_repair",
+      "seed": 207,
+      "split": "heldout",
+      "task_id": "swg.heldout.composite_workspace.retrieval_guided_pipeline_repair.d4.s207"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "composite_workspace",
+      "metadata": {
+        "assignment_fingerprint": "6a58a33f3f1552a6b8fdb8fe0ae6a741b7c79f13c9bf1345e4b5d217d356d048",
+        "contributing_families": [
+          "retrieval_workspace",
+          "pipeline"
+        ],
+        "experiment": "eval-composite-heldout-24"
+      },
+      "scenario": "retrieval_guided_pipeline_repair",
+      "seed": 200,
+      "split": "heldout",
+      "task_id": "swg.heldout.composite_workspace.retrieval_guided_pipeline_repair.d5.s200"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "composite_workspace",
+      "metadata": {
+        "assignment_fingerprint": "9b744de14d4c3a1cd352fed333e7fc921dacbe83ba60e5917195aa2e551a52e6",
+        "contributing_families": [
+          "retrieval_workspace",
+          "pipeline"
+        ],
+        "experiment": "eval-composite-heldout-24"
+      },
+      "scenario": "retrieval_guided_pipeline_repair",
+      "seed": 201,
+      "split": "heldout",
+      "task_id": "swg.heldout.composite_workspace.retrieval_guided_pipeline_repair.d5.s201"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "composite_workspace",
+      "metadata": {
+        "assignment_fingerprint": "55c2a57471fbc1d6832675fb50082fe3769eb06c1156faffbec0fca8d9f175b5",
+        "contributing_families": [
+          "retrieval_workspace",
+          "pipeline"
+        ],
+        "experiment": "eval-composite-heldout-24"
+      },
+      "scenario": "retrieval_guided_pipeline_repair",
+      "seed": 202,
+      "split": "heldout",
+      "task_id": "swg.heldout.composite_workspace.retrieval_guided_pipeline_repair.d5.s202"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "composite_workspace",
+      "metadata": {
+        "assignment_fingerprint": "1a70618a8ffbfb745c3f2c1e2d03814f6454f3046250ff2d177168403f244361",
+        "contributing_families": [
+          "retrieval_workspace",
+          "pipeline"
+        ],
+        "experiment": "eval-composite-heldout-24"
+      },
+      "scenario": "retrieval_guided_pipeline_repair",
+      "seed": 203,
+      "split": "heldout",
+      "task_id": "swg.heldout.composite_workspace.retrieval_guided_pipeline_repair.d5.s203"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "composite_workspace",
+      "metadata": {
+        "assignment_fingerprint": "d09106b3879762e7be6f029d21421377e742c6f82fd3b544dc8f310368b8110c",
+        "contributing_families": [
+          "retrieval_workspace",
+          "pipeline"
+        ],
+        "experiment": "eval-composite-heldout-24"
+      },
+      "scenario": "retrieval_guided_pipeline_repair",
+      "seed": 204,
+      "split": "heldout",
+      "task_id": "swg.heldout.composite_workspace.retrieval_guided_pipeline_repair.d5.s204"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "composite_workspace",
+      "metadata": {
+        "assignment_fingerprint": "aa432d74305dd3b94e4883534ab3d2d935da8eba5806534d77decab4afcd0979",
+        "contributing_families": [
+          "retrieval_workspace",
+          "pipeline"
+        ],
+        "experiment": "eval-composite-heldout-24"
+      },
+      "scenario": "retrieval_guided_pipeline_repair",
+      "seed": 205,
+      "split": "heldout",
+      "task_id": "swg.heldout.composite_workspace.retrieval_guided_pipeline_repair.d5.s205"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "composite_workspace",
+      "metadata": {
+        "assignment_fingerprint": "052a72cb5b03059be3c8ebb95c3feec3fce32424a5c2dfc7ae7ee51ee1e27b0e",
+        "contributing_families": [
+          "retrieval_workspace",
+          "pipeline"
+        ],
+        "experiment": "eval-composite-heldout-24"
+      },
+      "scenario": "retrieval_guided_pipeline_repair",
+      "seed": 206,
+      "split": "heldout",
+      "task_id": "swg.heldout.composite_workspace.retrieval_guided_pipeline_repair.d5.s206"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "composite_workspace",
+      "metadata": {
+        "assignment_fingerprint": "b1c09383e772cf5b1a52a0566f21f7bced89b92513f47455d6d50e8d6aecb8f6",
+        "contributing_families": [
+          "retrieval_workspace",
+          "pipeline"
+        ],
+        "experiment": "eval-composite-heldout-24"
+      },
+      "scenario": "retrieval_guided_pipeline_repair",
+      "seed": 207,
+      "split": "heldout",
+      "task_id": "swg.heldout.composite_workspace.retrieval_guided_pipeline_repair.d5.s207"
+    }
+  ],
+  "created_at": "2026-07-27T00:00:00+05:30",
+  "metadata": {
+    "assignment_count": 24,
+    "document_fixture_split": "heldout",
+    "environment_version": "0.2.0.dev1",
+    "frozen": true,
+    "manifest_fingerprint": "6bb7454da2eaf290b5848fcbbe6555305475b3d95cf12a7836119f205097408e",
+    "panel": "composite_heldout"
+  },
+  "name": "eval-composite-heldout-24",
+  "split_specs": {},
+  "version": "v1"
+}
