@@ -103,7 +103,27 @@ class ProfiledPipelineEvaluator(BaseEvaluator):
             and hidden["value"] == hidden_expected
             and values["determinism"] == 1.0
         )
-        score = 1.0 if success else weighted_capability_score(capabilities)
+        base_score = weighted_capability_score(capabilities)
+        # D5 should reward completion of the semantic chain, not the many
+        # mechanical properties (execution, JSON shape, determinism) that a
+        # substantially broken starter already satisfies.  A steep completion
+        # factor keeps untouched and one-defect repairs below the shared D5
+        # ceilings while preserving continuous partial credit.
+        semantic_names = {
+            "normalization",
+            "deduplication",
+            "filtering",
+            "aggregation",
+            "ordering",
+        }
+        semantic_completion = sum(values[name] for name in semantic_names) / len(
+            semantic_names
+        )
+        score = (
+            1.0
+            if success
+            else round(base_score * semantic_completion**6, 6)
+        )
         return EvaluatorResult(
             success=success,
             score=score,
@@ -113,6 +133,8 @@ class ProfiledPipelineEvaluator(BaseEvaluator):
                 "capability_diagnostics": capability_diagnostics(capabilities),
                 "visible_exact": visible["value"] == visible_expected,
                 "hidden_exact": hidden["value"] == hidden_expected,
+                "base_weighted_score": base_score,
+                "semantic_completion": round(semantic_completion, 6),
                 "visible_stderr": visible["stderr"],
                 "hidden_stderr": hidden["stderr"],
             },

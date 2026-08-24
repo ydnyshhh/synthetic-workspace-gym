@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "status": "stopped_by_user_partial",
+  "usable_as_balanced_baseline": false,
+  "environment": "yadnyesh/synthetic-workspace-gym@0.1.1",
+  "manifest": "eval-d5-panel-24",
+  "model": "qwen/qwen3.5-397b-a17b",
+  "runtime": "prime_vm",
+  "harness": "codex",
+  "requested": {
+    "tasks": 24,
+    "rollouts_per_task": 5,
+    "total_rollouts": 120,
+    "concurrency": 3,
+    "max_retries": 10
+  },
+  "completed": {
+    "valid_samples": 31,
+    "ok_samples": 31,
+    "agent_completed_samples": 31,
+    "mean_reward": 0.403622,
+    "success_samples": 11,
+    "provider_retry_events": 7
+  },
+  "family_results": {
+    "tabular": {
+      "samples": 30,
+      "mean_reward": 0.4072,
+      "success_samples": 11
+    },
+    "script_repair": {
+      "samples": 1,
+      "mean_reward": 0.296297,
+      "success_samples": 0
+    },
+    "pipeline": {
+      "samples": 0
+    },
+    "retrieval_workspace": {
+      "samples": 0
+    }
+  },
+  "task_results": [
+    {
+      "idx": 0,
+      "name": "swg.test.tabular.monthly_segment_report.d5.s190",
+      "samples": 5,
+      "mean_reward": 1.0
+    },
+    {
+      "idx": 1,
+      "name": "swg.test.tabular.channel_status_pivot.d5.s191",
+      "samples": 5,
+      "mean_reward": 0.064
+    },
+    {
+      "idx": 2,
+      "name": "swg.test.tabular.weekly_refund_rollup.d5.s192",
+      "samples": 5,
+      "mean_reward": 1.0
+    },
+    {
+      "idx": 3,
+      "name": "swg.test.tabular.monthly_segment_report.d5.s193",
+      "samples": 5,
+      "mean_reward": 0.2512
+    },
+    {
+      "idx": 4,
+      "name": "swg.test.tabular.channel_status_pivot.d5.s194",
+      "samples": 5,
+      "mean_reward": 0.064
+    },
+    {
+      "idx": 5,
+      "name": "swg.test.tabular.weekly_refund_rollup.d5.s195",
+      "samples": 5,
+      "mean_reward": 0.064
+    },
+    {
+      "idx": 6,
+      "name": "swg.test.script_repair.inventory_report.d5.s190",
+      "samples": 1,
+      "mean_reward": 0.296297
+    }
+  ],
+  "timing_utc": {
+    "started": "2026-08-22T18:23:20Z",
+    "interrupted": "2026-08-22T18:43:36Z"
+  },
+  "notes": [
+    "The run was stopped at the user's request before the balanced 120-rollout panel completed.",
+    "All 31 persisted samples completed with stop_condition=agent_completed and ok=true.",
+    "Seven transient provider 429 attempts were recovered by retries; six completed traces retain those retry diagnostics in their errors field.",
+    "Because family coverage is 30 tabular and 1 script-repair with no pipeline or retrieval samples, the overall mean is not a balanced D5 baseline."
+  ]
+}

@@ -25,6 +25,59 @@
       "status": "completed"
     }
   },
+  "native_v1_d5_evaluation": {
+    "environment": "yadnyesh/synthetic-workspace-gym@0.1.1",
+    "manifest": "eval-d5-panel-24",
+    "planned_rollouts": 120,
+    "requested_shape": {
+      "families": 4,
+      "rollouts_per_family": 30,
+      "rollouts_per_task": 5,
+      "tasks": 24
+    },
+    "status": "partial_prime_vm_run_stopped_by_user",
+    "partial_prime_vm_run": {
+      "artifact": "analysis/runs/d5-qwen35-397b-partial-31",
+      "completed_rollouts": 31,
+      "family_counts": {
+        "pipeline": 0,
+        "retrieval_workspace": 0,
+        "script_repair": 1,
+        "tabular": 30
+      },
+      "mean_reward": 0.403622,
+      "model": "qwen/qwen3.5-397b-a17b",
+      "provider_retry_events": 7,
+      "status": "stopped_by_user_partial_unbalanced",
+      "success_samples": 11
+    },
+    "superseded_zero_sample_attempts": [
+      {
+        "evaluation_id": "rzs7voa7mb60pj12getr8do7",
+        "model": "deepseek-v4-flash",
+        "reason": "obsolete model alias returned 404 from Prime Inference",
+        "valid_samples": 0
+      },
+      {
+        "evaluation_id": "c2iznjow3nvak344toccd52j",
+        "model": "deepseek/deepseek-v4-flash",
+        "reason": "hosted worker connect-python/connectrpc dependency collision before environment pull",
+        "valid_samples": 0
+      },
+      {
+        "evaluation_id": "z1jrwnydrmzgb2ygn0ub1m3q",
+        "model": "deepseek/deepseek-v4-flash",
+        "reason": "hosted worker connect-python/connectrpc dependency collision before environment pull",
+        "valid_samples": 0
+      },
+      {
+        "evaluation_id": "f6dgre2y72nwxx7amb7vk0vf",
+        "model": "qwen/qwen3-coder-next",
+        "reason": "Prime hosted wrapper invoked legacy load_environment protocol instead of native Verifiers V1 Taskset",
+        "valid_samples": 0
+      }
+    ]
+  },
   "checkpoint_recovery": {
     "pipeline": {
       "checkpoint_id": "x32x79b4m7cgidhsg5h7aiet",

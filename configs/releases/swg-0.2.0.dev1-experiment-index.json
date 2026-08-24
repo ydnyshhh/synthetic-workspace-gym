@@ -1,5 +1,5 @@
 {
-  "candidate_wheel_sha256": "63ead4f66d683c7b6d41094cc2e613c6730fe4f5f1f742f3596d0081a58da33a",
+  "candidate_wheel_sha256": "678c33b73628e24dd62ef6367ae18fa6da3603c433dd93e09c4d9a4fed3fe4e8",
   "created_at": "2026-07-27T00:00:00+05:30",
   "environment_version": "0.2.0.dev1",
   "evaluation_panels": [
@@ -26,6 +26,12 @@
     "temperature": 0.7
   },
   "pilot_manifest": "train-all-family-seed-42",
+  "training_purpose_manifests": {
+    "rl_evaluation": "rl-eval-v1",
+    "rl_train": "rl-hard-v1",
+    "sft_train": "sft-easy-v1",
+    "sft_validation": "sft-validation-v1"
+  },
   "training_runs": [
     "train-all-family-seed-42",
     "train-all-family-seed-43",
