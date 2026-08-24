@@ -6,7 +6,6 @@ temperature = 0.7
 max_concurrent = 5
 max_retries = 0
 timeout_minutes = 180
-custom_secrets = { UV_OVERRIDE = "https://raw.githubusercontent.com/ydnyshhh/synthetic-workspace-gym/main/configs/evals/qwen35-4b-matrix/hosted-bootstrap-overrides.txt" }
 
 [[eval]]
 id = "yadnyesh/synthetic-workspace-gym"

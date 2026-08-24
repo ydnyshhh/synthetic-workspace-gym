@@ -391,10 +391,7 @@ def evaluation_config(manifest_name: str, count: int, rollouts: int, split: str)
         'model = "Qwen/Qwen3.5-4B"\n'
         f"num_examples = {count}\nrollouts_per_example = {rollouts}\n"
         "max_tokens = 4096\ntemperature = 0.7\nmax_concurrent = 5\n"
-        "max_retries = 0\ntimeout_minutes = 180\n"
-        'custom_secrets = { UV_OVERRIDE = "https://raw.githubusercontent.com/'
-        'ydnyshhh/synthetic-workspace-gym/main/configs/evals/qwen35-4b-matrix/'
-        'hosted-bootstrap-overrides.txt" }\n\n'
+        "max_retries = 0\ntimeout_minutes = 180\n\n"
         '[[eval]]\nid = "yadnyesh/synthetic-workspace-gym"\n'
         f'eval_name = "base-{manifest_name}"\n'
         f'env_args = {{ manifest = "{manifest_name}" }}\n'
