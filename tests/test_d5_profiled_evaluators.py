@@ -120,7 +120,8 @@ def test_pipeline_hidden_fixture_and_determinism_are_independent() -> None:
             nondeterministic, bundle.manifest, bundle.hidden_root
         )
         assert nondeterministic_result.subscores["capability_determinism"] == 0.0
-        assert nondeterministic_result.score == 0.9
+        assert nondeterministic_result.score == 0.729
+        assert nondeterministic_result.diagnostics["d5_raw_partial_score"] == 0.9
 
 
 def test_tabular_focused_capabilities_and_independent_determinism() -> None:

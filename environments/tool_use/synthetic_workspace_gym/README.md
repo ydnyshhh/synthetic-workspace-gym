@@ -33,7 +33,7 @@ uv run eval synthetic-workspace-gym \
   --env.agent.runtime.vm true
 ```
 
-Use the default `train-all-family-seed-42` manifest or select a packaged manifest and filters:
+Use the default `sft-easy-v1` mid-training manifest or select a packaged manifest and filters:
 
 ```bash
 uv run eval synthetic-workspace-gym \
@@ -43,13 +43,13 @@ uv run eval synthetic-workspace-gym \
   -n 20 -r 3 --rich false --no-push
 ```
 
-Available manifests include balanced and specialist training assignments plus in-distribution, scenario-heldout, composite-heldout, and difficulty-5 evaluation panels. Verifiers' normal `-n`, `-r`, `--shuffle`, harness, model, sampling, and runtime options apply without environment-specific rollout arguments.
+The purpose-specific manifests are `sft-easy-v1` (D1-D3 atomic teacher traces), `sft-validation-v1` (scenario- and seed-held-out D1-D3), `rl-hard-v1` (D4-D5 atomic and composite training), and `rl-eval-v1` (held-out D4-D5 scenarios, seeds, fixtures, and compositions). Historical balanced and specialist RL manifests remain packaged for reproducibility. Verifiers' normal `-n`, `-r`, `--shuffle`, harness, model, sampling, and runtime options apply without environment-specific rollout arguments.
 
 ## Configuration
 
 | Field | Default | Purpose |
 | --- | --- | --- |
-| `manifest` | `train-all-family-seed-42` | Packaged frozen assignment manifest |
+| `manifest` | `sft-easy-v1` | Packaged frozen assignment manifest |
 | `families` | all in manifest | Optional family filter |
 | `difficulties` | all in manifest | Optional difficulty filter (`1` through `5`) |
 | `tasks` | all in manifest | Optional exact task-ID filter |

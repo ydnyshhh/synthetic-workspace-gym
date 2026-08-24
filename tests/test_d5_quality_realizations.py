@@ -229,14 +229,14 @@ def test_retrieval_d5_full_oracle_lattice_passes_quality_limits() -> None:
             scores,
             [bug["label"] for bug in scenario["bugs"]],
             thresholds={
-                "no_fixes_max": 0.35,
-                "single_fix_max": 0.60,
-                "pair_fix_max": 0.85,
-                "all_but_one_max": 0.95,
+                "no_fixes_max": 0.15,
+                "single_fix_max": 0.40,
+                "pair_fix_max": 0.65,
+                "all_but_one_max": 0.85,
             },
         )
         assert profile["valid"] is True
-        assert profile["no_fix_score"] == 0.15
+        assert profile["no_fix_score"] <= 0.15
         assert profile["single_fix_max_score"] > profile["no_fix_score"]
         assert profile["pair_fix_max_score"] > profile["single_fix_max_score"]
         assert profile["full_solution_score"] == 1.0
@@ -345,10 +345,10 @@ def test_pipeline_d5_full_oracle_lattice_passes_quality_limits() -> None:
             scores,
             [bug["label"] for bug in scenario["bugs"]],
             thresholds={
-                "no_fixes_max": 0.60,
-                "single_fix_max": 0.95,
-                "pair_fix_max": 1.0,
-                "all_but_one_max": 0.95,
+                "no_fixes_max": 0.15,
+                "single_fix_max": 0.40,
+                "pair_fix_max": 0.65,
+                "all_but_one_max": 0.85,
             },
         )
         assert profile["valid"] is True

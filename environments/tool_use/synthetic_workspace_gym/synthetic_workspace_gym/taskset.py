@@ -27,7 +27,7 @@ Family = Literal[
     "composite_workspace",
 ]
 
-DEFAULT_MANIFEST = "train-all-family-seed-42"
+DEFAULT_MANIFEST = "sft-easy-v1"
 DEFAULT_IMAGE = "python:3.12-slim"
 WORKDIR = "/workspace"
 

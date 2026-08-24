@@ -23,7 +23,7 @@ EVALUATORS = {
 def get_evaluator(family: EnvironmentFamily | str, evaluator_entrypoint: str | None = None):
     if evaluator_entrypoint:
         return load_evaluator_from_entrypoint(evaluator_entrypoint)
-    return EVALUATORS[EnvironmentFamily(family)]
+    return D5CalibratedEvaluator(EVALUATORS[EnvironmentFamily(family)])
 
 
 def list_evaluators() -> list[str]:
@@ -37,8 +37,29 @@ def load_evaluator_from_entrypoint(entrypoint: str) -> BaseEvaluator:
     module = import_module(module_name)
     loaded = getattr(module, attr_name)
     if isinstance(loaded, BaseEvaluator):
-        return loaded
+        return D5CalibratedEvaluator(loaded)
     instance = loaded()
     if not isinstance(instance, BaseEvaluator):
         raise TypeError(f"Evaluator entrypoint did not resolve to a BaseEvaluator: {entrypoint}")
-    return instance
+    return D5CalibratedEvaluator(instance)
+
+
+class D5CalibratedEvaluator(BaseEvaluator):
+    """Compress incomplete D5 rewards while preserving evaluator diagnostics."""
+
+    def __init__(self, evaluator: BaseEvaluator) -> None:
+        self.evaluator = evaluator
+
+    def evaluate(self, workspace_path, manifest, hidden_root):
+        result = self.evaluator.evaluate(workspace_path, manifest, hidden_root)
+        realization = dict(manifest.metadata.get("difficulty_realization", {}))
+        if int(realization.get("level", 0)) != 5 or result.success:
+            return result
+        raw_score = float(result.score)
+        result.score = round(raw_score**3, 6)
+        result.diagnostics = {
+            **result.diagnostics,
+            "d5_raw_partial_score": raw_score,
+            "d5_partial_score_exponent": 3,
+        }
+        return result

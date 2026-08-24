@@ -7,6 +7,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "src/synthetic_workspace_gym/frozen_manifests"
+V1_OUT = (
+    ROOT
+    / "environments/tool_use/synthetic_workspace_gym/synthetic_workspace_gym/frozen_manifests"
+)
 INDEX = ROOT / "configs/releases/swg-0.2.0.dev1-experiment-index.json"
 TRAIN_CONFIGS = ROOT / "configs/rl/qwen35-4b-matrix"
 EVAL_CONFIGS = ROOT / "configs/evals/qwen35-4b-matrix"
@@ -228,6 +232,98 @@ def build():
     result[name] = freeze(
         name, panel, {"panel": "composite_heldout", "document_fixture_split": "heldout"}
     )
+
+    # Training-purpose manifests deliberately use non-overlapping seed bands and
+    # explicit split labels.  They are independent of the historical Qwen RL
+    # matrix above, which mixed D2-D4 tasks under generic ``train`` manifests.
+    name = "sft-easy-v1"
+    result[name] = freeze(
+        name,
+        balanced_by_family(
+            pool(ORIGINAL, "sft_train", [1, 2, 3], range(0, 80), name),
+            512,
+            20260822,
+        ),
+        {
+            "training_purpose": "supervised_midtraining",
+            "curriculum": "easy_atomic",
+            "difficulty_range": [1, 3],
+            "scenario_partition": "development",
+            "seed_range": [0, 79],
+            "shuffle_seed": 20260822,
+        },
+    )
+
+    name = "sft-validation-v1"
+    result[name] = freeze(
+        name,
+        pool(HELDOUT, "sft_validation", [1, 2, 3], range(120, 128), name),
+        {
+            "training_purpose": "supervised_validation",
+            "curriculum": "easy_atomic_heldout",
+            "difficulty_range": [1, 3],
+            "scenario_partition": "heldout",
+            "seed_range": [120, 127],
+            "disjoint_from": ["sft-easy-v1"],
+        },
+    )
+
+    name = "rl-hard-v1"
+    hard_atomic = pool(ORIGINAL, "rl_train", [4, 5], range(128, 190), name)
+    hard_composite = pool(
+        {"composite_workspace": [COMPOSITE]},
+        "rl_train",
+        [4, 5],
+        range(128, 190),
+        name,
+    )
+    hard_assignments = balanced_by_family(hard_atomic, 392, 20260823) + balanced(
+        hard_composite, 120, 20260823
+    )
+    random.Random(20260823).shuffle(hard_assignments)
+    result[name] = freeze(
+        name,
+        hard_assignments,
+        {
+            "training_purpose": "reinforcement_learning",
+            "curriculum": "hard_atomic_and_composite",
+            "difficulty_range": [4, 5],
+            "scenario_partition": "development",
+            "seed_range": [128, 189],
+            "atomic_count": 392,
+            "composite_count": 120,
+            "composite_fraction": 120 / 512,
+            "shuffle_seed": 20260823,
+        },
+    )
+
+    name = "rl-eval-v1"
+    rl_eval_atomic = pool(
+        HELDOUT, "rl_eval", [4, 5], range(220, 230), name
+    )
+    rl_eval_composite = pool(
+        {"composite_workspace": [COMPOSITE]},
+        "rl_eval",
+        [4, 5],
+        range(230, 250),
+        name,
+    )
+    result[name] = freeze(
+        name,
+        rl_eval_atomic + rl_eval_composite,
+        {
+            "training_purpose": "reinforcement_learning_evaluation",
+            "curriculum": "hard_scenario_seed_and_template_heldout",
+            "difficulty_range": [4, 5],
+            "scenario_partition": "heldout",
+            "atomic_seed_range": [220, 229],
+            "composite_seed_range": [230, 249],
+            "atomic_count": len(rl_eval_atomic),
+            "composite_count": len(rl_eval_composite),
+            "disjoint_from": ["rl-hard-v1"],
+            "document_fixture_split": "heldout",
+        },
+    )
     return result
 
 
@@ -258,15 +354,18 @@ def evaluation_config(manifest_name: str, count: int, rollouts: int, split: str)
 
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
+    V1_OUT.mkdir(parents=True, exist_ok=True)
     INDEX.parent.mkdir(parents=True, exist_ok=True)
     TRAIN_CONFIGS.mkdir(parents=True, exist_ok=True)
     EVAL_CONFIGS.mkdir(parents=True, exist_ok=True)
     manifests = build()
     for name, payload in manifests.items():
-        (OUT / f"{name}.json").write_text(
-            json.dumps(payload, indent=2, sort_keys=True) + "\n",
-            encoding="utf-8",
-        )
+        serialized = json.dumps(payload, indent=2, sort_keys=True) + "\n"
+        for manifest_root in (OUT, V1_OUT):
+            (manifest_root / f"{name}.json").write_text(
+                serialized,
+                encoding="utf-8",
+            )
     training = sorted(name for name in manifests if name.startswith("train-"))
     evaluations = sorted(name for name in manifests if name.startswith("eval-"))
     for name in training:
@@ -296,6 +395,12 @@ def main():
         "training_runs": training,
         "evaluation_panels": evaluations,
         "pilot_manifest": "train-all-family-seed-42",
+        "training_purpose_manifests": {
+            "sft_train": "sft-easy-v1",
+            "sft_validation": "sft-validation-v1",
+            "rl_train": "rl-hard-v1",
+            "rl_evaluation": "rl-eval-v1",
+        },
         "fixed_settings": {
             "model": "Qwen/Qwen3.5-4B",
             "steps": 200,

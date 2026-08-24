@@ -36,7 +36,7 @@ from synthetic_workspace_gym.taskset import (
 def _single_task(**overrides) -> SyntheticWorkspaceTask:
     config = SyntheticWorkspaceTasksetConfig(
         id="synthetic-workspace-gym",
-        tasks=["swg.train.script_repair.inventory_report.d2.s53"],
+        tasks=["swg.sft_train.script_repair.path_batch.d2.s53"],
         **overrides,
     )
     return next(iter(SyntheticWorkspaceTaskset(config)))
@@ -200,3 +200,4 @@ def test_package_contains_all_training_and_eval_manifests() -> None:
     assert "train-specialist-script_repair" in names
     assert "eval-id-d3-d5" in names
     assert "eval-scenario-heldout" in names
+    assert {"sft-easy-v1", "sft-validation-v1", "rl-hard-v1", "rl-eval-v1"} <= names

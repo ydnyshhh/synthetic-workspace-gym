@@ -1,6 +1,8 @@
 {
-  "monotonic_task_count": 15,
-  "schema_version": "d5-calibration-v1",
+  "monotonic_task_count": 25,
+  "monotonicity_violation_count": 0,
+  "quality_violation_count": 0,
+  "schema_version": "d5-calibration-v2",
   "seeds": [
     100,
     103,
@@ -8,21 +10,23 @@
     108,
     109
   ],
-  "task_count": 15,
+  "task_count": 25,
   "tasks": [
     {
       "capability_count": 9,
       "family": "pipeline",
       "monotonic": true,
       "profile": "d5_a",
+      "quality_gate_passed": true,
+      "quality_violations": [],
       "seed": 100,
       "semantic_dependency_depth": 2,
       "states": {
-        "all_but_one": 0.9125,
+        "all_but_one": 0.057814,
         "full": 1.0,
-        "one_capability": 0.9125,
+        "one_capability": 0.057814,
         "two_capabilities": 1.0,
-        "untouched": 0.5375
+        "untouched": 1e-06
       },
       "task_id": "swg.calibration.pipeline.team_hours_pipeline.d5.d5_a.s100",
       "violations": []
@@ -32,14 +36,16 @@
       "family": "pipeline",
       "monotonic": true,
       "profile": "d5_b",
+      "quality_gate_passed": true,
+      "quality_violations": [],
       "seed": 103,
       "semantic_dependency_depth": 3,
       "states": {
-        "all_but_one": 0.875,
+        "all_but_one": 0.100552,
         "full": 1.0,
-        "one_capability": 0.8125,
-        "two_capabilities": 0.875,
-        "untouched": 0.6125
+        "one_capability": 0.009663,
+        "two_capabilities": 0.100552,
+        "untouched": 2.3e-05
       },
       "task_id": "swg.calibration.pipeline.team_hours_pipeline.d5.d5_b.s103",
       "violations": []
@@ -49,14 +55,16 @@
       "family": "pipeline",
       "monotonic": true,
       "profile": "d5_b",
+      "quality_gate_passed": true,
+      "quality_violations": [],
       "seed": 106,
       "semantic_dependency_depth": 3,
       "states": {
-        "all_but_one": 0.875,
+        "all_but_one": 0.100552,
         "full": 1.0,
-        "one_capability": 0.8125,
-        "two_capabilities": 0.875,
-        "untouched": 0.6125
+        "one_capability": 0.009663,
+        "two_capabilities": 0.100552,
+        "untouched": 2.3e-05
       },
       "task_id": "swg.calibration.pipeline.team_hours_pipeline.d5.d5_b.s106",
       "violations": []
@@ -66,13 +74,15 @@
       "family": "pipeline",
       "monotonic": true,
       "profile": "d5_c",
+      "quality_gate_passed": true,
+      "quality_violations": [],
       "seed": 108,
       "semantic_dependency_depth": 5,
       "states": {
-        "all_but_one": 0.75,
+        "all_but_one": 0.0076,
         "full": 1.0,
-        "one_capability": 0.55,
-        "two_capabilities": 0.625,
+        "one_capability": 1e-06,
+        "two_capabilities": 4.5e-05,
         "untouched": 0.0
       },
       "task_id": "swg.calibration.pipeline.team_hours_pipeline.d5.d5_c.s108",
@@ -83,31 +93,35 @@
       "family": "pipeline",
       "monotonic": true,
       "profile": "d5_c",
+      "quality_gate_passed": true,
+      "quality_violations": [],
       "seed": 109,
       "semantic_dependency_depth": 5,
       "states": {
-        "all_but_one": 0.75,
+        "all_but_one": 0.0076,
         "full": 1.0,
-        "one_capability": 0.55,
-        "two_capabilities": 0.625,
+        "one_capability": 1e-06,
+        "two_capabilities": 4.5e-05,
         "untouched": 0.0
       },
       "task_id": "swg.calibration.pipeline.team_hours_pipeline.d5.d5_c.s109",
       "violations": []
     },
     {
-      "capability_count": 10,
+      "capability_count": 14,
       "family": "retrieval_workspace",
       "monotonic": true,
       "profile": "d5_a",
+      "quality_gate_passed": true,
+      "quality_violations": [],
       "seed": 100,
       "semantic_dependency_depth": 2,
       "states": {
-        "all_but_one": 0.6,
+        "all_but_one": 0.791453,
         "full": 1.0,
-        "one_capability": 0.15,
-        "two_capabilities": 0.4,
-        "untouched": 0.15
+        "one_capability": 0.003375,
+        "two_capabilities": 0.042875,
+        "untouched": 0.003375
       },
       "task_id": "swg.calibration.retrieval_workspace.client_adapter_sync.d5.d5_a.s100",
       "violations": []
@@ -117,14 +131,16 @@
       "family": "retrieval_workspace",
       "monotonic": true,
       "profile": "d5_b",
+      "quality_gate_passed": true,
+      "quality_violations": [],
       "seed": 103,
       "semantic_dependency_depth": 3,
       "states": {
-        "all_but_one": 0.75,
+        "all_but_one": 0.421875,
         "full": 1.0,
-        "one_capability": 0.25,
-        "two_capabilities": 0.35,
-        "untouched": 0.15
+        "one_capability": 0.015625,
+        "two_capabilities": 0.042875,
+        "untouched": 0.003375
       },
       "task_id": "swg.calibration.retrieval_workspace.client_adapter_policy_sync.d5.d5_b.s103",
       "violations": []
@@ -134,14 +150,16 @@
       "family": "retrieval_workspace",
       "monotonic": true,
       "profile": "d5_b",
+      "quality_gate_passed": true,
+      "quality_violations": [],
       "seed": 106,
       "semantic_dependency_depth": 3,
       "states": {
-        "all_but_one": 0.75,
+        "all_but_one": 0.421875,
         "full": 1.0,
-        "one_capability": 0.25,
-        "two_capabilities": 0.35,
-        "untouched": 0.15
+        "one_capability": 0.015625,
+        "two_capabilities": 0.042875,
+        "untouched": 0.003375
       },
       "task_id": "swg.calibration.retrieval_workspace.client_adapter_policy_sync.d5.d5_b.s106",
       "violations": []
@@ -151,14 +169,16 @@
       "family": "retrieval_workspace",
       "monotonic": true,
       "profile": "d5_c",
+      "quality_gate_passed": true,
+      "quality_violations": [],
       "seed": 108,
       "semantic_dependency_depth": 5,
       "states": {
-        "all_but_one": 0.75,
+        "all_but_one": 0.421875,
         "full": 1.0,
-        "one_capability": 0.25,
-        "two_capabilities": 0.35,
-        "untouched": 0.15
+        "one_capability": 0.001,
+        "two_capabilities": 0.015625,
+        "untouched": 0.0
       },
       "task_id": "swg.calibration.retrieval_workspace.versioned_client_migration.d5.d5_c.s108",
       "violations": []
@@ -168,16 +188,113 @@
       "family": "retrieval_workspace",
       "monotonic": true,
       "profile": "d5_c",
+      "quality_gate_passed": true,
+      "quality_violations": [],
       "seed": 109,
       "semantic_dependency_depth": 5,
       "states": {
-        "all_but_one": 0.75,
+        "all_but_one": 0.421875,
         "full": 1.0,
-        "one_capability": 0.25,
-        "two_capabilities": 0.35,
-        "untouched": 0.15
+        "one_capability": 0.001,
+        "two_capabilities": 0.015625,
+        "untouched": 0.0
       },
       "task_id": "swg.calibration.retrieval_workspace.versioned_client_migration.d5.d5_c.s109",
+      "violations": []
+    },
+    {
+      "capability_count": 0,
+      "family": "script_repair",
+      "monotonic": true,
+      "profile": "inventory_report",
+      "quality_gate_passed": true,
+      "quality_violations": [],
+      "seed": 100,
+      "semantic_dependency_depth": 0,
+      "states": {
+        "all_but_one": 0.296297,
+        "full": 1.0,
+        "one_capability": 0.037037,
+        "two_capabilities": 0.296297,
+        "untouched": 0.0
+      },
+      "task_id": "swg.calibration.script_repair.inventory_report.d5.inventory_report.s100",
+      "violations": []
+    },
+    {
+      "capability_count": 0,
+      "family": "script_repair",
+      "monotonic": true,
+      "profile": "inventory_report",
+      "quality_gate_passed": true,
+      "quality_violations": [],
+      "seed": 103,
+      "semantic_dependency_depth": 0,
+      "states": {
+        "all_but_one": 0.296297,
+        "full": 1.0,
+        "one_capability": 0.037037,
+        "two_capabilities": 0.296297,
+        "untouched": 0.0
+      },
+      "task_id": "swg.calibration.script_repair.inventory_report.d5.inventory_report.s103",
+      "violations": []
+    },
+    {
+      "capability_count": 0,
+      "family": "script_repair",
+      "monotonic": true,
+      "profile": "inventory_report",
+      "quality_gate_passed": true,
+      "quality_violations": [],
+      "seed": 106,
+      "semantic_dependency_depth": 0,
+      "states": {
+        "all_but_one": 0.296297,
+        "full": 1.0,
+        "one_capability": 0.037037,
+        "two_capabilities": 0.296297,
+        "untouched": 0.0
+      },
+      "task_id": "swg.calibration.script_repair.inventory_report.d5.inventory_report.s106",
+      "violations": []
+    },
+    {
+      "capability_count": 0,
+      "family": "script_repair",
+      "monotonic": true,
+      "profile": "inventory_report",
+      "quality_gate_passed": true,
+      "quality_violations": [],
+      "seed": 108,
+      "semantic_dependency_depth": 0,
+      "states": {
+        "all_but_one": 0.296297,
+        "full": 1.0,
+        "one_capability": 0.037037,
+        "two_capabilities": 0.296297,
+        "untouched": 0.0
+      },
+      "task_id": "swg.calibration.script_repair.inventory_report.d5.inventory_report.s108",
+      "violations": []
+    },
+    {
+      "capability_count": 0,
+      "family": "script_repair",
+      "monotonic": true,
+      "profile": "inventory_report",
+      "quality_gate_passed": true,
+      "quality_violations": [],
+      "seed": 109,
+      "semantic_dependency_depth": 0,
+      "states": {
+        "all_but_one": 0.296297,
+        "full": 1.0,
+        "one_capability": 0.037037,
+        "two_capabilities": 0.296297,
+        "untouched": 0.0
+      },
+      "task_id": "swg.calibration.script_repair.inventory_report.d5.inventory_report.s109",
       "violations": []
     },
     {
@@ -185,14 +302,16 @@
       "family": "tabular",
       "monotonic": true,
       "profile": "d5_a",
+      "quality_gate_passed": true,
+      "quality_violations": [],
       "seed": 100,
       "semantic_dependency_depth": 2,
       "states": {
-        "all_but_one": 0.6,
+        "all_but_one": 0.216,
         "full": 1.0,
-        "one_capability": 0.52,
-        "two_capabilities": 0.6,
-        "untouched": 0.39
+        "one_capability": 0.140608,
+        "two_capabilities": 0.216,
+        "untouched": 0.059319
       },
       "task_id": "swg.calibration.tabular.account_event_program_synthesis.d5.d5_a.s100",
       "violations": []
@@ -202,14 +321,16 @@
       "family": "tabular",
       "monotonic": true,
       "profile": "d5_b",
+      "quality_gate_passed": true,
+      "quality_violations": [],
       "seed": 103,
       "semantic_dependency_depth": 3,
       "states": {
-        "all_but_one": 0.73,
+        "all_but_one": 0.389017,
         "full": 1.0,
-        "one_capability": 0.5,
-        "two_capabilities": 0.63,
-        "untouched": 0.38
+        "one_capability": 0.125,
+        "two_capabilities": 0.250047,
+        "untouched": 0.054872
       },
       "task_id": "swg.calibration.tabular.account_event_program_synthesis.d5.d5_b.s103",
       "violations": []
@@ -219,14 +340,16 @@
       "family": "tabular",
       "monotonic": true,
       "profile": "d5_b",
+      "quality_gate_passed": true,
+      "quality_violations": [],
       "seed": 106,
       "semantic_dependency_depth": 3,
       "states": {
-        "all_but_one": 0.73,
+        "all_but_one": 0.389017,
         "full": 1.0,
-        "one_capability": 0.5,
-        "two_capabilities": 0.63,
-        "untouched": 0.38
+        "one_capability": 0.125,
+        "two_capabilities": 0.250047,
+        "untouched": 0.054872
       },
       "task_id": "swg.calibration.tabular.account_event_program_synthesis.d5.d5_b.s106",
       "violations": []
@@ -236,14 +359,16 @@
       "family": "tabular",
       "monotonic": true,
       "profile": "d5_c",
+      "quality_gate_passed": true,
+      "quality_violations": [],
       "seed": 108,
       "semantic_dependency_depth": 5,
       "states": {
-        "all_but_one": 0.73,
+        "all_but_one": 0.389017,
         "full": 1.0,
-        "one_capability": 0.3,
-        "two_capabilities": 0.38,
-        "untouched": 0.17
+        "one_capability": 0.027,
+        "two_capabilities": 0.054872,
+        "untouched": 0.004913
       },
       "task_id": "swg.calibration.tabular.account_event_program_synthesis.d5.d5_c.s108",
       "violations": []
@@ -253,16 +378,113 @@
       "family": "tabular",
       "monotonic": true,
       "profile": "d5_c",
+      "quality_gate_passed": true,
+      "quality_violations": [],
       "seed": 109,
       "semantic_dependency_depth": 5,
       "states": {
-        "all_but_one": 0.73,
+        "all_but_one": 0.389017,
         "full": 1.0,
-        "one_capability": 0.3,
-        "two_capabilities": 0.38,
-        "untouched": 0.17
+        "one_capability": 0.027,
+        "two_capabilities": 0.054872,
+        "untouched": 0.004913
       },
       "task_id": "swg.calibration.tabular.account_event_program_synthesis.d5.d5_c.s109",
+      "violations": []
+    },
+    {
+      "capability_count": 11,
+      "family": "composite_workspace",
+      "monotonic": true,
+      "profile": "retrieval_guided_pipeline_repair",
+      "quality_gate_passed": true,
+      "quality_violations": [],
+      "seed": 100,
+      "semantic_dependency_depth": 3,
+      "states": {
+        "all_but_one": 0.751315,
+        "full": 1.0,
+        "one_capability": 0.000751,
+        "two_capabilities": 0.000751,
+        "untouched": 0.000751
+      },
+      "task_id": "swg.calibration.composite_workspace.retrieval_guided_pipeline_repair.d5.retrieval_guided_pipeline_repair.s100",
+      "violations": []
+    },
+    {
+      "capability_count": 11,
+      "family": "composite_workspace",
+      "monotonic": true,
+      "profile": "retrieval_guided_pipeline_repair",
+      "quality_gate_passed": true,
+      "quality_violations": [],
+      "seed": 103,
+      "semantic_dependency_depth": 3,
+      "states": {
+        "all_but_one": 0.751315,
+        "full": 1.0,
+        "one_capability": 0.000751,
+        "two_capabilities": 0.000751,
+        "untouched": 0.000751
+      },
+      "task_id": "swg.calibration.composite_workspace.retrieval_guided_pipeline_repair.d5.retrieval_guided_pipeline_repair.s103",
+      "violations": []
+    },
+    {
+      "capability_count": 11,
+      "family": "composite_workspace",
+      "monotonic": true,
+      "profile": "retrieval_guided_pipeline_repair",
+      "quality_gate_passed": true,
+      "quality_violations": [],
+      "seed": 106,
+      "semantic_dependency_depth": 3,
+      "states": {
+        "all_but_one": 0.751315,
+        "full": 1.0,
+        "one_capability": 0.000751,
+        "two_capabilities": 0.000751,
+        "untouched": 0.000751
+      },
+      "task_id": "swg.calibration.composite_workspace.retrieval_guided_pipeline_repair.d5.retrieval_guided_pipeline_repair.s106",
+      "violations": []
+    },
+    {
+      "capability_count": 11,
+      "family": "composite_workspace",
+      "monotonic": true,
+      "profile": "retrieval_guided_pipeline_repair",
+      "quality_gate_passed": true,
+      "quality_violations": [],
+      "seed": 108,
+      "semantic_dependency_depth": 3,
+      "states": {
+        "all_but_one": 0.751315,
+        "full": 1.0,
+        "one_capability": 0.000751,
+        "two_capabilities": 0.000751,
+        "untouched": 0.000751
+      },
+      "task_id": "swg.calibration.composite_workspace.retrieval_guided_pipeline_repair.d5.retrieval_guided_pipeline_repair.s108",
+      "violations": []
+    },
+    {
+      "capability_count": 11,
+      "family": "composite_workspace",
+      "monotonic": true,
+      "profile": "retrieval_guided_pipeline_repair",
+      "quality_gate_passed": true,
+      "quality_violations": [],
+      "seed": 109,
+      "semantic_dependency_depth": 3,
+      "states": {
+        "all_but_one": 0.751315,
+        "full": 1.0,
+        "one_capability": 0.000751,
+        "two_capabilities": 0.000751,
+        "untouched": 0.000751
+      },
+      "task_id": "swg.calibration.composite_workspace.retrieval_guided_pipeline_repair.d5.retrieval_guided_pipeline_repair.s109",
       "violations": []
     }
   ],

@@ -18,7 +18,8 @@ class EvaluatorCorrectnessTests(unittest.TestCase):
             EnvironmentFamily.TABULAR,
             evaluator_entrypoint="synthetic_workspace_gym.evaluators.tabular:TabularEvaluator",
         )
-        self.assertEqual(type(evaluator).__name__, "TabularEvaluator")
+        self.assertEqual(type(evaluator).__name__, "D5CalibratedEvaluator")
+        self.assertEqual(type(evaluator.evaluator).__name__, "TabularEvaluator")
 
     def test_unsolved_workspace_fails_for_each_family(self) -> None:
         for family in EnvironmentFamily:

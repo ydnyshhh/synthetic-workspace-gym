@@ -46,7 +46,11 @@ def validate_partial_solution_lattice(
         violations.append("untouched workspace reward exceeds no_fixes_max")
     if by_size.get(1) and max(by_size[1]) > float(limits["single_fix_max"]):
         violations.append("a single fix exceeds single_fix_max")
-    if by_size.get(2) and max(by_size[2]) > float(limits["pair_fix_max"]):
+    if (
+        len(ordered) > 2
+        and by_size.get(2)
+        and max(by_size[2]) > float(limits["pair_fix_max"])
+    ):
         violations.append("a two-fix subset exceeds pair_fix_max")
     if len(ordered) > 2 and max(by_size[len(ordered) - 1]) > float(
         limits["all_but_one_max"]
