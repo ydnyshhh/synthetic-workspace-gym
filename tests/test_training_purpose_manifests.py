@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from collections import Counter
 from pathlib import Path
 
 
@@ -85,3 +86,20 @@ def test_manifest_metadata_declares_training_purpose_and_is_frozen() -> None:
         assert metadata["frozen"] is True
         assert metadata["training_purpose"] == purpose
         assert metadata["manifest_fingerprint"]
+
+
+def test_difficulty_band_eval_panels_are_balanced_and_held_out() -> None:
+    expected_difficulties = {
+        "eval-d1-d2-panel-24": {1, 2},
+        "eval-d3-d4-panel-24": {3, 4},
+        "eval-d5-heldout-panel-24": {5},
+    }
+    for name, difficulties in expected_difficulties.items():
+        payload = _load(name)
+        assignments = list(payload["assignments"])
+        assert len(assignments) == 24
+        assert {row["difficulty"] for row in assignments} == difficulties
+        assert {row["split"] for row in assignments} == {"heldout"}
+        family_counts = Counter(row["family"] for row in assignments)
+        assert set(family_counts.values()) == {6}
+        assert payload["metadata"]["manifest_fingerprint"]

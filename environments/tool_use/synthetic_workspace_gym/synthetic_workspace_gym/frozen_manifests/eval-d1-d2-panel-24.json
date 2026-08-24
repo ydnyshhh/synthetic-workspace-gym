@@ -1,0 +1,401 @@
+{
+  "assignments": [
+    {
+      "difficulty": 1,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "41516a14cbb3d194ee4e7e0eb493d3ecc4a542aa5dd1aa33ab7c0d38d938a0f1",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-d1-d2-panel-24"
+      },
+      "scenario": "supplier_restock_summary",
+      "seed": 120,
+      "split": "heldout",
+      "task_id": "swg.heldout.tabular.supplier_restock_summary.d1.s120"
+    },
+    {
+      "difficulty": 1,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "78ff28abc1f7392f8ee927866ebb5d4c213284e054bf68edeab3fe64aeeaeac9",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-d1-d2-panel-24"
+      },
+      "scenario": "supplier_restock_summary",
+      "seed": 121,
+      "split": "heldout",
+      "task_id": "swg.heldout.tabular.supplier_restock_summary.d1.s121"
+    },
+    {
+      "difficulty": 1,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "49e3e289cc2bf0f22b2cf69cca0d6e5ae88a23c7f0427a908220fe09d35d7fae",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-d1-d2-panel-24"
+      },
+      "scenario": "supplier_restock_summary",
+      "seed": 122,
+      "split": "heldout",
+      "task_id": "swg.heldout.tabular.supplier_restock_summary.d1.s122"
+    },
+    {
+      "difficulty": 2,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "ea2b30f90a584cbd039e721d5cdbdac01e6cdd3739307c9342078a058fb19ac3",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-d1-d2-panel-24"
+      },
+      "scenario": "supplier_restock_summary",
+      "seed": 120,
+      "split": "heldout",
+      "task_id": "swg.heldout.tabular.supplier_restock_summary.d2.s120"
+    },
+    {
+      "difficulty": 2,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "8c1fbcd47341407ccb8e4776dd632c4feefa7443196661f8bda184e064287c32",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-d1-d2-panel-24"
+      },
+      "scenario": "supplier_restock_summary",
+      "seed": 121,
+      "split": "heldout",
+      "task_id": "swg.heldout.tabular.supplier_restock_summary.d2.s121"
+    },
+    {
+      "difficulty": 2,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "011e89c601c5c76bbf5e431842c912220e22f41a3856ceea4594a064fae9fff0",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-d1-d2-panel-24"
+      },
+      "scenario": "supplier_restock_summary",
+      "seed": 122,
+      "split": "heldout",
+      "task_id": "swg.heldout.tabular.supplier_restock_summary.d2.s122"
+    },
+    {
+      "difficulty": 1,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "53dfbf37d8a774b80eafdef032d2484a10be004424e701e5ad8d3868cbe05f6d",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-d1-d2-panel-24"
+      },
+      "scenario": "team_roster_export",
+      "seed": 120,
+      "split": "heldout",
+      "task_id": "swg.heldout.script_repair.team_roster_export.d1.s120"
+    },
+    {
+      "difficulty": 1,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "724f39fda21e9ec7d613077625f40996e4b83aadcdb4af87cd72c2e4a34f2ab6",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-d1-d2-panel-24"
+      },
+      "scenario": "team_roster_export",
+      "seed": 121,
+      "split": "heldout",
+      "task_id": "swg.heldout.script_repair.team_roster_export.d1.s121"
+    },
+    {
+      "difficulty": 1,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "a2de02d05b88d30f54cbb36ac333ead2c134d8f079217d862b2aa1b6de6c6990",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-d1-d2-panel-24"
+      },
+      "scenario": "team_roster_export",
+      "seed": 122,
+      "split": "heldout",
+      "task_id": "swg.heldout.script_repair.team_roster_export.d1.s122"
+    },
+    {
+      "difficulty": 2,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "6caf309b4cbc3f143cceb40c17e8da278fd4bb68300d18c9d502b8626409acfb",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-d1-d2-panel-24"
+      },
+      "scenario": "team_roster_export",
+      "seed": 120,
+      "split": "heldout",
+      "task_id": "swg.heldout.script_repair.team_roster_export.d2.s120"
+    },
+    {
+      "difficulty": 2,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "32b55f940dcbe9245b14bb6bffba72c26e14b6d41f5b61edd84b7ac5ad963048",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-d1-d2-panel-24"
+      },
+      "scenario": "team_roster_export",
+      "seed": 121,
+      "split": "heldout",
+      "task_id": "swg.heldout.script_repair.team_roster_export.d2.s121"
+    },
+    {
+      "difficulty": 2,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "579d0d0e29300bd2356e7ea413cc3eafe9a5e545fb68f9791a364ad1f5527887",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-d1-d2-panel-24"
+      },
+      "scenario": "team_roster_export",
+      "seed": 122,
+      "split": "heldout",
+      "task_id": "swg.heldout.script_repair.team_roster_export.d2.s122"
+    },
+    {
+      "difficulty": 1,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "fee9962f1fe91e4c1a4bf4ff2e333a00ffdd07f604e1e3f2be08297c87cbca36",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-d1-d2-panel-24"
+      },
+      "scenario": "quality_gate_pipeline",
+      "seed": 120,
+      "split": "heldout",
+      "task_id": "swg.heldout.pipeline.quality_gate_pipeline.d1.s120"
+    },
+    {
+      "difficulty": 1,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "065d2d3de009be55e52ce6eccca275409e166c34f69df989aa8ba63e6e200383",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-d1-d2-panel-24"
+      },
+      "scenario": "quality_gate_pipeline",
+      "seed": 121,
+      "split": "heldout",
+      "task_id": "swg.heldout.pipeline.quality_gate_pipeline.d1.s121"
+    },
+    {
+      "difficulty": 1,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "7b4cf6c3a8937ffd1c5c2dc897062d542fd009a32372404e13544c2ffe91b661",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-d1-d2-panel-24"
+      },
+      "scenario": "quality_gate_pipeline",
+      "seed": 122,
+      "split": "heldout",
+      "task_id": "swg.heldout.pipeline.quality_gate_pipeline.d1.s122"
+    },
+    {
+      "difficulty": 2,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "f9a5c8d0b790ce2047a30d102dd22de388abd2b871f0f7ca89c0dc0cf4a61339",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-d1-d2-panel-24"
+      },
+      "scenario": "quality_gate_pipeline",
+      "seed": 120,
+      "split": "heldout",
+      "task_id": "swg.heldout.pipeline.quality_gate_pipeline.d2.s120"
+    },
+    {
+      "difficulty": 2,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "98fb674b3e065d9b92af0ca01061a752be84f1406371b8469563ae577ad99dda",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-d1-d2-panel-24"
+      },
+      "scenario": "quality_gate_pipeline",
+      "seed": 121,
+      "split": "heldout",
+      "task_id": "swg.heldout.pipeline.quality_gate_pipeline.d2.s121"
+    },
+    {
+      "difficulty": 2,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "32151844e083b3131d98ab50f7c29255aaa4244d6ee7abb5ba6163a023b3f960",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-d1-d2-panel-24"
+      },
+      "scenario": "quality_gate_pipeline",
+      "seed": 122,
+      "split": "heldout",
+      "task_id": "swg.heldout.pipeline.quality_gate_pipeline.d2.s122"
+    },
+    {
+      "difficulty": 1,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "88a1a4496ea76c497c26e31dcc820e6061c5b71d97dd1892844b5b443b8570dd",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-d1-d2-panel-24"
+      },
+      "scenario": "client_adapter_sync",
+      "seed": 120,
+      "split": "heldout",
+      "task_id": "swg.heldout.retrieval_workspace.client_adapter_sync.d1.s120"
+    },
+    {
+      "difficulty": 1,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "5cf619ced0b71f4cc2382efaf6a4372cdaacc02ebea2a873eef3733b311e680f",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-d1-d2-panel-24"
+      },
+      "scenario": "client_adapter_sync",
+      "seed": 121,
+      "split": "heldout",
+      "task_id": "swg.heldout.retrieval_workspace.client_adapter_sync.d1.s121"
+    },
+    {
+      "difficulty": 1,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "9850d34a21466e7f228d02cdec89974e4e26d22f141217eaef70436b6c64f9a2",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-d1-d2-panel-24"
+      },
+      "scenario": "client_adapter_sync",
+      "seed": 122,
+      "split": "heldout",
+      "task_id": "swg.heldout.retrieval_workspace.client_adapter_sync.d1.s122"
+    },
+    {
+      "difficulty": 2,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "fa303e4bc7873cd240240977e6d2ed03b6b7d04e25caff1de0e9bbbfa769ef56",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-d1-d2-panel-24"
+      },
+      "scenario": "client_adapter_sync",
+      "seed": 120,
+      "split": "heldout",
+      "task_id": "swg.heldout.retrieval_workspace.client_adapter_sync.d2.s120"
+    },
+    {
+      "difficulty": 2,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "0eb4f7d4e9c0652d2e8bb450a7d6f18e8bb4bc3eb5237050da71f3826f1aaae4",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-d1-d2-panel-24"
+      },
+      "scenario": "client_adapter_sync",
+      "seed": 121,
+      "split": "heldout",
+      "task_id": "swg.heldout.retrieval_workspace.client_adapter_sync.d2.s121"
+    },
+    {
+      "difficulty": 2,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "c9b3d1eee2ee23a9dbc88f4dc14867c251c0fa1efd3a0e14b68e9336e099f63f",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-d1-d2-panel-24"
+      },
+      "scenario": "client_adapter_sync",
+      "seed": 122,
+      "split": "heldout",
+      "task_id": "swg.heldout.retrieval_workspace.client_adapter_sync.d2.s122"
+    }
+  ],
+  "created_at": "2026-07-27T00:00:00+05:30",
+  "metadata": {
+    "assignment_count": 24,
+    "environment_version": "0.2.0.dev1",
+    "frozen": true,
+    "manifest_fingerprint": "60c73b91bdd810173feaf118dd489f0c40394e08e7344005f94bcddd5f268d87",
+    "panel": "difficulty_band_heldout",
+    "rollouts_per_task": 5,
+    "scenario_partition": "heldout"
+  },
+  "name": "eval-d1-d2-panel-24",
+  "split_specs": {},
+  "version": "v1"
+}

@@ -1,0 +1,401 @@
+{
+  "assignments": [
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "bf6e77746acbc5d544fed9bb542621210d8d5c23b97a2abce133c04e2bdb470d",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-d5-heldout-panel-24"
+      },
+      "scenario": "supplier_restock_summary",
+      "seed": 223,
+      "split": "heldout",
+      "task_id": "swg.heldout.tabular.supplier_restock_summary.d5.s223"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "9b48aa1d8844479747ee54652ea025aa45fd3bb4a6aad5869ca5067dab3cbe82",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-d5-heldout-panel-24"
+      },
+      "scenario": "supplier_restock_summary",
+      "seed": 224,
+      "split": "heldout",
+      "task_id": "swg.heldout.tabular.supplier_restock_summary.d5.s224"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "69da1f5092f0dd2bf31ecf5251ee63823959c1cb8a0907f01ae727be574de626",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-d5-heldout-panel-24"
+      },
+      "scenario": "supplier_restock_summary",
+      "seed": 225,
+      "split": "heldout",
+      "task_id": "swg.heldout.tabular.supplier_restock_summary.d5.s225"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "100e9bc789c2a850a40eeb5213c355f344f9e72b9955074b08c13f3f9b201c4a",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-d5-heldout-panel-24"
+      },
+      "scenario": "supplier_restock_summary",
+      "seed": 226,
+      "split": "heldout",
+      "task_id": "swg.heldout.tabular.supplier_restock_summary.d5.s226"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "cb92adf8701a95f9b44e1c71e3f2c6fd16871b451ad3dadb455d21caa20ec79d",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-d5-heldout-panel-24"
+      },
+      "scenario": "supplier_restock_summary",
+      "seed": 227,
+      "split": "heldout",
+      "task_id": "swg.heldout.tabular.supplier_restock_summary.d5.s227"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "743221b0afc572b346755c14f38bb2e5d560b3e36d14679dfaee33547397ca75",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-d5-heldout-panel-24"
+      },
+      "scenario": "supplier_restock_summary",
+      "seed": 228,
+      "split": "heldout",
+      "task_id": "swg.heldout.tabular.supplier_restock_summary.d5.s228"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "135749fca73e96cbaf2f38694e8cb4967f6984eda73c5d8c6f7b2d006185b323",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-d5-heldout-panel-24"
+      },
+      "scenario": "team_roster_export",
+      "seed": 223,
+      "split": "heldout",
+      "task_id": "swg.heldout.script_repair.team_roster_export.d5.s223"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "7098f700b27d8613be760ff61c1786ba42dcbe276e4ddbcfcdcbf2de985eba39",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-d5-heldout-panel-24"
+      },
+      "scenario": "team_roster_export",
+      "seed": 224,
+      "split": "heldout",
+      "task_id": "swg.heldout.script_repair.team_roster_export.d5.s224"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "0d1b54501768c3b300bfbae9338dd99bade019b7d8d4a1baff0212da69f76b1b",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-d5-heldout-panel-24"
+      },
+      "scenario": "team_roster_export",
+      "seed": 225,
+      "split": "heldout",
+      "task_id": "swg.heldout.script_repair.team_roster_export.d5.s225"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "9ac91fab6711fc42ec6867653d1c5546a8b5f0fc561a79fa8aff78030b8efd60",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-d5-heldout-panel-24"
+      },
+      "scenario": "team_roster_export",
+      "seed": 226,
+      "split": "heldout",
+      "task_id": "swg.heldout.script_repair.team_roster_export.d5.s226"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "3b26e75138835923e5cbf9358aa969b4b0ca68b1dbf834effb4f9babf575d761",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-d5-heldout-panel-24"
+      },
+      "scenario": "team_roster_export",
+      "seed": 227,
+      "split": "heldout",
+      "task_id": "swg.heldout.script_repair.team_roster_export.d5.s227"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "a759b59b4935edca82ef321e1d21b6259f094c473056a0717b20b949d312940c",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-d5-heldout-panel-24"
+      },
+      "scenario": "team_roster_export",
+      "seed": 228,
+      "split": "heldout",
+      "task_id": "swg.heldout.script_repair.team_roster_export.d5.s228"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "6c2afbbc898e387e1838b9dfc921e0528ce2c0a2f02df59d90b10bc596501da2",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-d5-heldout-panel-24"
+      },
+      "scenario": "quality_gate_pipeline",
+      "seed": 223,
+      "split": "heldout",
+      "task_id": "swg.heldout.pipeline.quality_gate_pipeline.d5.s223"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "f3748eced7792b875a3423d6adcd2d9dde9e83c5b17a250b5088eb1372b4c909",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-d5-heldout-panel-24"
+      },
+      "scenario": "quality_gate_pipeline",
+      "seed": 224,
+      "split": "heldout",
+      "task_id": "swg.heldout.pipeline.quality_gate_pipeline.d5.s224"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "508e7db88cfe0f2cf01b1df70e5ea10efee162e47411ddb99dfc4cbee434888f",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-d5-heldout-panel-24"
+      },
+      "scenario": "quality_gate_pipeline",
+      "seed": 225,
+      "split": "heldout",
+      "task_id": "swg.heldout.pipeline.quality_gate_pipeline.d5.s225"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "af0f9273460ed7d48b64da38b419e1a0cf11cd61c5b3e23ac5d7663e0abcb1ce",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-d5-heldout-panel-24"
+      },
+      "scenario": "quality_gate_pipeline",
+      "seed": 226,
+      "split": "heldout",
+      "task_id": "swg.heldout.pipeline.quality_gate_pipeline.d5.s226"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "a1fe339e0b1aeb20283eb061b64f94ccd10a96213bb1f3f559429e4bdc0b424f",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-d5-heldout-panel-24"
+      },
+      "scenario": "quality_gate_pipeline",
+      "seed": 227,
+      "split": "heldout",
+      "task_id": "swg.heldout.pipeline.quality_gate_pipeline.d5.s227"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "fc45355b779da107f7756a17562cd9a0759de7c92688917df8cda355f45f1a76",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-d5-heldout-panel-24"
+      },
+      "scenario": "quality_gate_pipeline",
+      "seed": 228,
+      "split": "heldout",
+      "task_id": "swg.heldout.pipeline.quality_gate_pipeline.d5.s228"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "660d157e4302dbf56fcc563249176082faa737053a4e60b1e902ec7c0bac7584",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-d5-heldout-panel-24"
+      },
+      "scenario": "client_adapter_sync",
+      "seed": 223,
+      "split": "heldout",
+      "task_id": "swg.heldout.retrieval_workspace.client_adapter_sync.d5.s223"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "bb8e74c1301f68d575501b5666a6654ed1f62fb31ea921faf6b5f3007e5ce788",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-d5-heldout-panel-24"
+      },
+      "scenario": "client_adapter_sync",
+      "seed": 224,
+      "split": "heldout",
+      "task_id": "swg.heldout.retrieval_workspace.client_adapter_sync.d5.s224"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "b44e9c69834f8a27b21d6f853d03851de01eb27e6670789d76a39cb5f485997a",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-d5-heldout-panel-24"
+      },
+      "scenario": "client_adapter_sync",
+      "seed": 225,
+      "split": "heldout",
+      "task_id": "swg.heldout.retrieval_workspace.client_adapter_sync.d5.s225"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "ef564ceae1220bdf078abb69b118cf90dc604f722ccd29742a571c69bc8c8523",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-d5-heldout-panel-24"
+      },
+      "scenario": "client_adapter_sync",
+      "seed": 226,
+      "split": "heldout",
+      "task_id": "swg.heldout.retrieval_workspace.client_adapter_sync.d5.s226"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "f8ee94c40f347a49344dcd074977987bcbb0c6eccbf5af16964bcce728f9369f",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-d5-heldout-panel-24"
+      },
+      "scenario": "client_adapter_sync",
+      "seed": 227,
+      "split": "heldout",
+      "task_id": "swg.heldout.retrieval_workspace.client_adapter_sync.d5.s227"
+    },
+    {
+      "difficulty": 5,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "580d029a3e4c9a14c0763e22ddaf259c21bd8bd532a614b2358570fc7f857cc7",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-d5-heldout-panel-24"
+      },
+      "scenario": "client_adapter_sync",
+      "seed": 228,
+      "split": "heldout",
+      "task_id": "swg.heldout.retrieval_workspace.client_adapter_sync.d5.s228"
+    }
+  ],
+  "created_at": "2026-07-27T00:00:00+05:30",
+  "metadata": {
+    "assignment_count": 24,
+    "environment_version": "0.2.0.dev1",
+    "frozen": true,
+    "manifest_fingerprint": "c139ebcde4b982bc2422c1b3a680ab78e384b0a062b6664d46fed0f0e0d6e760",
+    "panel": "difficulty_band_heldout",
+    "rollouts_per_task": 5,
+    "scenario_partition": "heldout"
+  },
+  "name": "eval-d5-heldout-panel-24",
+  "split_specs": {},
+  "version": "v1"
+}

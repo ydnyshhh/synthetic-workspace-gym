@@ -4,6 +4,9 @@
   "environment_version": "0.2.0.dev1",
   "evaluation_panels": [
     "eval-composite-heldout-24",
+    "eval-d1-d2-panel-24",
+    "eval-d3-d4-panel-24",
+    "eval-d5-heldout-panel-24",
     "eval-d5-panel-24",
     "eval-id-d3-d5",
     "eval-scenario-heldout"

@@ -45,6 +45,8 @@ uv run eval synthetic-workspace-gym \
 
 The purpose-specific manifests are `sft-easy-v1` (D1-D3 atomic teacher traces), `sft-validation-v1` (scenario- and seed-held-out D1-D3), `rl-hard-v1` (D4-D5 atomic and composite training), and `rl-eval-v1` (held-out D4-D5 scenarios, seeds, fixtures, and compositions). Historical balanced and specialist RL manifests remain packaged for reproducibility. Verifiers' normal `-n`, `-r`, `--shuffle`, harness, model, sampling, and runtime options apply without environment-specific rollout arguments.
 
+For directly comparable model evaluation across difficulty bands, use `eval-d1-d2-panel-24`, `eval-d3-d4-panel-24`, and `eval-d5-heldout-panel-24`. Each immutable panel contains 24 scenario-held-out atomic tasks balanced equally across the four families and is intended for five rollouts per task.
+
 ## Configuration
 
 | Field | Default | Purpose |

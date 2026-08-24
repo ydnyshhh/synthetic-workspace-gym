@@ -200,4 +200,9 @@ def test_package_contains_all_training_and_eval_manifests() -> None:
     assert "train-specialist-script_repair" in names
     assert "eval-id-d3-d5" in names
     assert "eval-scenario-heldout" in names
+    assert {
+        "eval-d1-d2-panel-24",
+        "eval-d3-d4-panel-24",
+        "eval-d5-heldout-panel-24",
+    } <= names
     assert {"sft-easy-v1", "sft-validation-v1", "rl-hard-v1", "rl-eval-v1"} <= names

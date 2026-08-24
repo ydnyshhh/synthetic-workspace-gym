@@ -1,0 +1,4 @@
+# Prime Hosted Evals currently upgrades prime-sandboxes while retaining the
+# incompatible legacy connect-python package in its base image. This compatible
+# release satisfies verifiers 0.3 and avoids the mixed Connect runtime.
+prime-sandboxes==0.2.35

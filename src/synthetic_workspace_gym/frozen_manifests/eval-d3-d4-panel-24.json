@@ -1,0 +1,401 @@
+{
+  "assignments": [
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "0c0125ce3d324e177f3f054f12f718cd6fe847dce0cea74025679f630c297f8f",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-d3-d4-panel-24"
+      },
+      "scenario": "supplier_restock_summary",
+      "seed": 123,
+      "split": "heldout",
+      "task_id": "swg.heldout.tabular.supplier_restock_summary.d3.s123"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "2c0613fca874779219055f01afc12040e2762f558563c6fd91afa9cbc0e80609",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-d3-d4-panel-24"
+      },
+      "scenario": "supplier_restock_summary",
+      "seed": 124,
+      "split": "heldout",
+      "task_id": "swg.heldout.tabular.supplier_restock_summary.d3.s124"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "6e53b3d157c14e11c541459929fbb3bcbb62e2b25c91e2e3de9d9038b9254902",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-d3-d4-panel-24"
+      },
+      "scenario": "supplier_restock_summary",
+      "seed": 125,
+      "split": "heldout",
+      "task_id": "swg.heldout.tabular.supplier_restock_summary.d3.s125"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "6ec67fb0214c264509af8201233e40cf4f6967671a28901bb2e91318a26d86f8",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-d3-d4-panel-24"
+      },
+      "scenario": "supplier_restock_summary",
+      "seed": 220,
+      "split": "heldout",
+      "task_id": "swg.heldout.tabular.supplier_restock_summary.d4.s220"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "bbe11ebf7b7c7bbe984cff16a61d722a540f439bfbacb4625fc962e9671562f1",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-d3-d4-panel-24"
+      },
+      "scenario": "supplier_restock_summary",
+      "seed": 221,
+      "split": "heldout",
+      "task_id": "swg.heldout.tabular.supplier_restock_summary.d4.s221"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "tabular",
+      "metadata": {
+        "assignment_fingerprint": "118183c81969ae85942f2acf7d79f6de076472276119537031b64aba127386ba",
+        "contributing_families": [
+          "tabular"
+        ],
+        "experiment": "eval-d3-d4-panel-24"
+      },
+      "scenario": "supplier_restock_summary",
+      "seed": 222,
+      "split": "heldout",
+      "task_id": "swg.heldout.tabular.supplier_restock_summary.d4.s222"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "c52d6495d4dcab435075af4c56d9cc72675d8e38a64acbca05107b497f3596f2",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-d3-d4-panel-24"
+      },
+      "scenario": "team_roster_export",
+      "seed": 123,
+      "split": "heldout",
+      "task_id": "swg.heldout.script_repair.team_roster_export.d3.s123"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "a29f6d2801221e9ae7310cf21b5e2c1e2778be90e450dd74d247cc731461a0ab",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-d3-d4-panel-24"
+      },
+      "scenario": "team_roster_export",
+      "seed": 124,
+      "split": "heldout",
+      "task_id": "swg.heldout.script_repair.team_roster_export.d3.s124"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "3e28b1446ecffc796e84c18b2c78b06299e4c5b01bb6ffb264cf9c128e8d97c5",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-d3-d4-panel-24"
+      },
+      "scenario": "team_roster_export",
+      "seed": 125,
+      "split": "heldout",
+      "task_id": "swg.heldout.script_repair.team_roster_export.d3.s125"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "8cd8c528fb5d4be1899cb1f4018ee335b32d8ac32bee6d380439ecaab7edda16",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-d3-d4-panel-24"
+      },
+      "scenario": "team_roster_export",
+      "seed": 220,
+      "split": "heldout",
+      "task_id": "swg.heldout.script_repair.team_roster_export.d4.s220"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "3fbba5bd04a6b7edab79994a53138855ff50d3b9c4891af38a65d911ce26541c",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-d3-d4-panel-24"
+      },
+      "scenario": "team_roster_export",
+      "seed": 221,
+      "split": "heldout",
+      "task_id": "swg.heldout.script_repair.team_roster_export.d4.s221"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "script_repair",
+      "metadata": {
+        "assignment_fingerprint": "e11f8abf3a82e597df0e436ce54360edd493fd7f8cd31159ae275d30e02f2558",
+        "contributing_families": [
+          "script_repair"
+        ],
+        "experiment": "eval-d3-d4-panel-24"
+      },
+      "scenario": "team_roster_export",
+      "seed": 222,
+      "split": "heldout",
+      "task_id": "swg.heldout.script_repair.team_roster_export.d4.s222"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "790923a603448603853efc60d6a922f70050a627d25570e48e3c6ae15e21a785",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-d3-d4-panel-24"
+      },
+      "scenario": "quality_gate_pipeline",
+      "seed": 123,
+      "split": "heldout",
+      "task_id": "swg.heldout.pipeline.quality_gate_pipeline.d3.s123"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "1b95910874db1cdf967a9f47f32aae7c157d2834bb7306bfd1a6498b0ed6b7c0",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-d3-d4-panel-24"
+      },
+      "scenario": "quality_gate_pipeline",
+      "seed": 124,
+      "split": "heldout",
+      "task_id": "swg.heldout.pipeline.quality_gate_pipeline.d3.s124"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "7691f5723fb25176c37c24b07f1030613a780682f4f8bee84bc82d76ff4aaa9f",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-d3-d4-panel-24"
+      },
+      "scenario": "quality_gate_pipeline",
+      "seed": 125,
+      "split": "heldout",
+      "task_id": "swg.heldout.pipeline.quality_gate_pipeline.d3.s125"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "81d92fb718eade406832991411d5c45420ff94438e839f570f75234065bac97b",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-d3-d4-panel-24"
+      },
+      "scenario": "quality_gate_pipeline",
+      "seed": 220,
+      "split": "heldout",
+      "task_id": "swg.heldout.pipeline.quality_gate_pipeline.d4.s220"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "29c589633e0ae24180184c4a2bd5dc917c31d7388eec655139f4e5741d8e3196",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-d3-d4-panel-24"
+      },
+      "scenario": "quality_gate_pipeline",
+      "seed": 221,
+      "split": "heldout",
+      "task_id": "swg.heldout.pipeline.quality_gate_pipeline.d4.s221"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "pipeline",
+      "metadata": {
+        "assignment_fingerprint": "e65e80911957dfe36792ae7855389a8d06b4906330399757c8a592c3738449c0",
+        "contributing_families": [
+          "pipeline"
+        ],
+        "experiment": "eval-d3-d4-panel-24"
+      },
+      "scenario": "quality_gate_pipeline",
+      "seed": 222,
+      "split": "heldout",
+      "task_id": "swg.heldout.pipeline.quality_gate_pipeline.d4.s222"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "45e00bb5b487e06822633329733470ba73001651de3bcf7112f6c6c090568423",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-d3-d4-panel-24"
+      },
+      "scenario": "client_adapter_sync",
+      "seed": 123,
+      "split": "heldout",
+      "task_id": "swg.heldout.retrieval_workspace.client_adapter_sync.d3.s123"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "8f4ab699e91a1d2a9c4361ebfa802a8d34d583f7392da21b67d3a4bc318a175b",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-d3-d4-panel-24"
+      },
+      "scenario": "client_adapter_sync",
+      "seed": 124,
+      "split": "heldout",
+      "task_id": "swg.heldout.retrieval_workspace.client_adapter_sync.d3.s124"
+    },
+    {
+      "difficulty": 3,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "9cb5cd0968126622efebbdb60422ced318a6b33561969442c7870fdc0ff4516a",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-d3-d4-panel-24"
+      },
+      "scenario": "client_adapter_sync",
+      "seed": 125,
+      "split": "heldout",
+      "task_id": "swg.heldout.retrieval_workspace.client_adapter_sync.d3.s125"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "a03a19e786021c27d33bfdaffb338fd012a51a4564f13bc9831bdd074a1dfe2c",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-d3-d4-panel-24"
+      },
+      "scenario": "client_adapter_sync",
+      "seed": 220,
+      "split": "heldout",
+      "task_id": "swg.heldout.retrieval_workspace.client_adapter_sync.d4.s220"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "81cb0c3a90430c42a5695e157753f6a7bda95a326ba1f1fcc21b22aa1a39d0a4",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-d3-d4-panel-24"
+      },
+      "scenario": "client_adapter_sync",
+      "seed": 221,
+      "split": "heldout",
+      "task_id": "swg.heldout.retrieval_workspace.client_adapter_sync.d4.s221"
+    },
+    {
+      "difficulty": 4,
+      "env_id": null,
+      "family": "retrieval_workspace",
+      "metadata": {
+        "assignment_fingerprint": "fdb9fed3b978c72c37f0eae5d22de8fb6d7f589be04d3a1862abbb15cfac196a",
+        "contributing_families": [
+          "retrieval_workspace"
+        ],
+        "experiment": "eval-d3-d4-panel-24"
+      },
+      "scenario": "client_adapter_sync",
+      "seed": 222,
+      "split": "heldout",
+      "task_id": "swg.heldout.retrieval_workspace.client_adapter_sync.d4.s222"
+    }
+  ],
+  "created_at": "2026-07-27T00:00:00+05:30",
+  "metadata": {
+    "assignment_count": 24,
+    "environment_version": "0.2.0.dev1",
+    "frozen": true,
+    "manifest_fingerprint": "fd1a0990ca12c3a202d0f9fc8b0e1bc7efd8e9649d3a351b0d3d4f1ad7aaa346",
+    "panel": "difficulty_band_heldout",
+    "rollouts_per_task": 5,
+    "scenario_partition": "heldout"
+  },
+  "name": "eval-d3-d4-panel-24",
+  "split_specs": {},
+  "version": "v1"
+}

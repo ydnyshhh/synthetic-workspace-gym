@@ -1,12 +1,14 @@
 model = "Qwen/Qwen3.5-4B"
 num_examples = 24
 rollouts_per_example = 5
-max_tokens = 1024
+max_tokens = 4096
 temperature = 0.7
 max_concurrent = 5
-timeout_minutes = 90
+max_retries = 0
+timeout_minutes = 180
+custom_secrets = { UV_OVERRIDE = "https://raw.githubusercontent.com/ydnyshhh/synthetic-workspace-gym/main/configs/evals/qwen35-4b-matrix/hosted-bootstrap-overrides.txt" }
 
 [[eval]]
-id = "yadnyesh/synthetic-workspace-gym@0.2.0.dev1"
+id = "yadnyesh/synthetic-workspace-gym"
 eval_name = "base-eval-d5-panel-24"
-env_args = { frozen_manifest = "eval-d5-panel-24", split = "test", max_examples = 24, max_turns = 25, max_tool_steps = 64, reward_mode = "score" }
+env_args = { manifest = "eval-d5-panel-24" }
