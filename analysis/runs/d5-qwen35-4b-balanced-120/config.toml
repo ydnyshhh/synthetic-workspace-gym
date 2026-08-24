@@ -1,0 +1,94 @@
+model = "Qwen/Qwen3.5-4B"
+num_tasks = 24
+num_rollouts = 5
+shuffle = false
+max_concurrent = 3
+verbose = false
+rich = false
+server = false
+push = false
+output_dir = "/workspace/d5-balanced-24x5-qwen35-4b"
+
+[env]
+id = ""
+max_concurrent_agents = 1
+
+[env.taskset]
+id = "synthetic-workspace-gym"
+manifest = "eval-d5-panel-24"
+families = []
+difficulties = []
+tasks = []
+validate_generation = false
+image = "python:3.12-slim"
+
+[env.taskset.task]
+judges = []
+max_result_bytes = 2097152
+
+[env.timeout]
+
+[env.retries]
+max_retries = 0
+include = []
+exclude = []
+
+[env.interception]
+type = "elastic"
+multiplex = 32
+
+[env.agent.harness]
+id = "codex"
+forward_env = []
+tool_timeout = 600.0
+skills = []
+version = "0.146.1"
+multi_agent = false
+
+[env.agent.harness.env]
+
+[env.agent.runtime]
+allow = [
+    "*",
+]
+block = []
+type = "prime"
+image = "python:3.11-slim"
+workdir = "/app"
+vm = true
+guaranteed = false
+labels = []
+cpu = 1.0
+memory = 2.0
+disk = 5.0
+idle_timeout = 3600.0
+
+[env.agent.timeout]
+rollout = 300.0
+
+[env.agent.retries]
+max_retries = 0
+include = []
+exclude = []
+
+[serve]
+address = "tcp://127.0.0.1:5000"
+
+[serve.pool]
+type = "elastic"
+multiplex = 128
+
+[legacy.args]
+
+[legacy.extra_env_kwargs]
+
+[client]
+base_url = "https://api.pinference.ai/api/v1"
+api_key_var = "PRIME_API_KEY"
+type = "eval"
+
+[client.headers]
+
+[sampling]
+temperature = 0.7
+max_tokens = 4096

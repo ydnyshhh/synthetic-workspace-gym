@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "status": "completed_balanced_harness_failure_dominated",
+  "usable_as_balanced_baseline": true,
+  "environment": "synthetic-workspace-gym@0.1.1",
+  "manifest": "eval-d5-panel-24",
+  "model": "Qwen/Qwen3.5-4B",
+  "runtime": "prime_vm",
+  "harness": "codex",
+  "requested": {
+    "tasks": 24,
+    "rollouts_per_task": 5,
+    "total_rollouts": 120,
+    "concurrency": 3,
+    "max_retries": 0,
+    "max_tokens": 4096,
+    "temperature": 0.7
+  },
+  "completed": {
+    "samples": 120,
+    "distinct_tasks": 24,
+    "samples_per_task": 5,
+    "ok_samples": 17,
+    "harness_error_samples": 103,
+    "agent_completed_samples": 17,
+    "positive_reward_samples": 8,
+    "success_samples": 0,
+    "mean_reward": 0.005718
+  },
+  "family_results": {
+    "tabular": {
+      "samples": 30,
+      "ok_samples": 5,
+      "harness_error_samples": 25,
+      "positive_reward_samples": 0,
+      "success_samples": 0,
+      "mean_reward": 0.0
+    },
+    "script_repair": {
+      "samples": 30,
+      "ok_samples": 5,
+      "harness_error_samples": 25,
+      "positive_reward_samples": 1,
+      "success_samples": 0,
+      "mean_reward": 0.000097
+    },
+    "pipeline": {
+      "samples": 30,
+      "ok_samples": 1,
+      "harness_error_samples": 29,
+      "positive_reward_samples": 1,
+      "success_samples": 0,
+      "mean_reward": 0.000001
+    },
+    "retrieval_workspace": {
+      "samples": 30,
+      "ok_samples": 6,
+      "harness_error_samples": 24,
+      "positive_reward_samples": 6,
+      "success_samples": 0,
+      "mean_reward": 0.022774
+    }
+  },
+  "timing_utc": {
+    "started": "2026-08-24T05:44:24Z",
+    "completed": "2026-08-24T06:46:49Z"
+  },
+  "superseded_attempt": {
+    "artifact": "analysis/runs/d5-qwen35-4b-retry10-superseded",
+    "accepted_samples": 3,
+    "harness_error_rollouts": 17,
+    "retry_events": 17,
+    "reason": "Ten retries selected for occasional protocol-compliant responses and projected beyond the runner lifetime, so the attempt was stopped and replaced with max_retries=0."
+  },
+  "notes": [
+    "The panel is balanced: every one of the 24 immutable D5 tasks has exactly five rows, and every atomic family has 30 rows.",
+    "Harness failures remain in the 120-sample denominator and receive zero reward; they were not retried away.",
+    "All eight positive-reward samples were partial-credit failures; no sample had metrics.success greater than zero.",
+    "The result shows Qwen3.5-4B is not a viable D5 trace teacher under the standard Codex harness in this configuration.",
+    "Direct reward comparison with the partial 397B run requires care because that run used max_retries=10 and retained only 31 successful rollouts before user interruption."
+  ]
+}

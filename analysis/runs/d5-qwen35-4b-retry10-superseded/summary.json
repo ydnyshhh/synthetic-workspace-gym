@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "status": "superseded_retry_biased_attempt",
+  "usable_as_balanced_baseline": false,
+  "environment": "synthetic-workspace-gym@0.1.1",
+  "manifest": "eval-d5-panel-24",
+  "model": "Qwen/Qwen3.5-4B",
+  "runtime": "prime_vm",
+  "harness": "codex",
+  "requested": {
+    "tasks": 24,
+    "rollouts_per_task": 5,
+    "total_rollouts": 120,
+    "concurrency": 3,
+    "max_retries": 10
+  },
+  "completed": {
+    "accepted_samples": 3,
+    "ok_samples": 3,
+    "agent_completed_samples": 3,
+    "harness_error_rollouts": 17,
+    "retry_events": 17,
+    "success_samples": 0,
+    "mean_reward": 0.0
+  },
+  "notes": [
+    "This attempt was deliberately stopped after retries selected for rare protocol-compliant responses and made the projected duration exceed the runner lifetime.",
+    "Its artifacts are retained only for auditability; use the balanced max_retries=0 run for the 4B baseline."
+  ]
+}

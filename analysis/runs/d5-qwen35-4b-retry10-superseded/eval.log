@@ -1,0 +1,272 @@
+05:30:30    INFO eval config:
+{
+  "env": {
+    "id": "",
+    "taskset": {
+      "id": "synthetic-workspace-gym",
+      "task": {
+        "judges": [],
+        "max_result_bytes": 2097152
+      },
+      "system_prompt": null,
+      "manifest": "eval-d5-panel-24",
+      "families": [],
+      "difficulties": [],
+      "tasks": [],
+      "validate_generation": false,
+      "image": "python:3.12-slim"
+    },
+    "timeout": {
+      "episode": null,
+      "finalize": null
+    },
+    "retries": {
+      "max_retries": 0,
+      "include": [],
+      "exclude": []
+    },
+    "max_concurrent_agents": 1,
+    "interception": {
+      "type": "elastic",
+      "multiplex": 32
+    },
+    "agent": {
+      "harness": {
+        "id": "codex",
+        "env": {},
+        "forward_env": [],
+        "tool_timeout": 600.0,
+        "disabled_tools": null,
+        "skills": [],
+        "version": "0.146.1",
+        "multi_agent": false
+      },
+      "runtime": {
+        "allow": [
+          "*"
+        ],
+        "block": [],
+        "type": "prime",
+        "image": "python:3.11-slim",
+        "workdir": "/app",
+        "vm": true,
+        "guaranteed": false,
+        "region": null,
+        "labels": [],
+        "cpu": 1.0,
+        "memory": 2.0,
+        "gpu": null,
+        "disk": 5.0,
+        "idle_timeout": 3600.0,
+        "creates_per_min": null
+      },
+      "model": null,
+      "client": null,
+      "sampling": null,
+      "max_turns": null,
+      "max_input_tokens": null,
+      "max_output_tokens": null,
+      "max_total_tokens": null,
+      "timeout": {
+        "setup": null,
+        "rollout": 300.0,
+        "finalize": null,
+        "scoring": null
+      },
+      "retries": {
+        "max_retries": 10,
+        "include": [],
+        "exclude": []
+      }
+    }
+  },
+  "serve": {
+    "pool": {
+      "type": "elastic",
+      "max_workers": null,
+      "multiplex": 128
+    },
+    "address": "tcp://127.0.0.1:5000",
+    "max_concurrent": null
+  },
+  "legacy": {
+    "id": null,
+    "args": {},
+    "extra_env_kwargs": {}
+  },
+  "model": "Qwen/Qwen3.5-4B",
+  "client": {
+    "base_url": "https://api.pinference.ai/api/v1",
+    "api_key_var": "PRIME_API_KEY",
+    "headers": {},
+    "type": "eval"
+  },
+  "sampling": {
+    "temperature": 0.7,
+    "top_p": null,
+    "reasoning_effort": null,
+    "max_tokens": 4096
+  },
+  "num_tasks": 24,
+  "num_rollouts": 5,
+  "shuffle": false,
+  "max_concurrent": 3,
+  "verbose": false,
+  "rich": false,
+  "server": false,
+  "push": false,
+  "output_dir": "/workspace/d5-balanced-24x5-qwen35-4b"
+}
+05:30:30    INFO running 24x5 rollouts on Qwen/Qwen3.5-4B
+05:30:30    INFO results: /workspace/d5-balanced-24x5-qwen35-4b
+05:30:30    INFO rollout start: id=7cca31dd667442319b913e03228edfdb task=0 harness=codex runtime=prime
+05:30:30    INFO rollout start: id=600bc358132a48f780b6604313faf001 task=0 harness=codex runtime=prime
+05:30:30    INFO rollout start: id=15a0364f2d564218afafc9c25ae48851 task=0 harness=codex runtime=prime
+05:30:30    INFO interception up: url=http://127.0.0.1:40565
+05:30:31    INFO interception pool: 1 server(s), multiplex=32
+05:30:34    INFO prime: sandbox ompxdt6wbi3gcfyjc3am0gq5 up (image=python:3.12-slim)
+05:30:35    INFO prime: sandbox yj4h3s3oiezxjuq8hrcy6lmw up (image=python:3.12-slim)
+05:30:35    INFO prime: sandbox v34mt0gm4egajvaqazvb94x1 up (image=python:3.12-slim)
+05:30:40    INFO codex: ensuring Codex 0.146.1 and codex-acp 1.1.10 are installed
+05:30:40    INFO codex: ensuring Codex 0.146.1 and codex-acp 1.1.10 are installed
+05:30:42    INFO codex: ensuring Codex 0.146.1 and codex-acp 1.1.10 are installed
+05:30:49    INFO prime: egress policy applied on sandbox ompxdt6wbi3gcfyjc3am0gq5 (allow=['t-0-b817479c19a846dd.tunnel.pinfra.io'] block=None)
+05:30:49 WARNING Harness 'codex' does not support a separate system prompt; prepending task.system_prompt to the user prompt.
+05:30:50    INFO prime: egress policy applied on sandbox v34mt0gm4egajvaqazvb94x1 (allow=['t-0-b817479c19a846dd.tunnel.pinfra.io'] block=None)
+05:30:50 WARNING Harness 'codex' does not support a separate system prompt; prepending task.system_prompt to the user prompt.
+05:30:52    INFO prime: egress policy applied on sandbox yj4h3s3oiezxjuq8hrcy6lmw (allow=['t-0-b817479c19a846dd.tunnel.pinfra.io'] block=None)
+05:30:52 WARNING Harness 'codex' does not support a separate system prompt; prepending task.system_prompt to the user prompt.
+05:31:06    INFO rollout done: id=15a0364f2d564218afafc9c25ae48851 task=0 reward=0.000 turns=5 stop=HarnessError
+05:31:06 WARNING retrying agent rollout (retry 1/10) in 0.6s after error: HarnessError
+05:31:07    INFO rollout start: id=9a70b22737a84d6189b97d2345d7f6cb task=0 harness=codex runtime=prime
+05:31:11    INFO prime: sandbox baa6q81qojxg9s0i37gcqt7z up (image=python:3.12-slim)
+05:31:18    INFO codex: ensuring Codex 0.146.1 and codex-acp 1.1.10 are installed
+05:31:27    INFO prime: egress policy applied on sandbox baa6q81qojxg9s0i37gcqt7z (allow=['t-0-b817479c19a846dd.tunnel.pinfra.io'] block=None)
+05:31:27 WARNING Harness 'codex' does not support a separate system prompt; prepending task.system_prompt to the user prompt.
+05:31:27    INFO rollout done: id=7cca31dd667442319b913e03228edfdb task=0 reward=0.000 turns=4 stop=HarnessError
+05:31:27 WARNING retrying agent rollout (retry 1/10) in 0.6s after error: HarnessError
+05:31:28    INFO rollout start: id=bea8bfa5c0c644b294e554b9f3383609 task=0 harness=codex runtime=prime
+05:31:33    INFO prime: sandbox iuxfosghx4xbootndt7wo5bk up (image=python:3.12-slim)
+05:31:39    INFO codex: ensuring Codex 0.146.1 and codex-acp 1.1.10 are installed
+05:31:40    INFO rollout done: id=9a70b22737a84d6189b97d2345d7f6cb task=0 reward=0.000 turns=4 stop=HarnessError
+05:31:40 WARNING retrying agent rollout (retry 2/10) in 0.7s after error: HarnessError
+05:31:41    INFO rollout start: id=48f133f3abd744b58f121d56d7d9b658 task=0 harness=codex runtime=prime
+05:31:46    INFO prime: sandbox bcvluue513o9cqs7vbrox3wp up (image=python:3.12-slim)
+05:31:47    INFO prime: egress policy applied on sandbox iuxfosghx4xbootndt7wo5bk (allow=['t-0-b817479c19a846dd.tunnel.pinfra.io'] block=None)
+05:31:47 WARNING Harness 'codex' does not support a separate system prompt; prepending task.system_prompt to the user prompt.
+05:31:53    INFO codex: ensuring Codex 0.146.1 and codex-acp 1.1.10 are installed
+05:31:57    INFO rollout done: id=bea8bfa5c0c644b294e554b9f3383609 task=0 reward=0.000 turns=2 stop=HarnessError
+05:31:57 WARNING retrying agent rollout (retry 2/10) in 0.8s after error: HarnessError
+05:31:58    INFO rollout start: id=8448d91648bb4415ae5c0ea814b5e356 task=0 harness=codex runtime=prime
+05:32:02    INFO prime: egress policy applied on sandbox bcvluue513o9cqs7vbrox3wp (allow=['t-0-b817479c19a846dd.tunnel.pinfra.io'] block=None)
+05:32:02 WARNING Harness 'codex' does not support a separate system prompt; prepending task.system_prompt to the user prompt.
+05:32:03    INFO prime: sandbox m9ld153vlwn06n9wpiwemiaj up (image=python:3.12-slim)
+05:32:09    INFO codex: ensuring Codex 0.146.1 and codex-acp 1.1.10 are installed
+05:32:15    INFO rollout done: id=48f133f3abd744b58f121d56d7d9b658 task=0 reward=0.000 turns=3 stop=HarnessError
+05:32:15 WARNING retrying agent rollout (retry 3/10) in 1.6s after error: HarnessError
+05:32:16    INFO rollout start: id=c04f77c211a54ff1926dbe46529911a4 task=0 harness=codex runtime=prime
+05:32:19    INFO prime: egress policy applied on sandbox m9ld153vlwn06n9wpiwemiaj (allow=['t-0-b817479c19a846dd.tunnel.pinfra.io'] block=None)
+05:32:19 WARNING Harness 'codex' does not support a separate system prompt; prepending task.system_prompt to the user prompt.
+05:32:21    INFO prime: sandbox uajjb9mnj5e6o77zexuiddcn up (image=python:3.12-slim)
+05:32:27    INFO codex: ensuring Codex 0.146.1 and codex-acp 1.1.10 are installed
+05:32:36    INFO prime: egress policy applied on sandbox uajjb9mnj5e6o77zexuiddcn (allow=['t-0-b817479c19a846dd.tunnel.pinfra.io'] block=None)
+05:32:36 WARNING Harness 'codex' does not support a separate system prompt; prepending task.system_prompt to the user prompt.
+05:32:42    INFO rollout done: id=8448d91648bb4415ae5c0ea814b5e356 task=0 reward=0.000 turns=6 stop=HarnessError
+05:32:42 WARNING retrying agent rollout (retry 3/10) in 1.4s after error: HarnessError
+05:32:44    INFO rollout start: id=1cbc616ef2174d8a9e863cb13b944f02 task=0 harness=codex runtime=prime
+05:32:49    INFO prime: sandbox xc65qw5qjv55ecs7lchbvu5e up (image=python:3.12-slim)
+05:32:54    INFO codex: ensuring Codex 0.146.1 and codex-acp 1.1.10 are installed
+05:32:54    INFO rollout done: id=600bc358132a48f780b6604313faf001 task=0 reward=0.000 turns=4 stop=HarnessError
+05:32:54 WARNING retrying agent rollout (retry 1/10) in 0.6s after error: HarnessError
+05:32:55    INFO rollout start: id=e88b8d3f848a4e54b35d68a97483132f task=0 harness=codex runtime=prime
+05:33:00    INFO prime: sandbox vtm52vis8eoac49fl92my0gb up (image=python:3.12-slim)
+05:33:02    INFO prime: egress policy applied on sandbox xc65qw5qjv55ecs7lchbvu5e (allow=['t-0-b817479c19a846dd.tunnel.pinfra.io'] block=None)
+05:33:02 WARNING Harness 'codex' does not support a separate system prompt; prepending task.system_prompt to the user prompt.
+05:33:06    INFO codex: ensuring Codex 0.146.1 and codex-acp 1.1.10 are installed
+05:33:15    INFO prime: egress policy applied on sandbox vtm52vis8eoac49fl92my0gb (allow=['t-0-b817479c19a846dd.tunnel.pinfra.io'] block=None)
+05:33:15 WARNING Harness 'codex' does not support a separate system prompt; prepending task.system_prompt to the user prompt.
+05:34:30    INFO rollout done: id=1cbc616ef2174d8a9e863cb13b944f02 task=0 reward=0.000 turns=6 stop=HarnessError
+05:34:30 WARNING retrying agent rollout (retry 4/10) in 3.9s after error: HarnessError
+05:34:34    INFO rollout start: id=c57306e67c444c488c9cfa4d7acda66e task=0 harness=codex runtime=prime
+05:34:39    INFO prime: sandbox qi702607lh5k8f95r6wg66jw up (image=python:3.12-slim)
+05:34:46    INFO codex: ensuring Codex 0.146.1 and codex-acp 1.1.10 are installed
+05:34:54    INFO prime: egress policy applied on sandbox qi702607lh5k8f95r6wg66jw (allow=['t-0-b817479c19a846dd.tunnel.pinfra.io'] block=None)
+05:34:54 WARNING Harness 'codex' does not support a separate system prompt; prepending task.system_prompt to the user prompt.
+05:35:04    INFO rollout done: id=c57306e67c444c488c9cfa4d7acda66e task=0 reward=0.000 turns=2 stop=HarnessError
+05:35:04 WARNING retrying agent rollout (retry 5/10) in 4.2s after error: HarnessError
+05:35:08    INFO rollout start: id=429c9db272be473fb7e4b589af4a443e task=0 harness=codex runtime=prime
+05:35:13    INFO prime: sandbox nz4rqjzhpd9d2fntjfnzedqu up (image=python:3.12-slim)
+05:35:20    INFO codex: ensuring Codex 0.146.1 and codex-acp 1.1.10 are installed
+05:35:29    INFO prime: egress policy applied on sandbox nz4rqjzhpd9d2fntjfnzedqu (allow=['t-0-b817479c19a846dd.tunnel.pinfra.io'] block=None)
+05:35:29 WARNING Harness 'codex' does not support a separate system prompt; prepending task.system_prompt to the user prompt.
+05:35:45    INFO rollout done: id=429c9db272be473fb7e4b589af4a443e task=0 reward=0.000 turns=5 stop=HarnessError
+05:35:45 WARNING retrying agent rollout (retry 6/10) in 21.5s after error: HarnessError
+05:35:46    INFO rollout done: id=e88b8d3f848a4e54b35d68a97483132f task=0 reward=0.000 turns=4 stop=HarnessError
+05:35:46 WARNING retrying agent rollout (retry 2/10) in 1.2s after error: HarnessError
+05:35:47    INFO rollout start: id=867b8941c7f54213aabff21c0b088e28 task=0 harness=codex runtime=prime
+05:35:53    INFO prime: sandbox h9bd1uu0g75r1h6gf3ia4qu6 up (image=python:3.12-slim)
+05:35:59    INFO codex: ensuring Codex 0.146.1 and codex-acp 1.1.10 are installed
+05:36:07    INFO rollout start: id=6d2bd26e8ef84b3289def7f501d92603 task=0 harness=codex runtime=prime
+05:36:09    INFO prime: egress policy applied on sandbox h9bd1uu0g75r1h6gf3ia4qu6 (allow=['t-0-b817479c19a846dd.tunnel.pinfra.io'] block=None)
+05:36:09 WARNING Harness 'codex' does not support a separate system prompt; prepending task.system_prompt to the user prompt.
+05:36:11    INFO prime: sandbox hljids4fwliduv53drn01anp up (image=python:3.12-slim)
+05:36:18    INFO codex: ensuring Codex 0.146.1 and codex-acp 1.1.10 are installed
+05:36:21    INFO rollout done: id=867b8941c7f54213aabff21c0b088e28 task=0 reward=0.000 turns=3 stop=HarnessError
+05:36:21 WARNING retrying agent rollout (retry 3/10) in 2.7s after error: HarnessError
+05:36:24    INFO rollout start: id=da08c857ce46437a861422cfd3342a61 task=0 harness=codex runtime=prime
+05:36:27    INFO prime: egress policy applied on sandbox hljids4fwliduv53drn01anp (allow=['t-0-b817479c19a846dd.tunnel.pinfra.io'] block=None)
+05:36:27 WARNING Harness 'codex' does not support a separate system prompt; prepending task.system_prompt to the user prompt.
+05:36:28    INFO prime: sandbox vierku88p98pqp7ugg8skg8u up (image=python:3.12-slim)
+05:36:34    INFO codex: ensuring Codex 0.146.1 and codex-acp 1.1.10 are installed
+05:36:44    INFO prime: egress policy applied on sandbox vierku88p98pqp7ugg8skg8u (allow=['t-0-b817479c19a846dd.tunnel.pinfra.io'] block=None)
+05:36:44 WARNING Harness 'codex' does not support a separate system prompt; prepending task.system_prompt to the user prompt.
+05:36:46    INFO rollout done: id=6d2bd26e8ef84b3289def7f501d92603 task=0 reward=0.000 turns=4 stop=agent_completed
+05:36:46    INFO rollout start: id=0aa6b7b259874e5899216952b1de985c task=0 harness=codex runtime=prime
+05:36:51    INFO prime: sandbox hmj9pq9l9in0qwbh9q4584wp up (image=python:3.12-slim)
+05:36:57    INFO codex: ensuring Codex 0.146.1 and codex-acp 1.1.10 are installed
+05:37:07    INFO prime: egress policy applied on sandbox hmj9pq9l9in0qwbh9q4584wp (allow=['t-0-b817479c19a846dd.tunnel.pinfra.io'] block=None)
+05:37:07 WARNING Harness 'codex' does not support a separate system prompt; prepending task.system_prompt to the user prompt.
+05:37:21    INFO rollout done: id=0aa6b7b259874e5899216952b1de985c task=0 reward=0.000 turns=2 stop=agent_completed
+05:37:21    INFO rollout start: id=d4feaeac44264dda935957b459f4e147 task=0 harness=codex runtime=prime
+05:37:25    INFO prime: sandbox h5tg3tl0b1bfup1jtuh9vy6c up (image=python:3.12-slim)
+05:37:32    INFO codex: ensuring Codex 0.146.1 and codex-acp 1.1.10 are installed
+05:37:40    INFO rollout done: id=c04f77c211a54ff1926dbe46529911a4 task=0 reward=0.000 turns=3 stop=HarnessError
+05:37:40 WARNING retrying agent rollout (retry 4/10) in 5.9s after error: HarnessError
+05:37:41    INFO prime: egress policy applied on sandbox h5tg3tl0b1bfup1jtuh9vy6c (allow=['t-0-b817479c19a846dd.tunnel.pinfra.io'] block=None)
+05:37:41 WARNING Harness 'codex' does not support a separate system prompt; prepending task.system_prompt to the user prompt.
+05:37:46    INFO rollout start: id=2480df0bffd74a88a08f472dd2b8c9fd task=0 harness=codex runtime=prime
+05:37:51    INFO prime: sandbox tyrcnrp4cto6twk0u66dv4e2 up (image=python:3.12-slim)
+05:37:58    INFO rollout done: id=d4feaeac44264dda935957b459f4e147 task=0 reward=0.000 turns=5 stop=HarnessError
+05:37:58 WARNING retrying agent rollout (retry 1/10) in 0.7s after error: HarnessError
+05:37:58    INFO codex: ensuring Codex 0.146.1 and codex-acp 1.1.10 are installed
+05:37:58    INFO rollout start: id=2495f1e1c3ed42b4b61b13231bad4000 task=0 harness=codex runtime=prime
+05:38:03    INFO prime: sandbox bnrx1d8ytvsp3irhn23d36xj up (image=python:3.12-slim)
+05:38:07    INFO prime: egress policy applied on sandbox tyrcnrp4cto6twk0u66dv4e2 (allow=['t-0-b817479c19a846dd.tunnel.pinfra.io'] block=None)
+05:38:07 WARNING Harness 'codex' does not support a separate system prompt; prepending task.system_prompt to the user prompt.
+05:38:10    INFO codex: ensuring Codex 0.146.1 and codex-acp 1.1.10 are installed
+05:38:19    INFO prime: egress policy applied on sandbox bnrx1d8ytvsp3irhn23d36xj (allow=['t-0-b817479c19a846dd.tunnel.pinfra.io'] block=None)
+05:38:19 WARNING Harness 'codex' does not support a separate system prompt; prepending task.system_prompt to the user prompt.
+05:38:21    INFO rollout done: id=2480df0bffd74a88a08f472dd2b8c9fd task=0 reward=0.000 turns=2 stop=agent_completed
+05:38:21    INFO rollout start: id=adffdd5501264d1a9a5ba0cb8a4cba3a task=1 harness=codex runtime=prime
+05:38:26    INFO prime: sandbox u97uuc2iv68243lje6z3dtqg up (image=python:3.12-slim)
+05:38:32    INFO codex: ensuring Codex 0.146.1 and codex-acp 1.1.10 are installed
+05:38:41    INFO prime: egress policy applied on sandbox u97uuc2iv68243lje6z3dtqg (allow=['t-0-b817479c19a846dd.tunnel.pinfra.io'] block=None)
+05:38:41 WARNING Harness 'codex' does not support a separate system prompt; prepending task.system_prompt to the user prompt.
+05:39:00    INFO rollout done: id=adffdd5501264d1a9a5ba0cb8a4cba3a task=1 reward=0.000 turns=7 stop=HarnessError
+05:39:00 WARNING retrying agent rollout (retry 1/10) in 0.6s after error: HarnessError
+05:39:00    INFO rollout start: id=ad57ef906dac42dfaf3d1bba7d101663 task=1 harness=codex runtime=prime
+05:39:05    INFO prime: sandbox w8foan8u91iftwpr2c9qbrx4 up (image=python:3.12-slim)
+05:39:12    INFO codex: ensuring Codex 0.146.1 and codex-acp 1.1.10 are installed
+05:39:20    INFO prime: egress policy applied on sandbox w8foan8u91iftwpr2c9qbrx4 (allow=['t-0-b817479c19a846dd.tunnel.pinfra.io'] block=None)
+05:39:20 WARNING Harness 'codex' does not support a separate system prompt; prepending task.system_prompt to the user prompt.
+05:39:36    INFO rollout done: id=ad57ef906dac42dfaf3d1bba7d101663 task=1 reward=0.000 turns=5 stop=HarnessError
+05:39:36 WARNING retrying agent rollout (retry 2/10) in 1.5s after error: HarnessError
+05:39:38    INFO rollout start: id=e2d229b7ea6645e88bac2f9b6fffb319 task=1 harness=codex runtime=prime
+05:39:43    INFO prime: sandbox ns9sqxcwqozb09zjenufjve1 up (image=python:3.12-slim)
+05:39:50    INFO codex: ensuring Codex 0.146.1 and codex-acp 1.1.10 are installed
+05:39:59    INFO prime: egress policy applied on sandbox ns9sqxcwqozb09zjenufjve1 (allow=['t-0-b817479c19a846dd.tunnel.pinfra.io'] block=None)
+05:39:59 WARNING Harness 'codex' does not support a separate system prompt; prepending task.system_prompt to the user prompt.
+05:41:49    INFO rollout done: id=da08c857ce46437a861422cfd3342a61 task=0 reward=0.000 turns=2 stop=HarnessError
+05:41:49 WARNING retrying agent rollout (retry 4/10) in 4.1s after error: HarnessError
+05:41:53 WARNING interrupted — cleaning up, please wait...
+05:41:53    INFO interception down: url=http://127.0.0.1:40565

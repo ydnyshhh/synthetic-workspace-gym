@@ -29,6 +29,8 @@
     "environment": "yadnyesh/synthetic-workspace-gym@0.1.1",
     "manifest": "eval-d5-panel-24",
     "planned_rollouts": 120,
+    "wheel_artifact": "environments/tool_use/synthetic_workspace_gym/dist/synthetic_workspace_gym-0.1.1-py3-none-any.whl",
+    "wheel_sha256": "40c9f4858ae9acbd929f5f414e33ea2ead2136b4f0cc603cbb66e5c919383437",
     "requested_shape": {
       "families": 4,
       "rollouts_per_family": 30,
@@ -50,6 +52,26 @@
       "provider_retry_events": 7,
       "status": "stopped_by_user_partial_unbalanced",
       "success_samples": 11
+    },
+    "qwen35_4b_balanced_run": {
+      "artifact": "analysis/runs/d5-qwen35-4b-balanced-120",
+      "completed_rollouts": 120,
+      "family_counts": {
+        "pipeline": 30,
+        "retrieval_workspace": 30,
+        "script_repair": 30,
+        "tabular": 30
+      },
+      "harness": "codex",
+      "harness_error_samples": 103,
+      "max_retries": 0,
+      "mean_reward": 0.005718,
+      "model": "Qwen/Qwen3.5-4B",
+      "ok_samples": 17,
+      "positive_reward_samples": 8,
+      "status": "completed_balanced_harness_failure_dominated",
+      "success_samples": 0,
+      "superseded_retry_attempt": "analysis/runs/d5-qwen35-4b-retry10-superseded"
     },
     "superseded_zero_sample_attempts": [
       {
